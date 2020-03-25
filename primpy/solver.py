@@ -26,10 +26,9 @@ def solve(ic, *args, **kwargs):
     (c) modified from "primordial" by Will Handley.
     """
     y0 = np.zeros(len(ic.equations.idx))
-    method = kwargs.pop('method', 'DOP853')
     ic(y0=y0)
     events = kwargs.pop('events', [])
-    sol = integrate.solve_ivp(ic.equations, (ic.x_ini, ic.x_end), y0, method=method, events=events,
+    sol = integrate.solve_ivp(ic.equations, (ic.x_ini, ic.x_end), y0, events=events,
                               *args, **kwargs)
     sol.event_keys = [e.name for e in events]
     return ic.equations.sol(sol)
