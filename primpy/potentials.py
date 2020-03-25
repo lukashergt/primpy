@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """:mod:`primpy.potential`: inflationary potentials."""
-
 import numpy as np
 from scipy.interpolate import interp1d
 from primpy.units import pi

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""`primpy`: Calculations for the primordial Universe."""
+""":mod:`primpy__init__`: Calculations for the primordial Universe."""
 
 from primpy.__version__ import __version__
 

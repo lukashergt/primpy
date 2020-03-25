@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """:mod:`primpy.time.initialconditions`: initial conditions for inflation."""
-
 import numpy as np
 from primpy.time.inflation import InflationEquationsT
 

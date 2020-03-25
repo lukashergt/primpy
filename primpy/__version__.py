@@ -1,4 +1,4 @@
 #!/usr/bin/env python
-"""`primpy`: Calculations for the primordial Universe."""
+""":mod:`primpy.__version__`: version file for primpy."""
 
 __version__ = '2.0.2'
