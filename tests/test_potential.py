@@ -22,5 +22,6 @@ def test_starobinsky_inflation():
     assert pot.V(phi=1) == (1 - np.exp(-gamma))**2
     assert pot.dV(phi=1) == 2 * gamma * np.exp(-2 * gamma) * (np.exp(gamma) - 1)
     assert pot.d2V(phi=1) == 2 * gamma**2 * np.exp(-2 * gamma) * (2 - np.exp(gamma))
+    assert pot.d3V(phi=1) == 2 * gamma**3 * np.exp(-2 * gamma) * (np.exp(gamma) - 4)
     pot = StarobinskyPotential(Lambda=1e-2)
     assert pot.V(phi=15) == 1e-2**4 * (1 - np.exp(-np.sqrt(2 / 3) * 15))**2
