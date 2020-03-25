@@ -17,7 +17,9 @@ def test_quadratic_inflation():
 
 def test_starobinsky_inflation():
     """Tests for `StarobinskyPotential`."""
+    gamma = np.sqrt(2 / 3)
     pot = StarobinskyPotential(Lambda=1)
-    assert pot.V(phi=1) == (1 - np.exp(-np.sqrt(2 / 3)))**2
+    assert pot.V(phi=1) == (1 - np.exp(-gamma))**2
+    assert pot.dV(phi=1) == 2 * gamma * np.exp(-2 * gamma) * (np.exp(gamma) - 1)
     pot = StarobinskyPotential(Lambda=1e-2)
     assert pot.V(phi=15) == 1e-2**4 * (1 - np.exp(-np.sqrt(2 / 3) * 15))**2
