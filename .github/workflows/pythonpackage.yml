@@ -50,7 +50,7 @@ jobs:
     # Run tests
     - name: Test with pytest
       run: |
-        pytest
+        pytest --cov=primpy
     
 #     # Check code coverage
 #     - name: Upload coverage to Codecov  
@@ -65,5 +65,5 @@ jobs:
        
     - name: Codecov
       run: | 
-        codecov -t
+        codecov --token=edcdc6bc-b2e1-4980-a60f-aa219e735cd9
         bash <(curl -s https://codecov.io/bash)
