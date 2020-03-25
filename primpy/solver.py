@@ -1,9 +1,11 @@
+#!/usr/bin/env python
+""":mod:`primpy.solver`: general setup for running `solve_ivp`."""
 import numpy as np
 from scipy import integrate
 
 
 def solve(ic, *args, **kwargs):
-    """Wrapper for solving differential equations in the primordial Universe.
+    """Run `solve_ivp` and store information in `sol` for post-processing.
 
     This is a wrapper around ``scipy.integrate.solve_ivp``, with easier
     reusable objects for the equations and initial conditions.
