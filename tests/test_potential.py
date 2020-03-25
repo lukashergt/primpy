@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Tests for `primpy.potential` module."""
 import numpy as np
-from primpy.potential import QuadraticPotential, StarobinskyPotential
+from primpy.potentials import QuadraticPotential, StarobinskyPotential
 
 
 def test_quadratic_inflation():

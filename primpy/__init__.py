@@ -7,5 +7,4 @@ __author__ = 'Lukas Hergt'
 __credits__ = ['Lukas Hergt', 'Will Handley', 'Mike Hobson', 'Anthony Lasenby']
 __email__ = 'lh561@mrao.cam.ac.uk'
 __version__ = __version__
-__all__ = ['time']
-
+__all__ = ['time', 'solver', 'units', 'parameters', 'potentials', 'events']
