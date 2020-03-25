@@ -11,6 +11,6 @@ def test_quadratic_inflation():
 
 def test_starobinsky_inflation():
     pot = StarobinskyPotential(Lambda=1)
-    assert pot.V(phi=1) == 0.5
+    assert pot.V(phi=1) == (1 - np.exp(-np.sqrt(2 / 3)))**2
     pot = StarobinskyPotential(Lambda=1e-2)
-    assert pot.V(phi=15) == 1e-2**4 * (1 - np.exp(np.sqrt(2 / 3) * 15))**2
+    assert pot.V(phi=15) == 1e-2**4 * (1 - np.exp(-np.sqrt(2 / 3) * 15))**2
