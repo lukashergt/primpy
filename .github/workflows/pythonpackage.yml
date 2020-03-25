@@ -65,5 +65,5 @@ jobs:
        
     - name: Codecov
       run: | 
-        codecov
+        codecov -t
         bash <(curl -s https://codecov.io/bash)
