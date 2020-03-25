@@ -13,6 +13,7 @@ def test_quadratic_inflation():
     assert pot.d3V(phi=1) == 0
     pot = QuadraticPotential(m=6e-6)
     assert pot.V(phi=20) == 0.5 * 6e-6**2 * 20**2
+    assert pot.As2mass(2e-9, 55)[1] == np.sqrt(4 * 55 + 2)
 
 
 def test_starobinsky_inflation():
