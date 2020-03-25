@@ -8,6 +8,9 @@ def test_quadratic_inflation():
     """Tests for `QuadraticPotential`."""
     pot = QuadraticPotential(m=1)
     assert pot.V(phi=1) == 0.5
+    assert pot.dV(phi=1) == 1
+    assert pot.d2V(phi=1) == 1
+    assert pot.d3V(phi=1) == 0
     pot = QuadraticPotential(m=6e-6)
     assert pot.V(phi=20) == 0.5 * 6e-6**2 * 20**2
 
