@@ -31,19 +31,28 @@ jobs:
       run: |
         pip install flake8
         pip install pydocstyle
-        pip install pytest        
+        pip install pytest
+        pip install pytest-cov pytest-xdist codecov  
+    
+    # Test for pep-compliance
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=99 --statistics
+    
+    # Test for documentation style
     - name: pydocstyle with numpy convention
       run: | 
         pydocstyle . --convention=numpy
+    
+    # Run tests
     - name: Test with pytest
       run: |
         pytest
+    
+    # Check code coverage
     - name: Upload coverage to Codecov  
       uses: codecov/codecov-action@v1
       with:
