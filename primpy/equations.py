@@ -48,6 +48,7 @@ class Equations(ABC):
         x, idx_x_unique = np.unique(sol.t, return_index=True)
         sol.idx_x_unique = idx_x_unique
         del sol.t
+        sol.y_events = dict(zip(sol.event_keys, sol.pop('y_events')))
         for name, i in self.idx.items():
             setattr(sol, name, sol.y[i, idx_x_unique])
         x_name = self.independent_variable
