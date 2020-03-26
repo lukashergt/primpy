@@ -76,7 +76,7 @@ class InflationEquationsT(InflationEquations):
             sol.N_beg = np.nan
             warn("The universe has collapsed.")
         # Case 1: inflating from the start
-        elif self.inflating(sol.x[0], sol.y[:, 0]) >= 0:
+        elif self.inflating(sol.x[0], sol.y[:, 0]) > 0:
             sol.t_beg = sol.t[0]
             sol.N_beg = sol.N[0]
         # Case 2: there is a transition from non-inflating to inflating
@@ -87,8 +87,9 @@ class InflationEquationsT(InflationEquations):
         else:
             sol.t_beg = np.nan
             sol.N_beg = np.nan
-            warn("In order to calculate quantities such as `N_tot`, "
-                 "make sure to track the event InflationEvent(ic.equations, direction=1).")
+            warn("Inflation start not determined. In order to calculate "
+                 "quantities such as `N_tot`, make sure to track the event "
+                 "InflationEvent(ic.equations, direction=+1).")
 
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
@@ -107,13 +108,13 @@ class InflationEquationsT(InflationEquations):
             sol.V_end = self.potential.V(sol.phi_end)
         else:
             # Case: inflation did not end
-            if self.inflating(sol.x[-1], sol.y[:, -1]) <= 0:
+            if self.inflating(sol.x[-1], sol.y[:, -1]) < 0:
                 warn("It seems that inflation has not ended. "
                      "Increase `t_end` or decrease initial `phi`?")
             elif ('Inflation_dir-1_term1' not in sol.t_events or
                   'Inflation_dir-1_term0' not in sol.t_events):
-                warn("`InflationEvent(ic.equations, direction=-1)` was not specified. In order to "
-                     "calculate quantities such as `N_tot`, make sure to track the event "
+                warn("Inflation end not determined. In order to calculate "
+                     "quantities such as `N_tot`, make sure to track the event "
                      "`InflationEvent(ic.equations, direction=-1)`.")
             else:
                 raise Exception("something unexpected has happend. This is the solution: "
