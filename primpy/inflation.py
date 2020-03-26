@@ -43,15 +43,15 @@ class InflationEquations(Equations, ABC):
 
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
-        sol = super(InflationEquations, self).sol(sol, **kwargs)
         sol.K = self.K
         sol.potential = self.potential
         sol.H = self.H(sol.x, sol.y)
         if not hasattr(sol, 'logaH'):
             sol.logaH = sol.N + np.log(sol.H)
         sol.w = self.w(sol.x, sol.y)
-        sol.N_tot = sol.N_end - sol.N_beg
-        sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
+        if sol.N_beg and sol.N_end:
+            sol.N_tot = sol.N_end - sol.N_beg
+            sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
 
         def derive_a0(Omega_K0, h, delta_reh=None, w_reh=None):
             """Derive the scale factor today `a_0` either from reheating or from `Omega_K0`."""

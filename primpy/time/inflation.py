@@ -2,6 +2,7 @@
 """:mod:`primpy.time.inflation`: differential equations for inflation w.r.t. time `t`."""
 from warnings import warn
 import numpy as np
+from primpy.equations import Equations
 from primpy.inflation import InflationEquations
 
 
@@ -61,15 +62,17 @@ class InflationEquationsT(InflationEquations):
 
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
-        sol = super(InflationEquationsT, self).sol(sol, **kwargs)
+        sol = Equations.sol(self, sol, **kwargs)
+        print(sol)
         self.postprocessing_inflation_start(sol)
         self.postporcessing_inflation_end(sol)
+        sol = super(InflationEquationsT, self).sol(sol, **kwargs)
         return sol
 
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""
         # Case 1: Universe has collapsed
-        if 'Collapse_dir0_term1' in sol.t_events and sol.t_events['Collapse_dir0_term1'].size > 0:
+        if 'Collapse' in sol.t_events and sol.t_events['Collapse'].size > 0:
             sol.t_beg = np.nan
             sol.N_beg = np.nan
         # Case 1: inflating from the start
@@ -79,7 +82,7 @@ class InflationEquationsT(InflationEquations):
         # Case 2: there is a transition from non-inflating to inflating
         elif 'Inflation_dir1_term0' in sol.t_events:
             sol.t_beg = sol.t_events['Inflation_dir1_term0'][0]
-            sol.N_beg = sol.N[sol.t == sol.t_beg]
+            sol.N_beg = sol.y_events['Inflation_dir1_term0'][self.idx['N'], 0]
         else:
             warn("In order to calculate quantities such as `N_tot`, "
                  "make sure to track the event InflationEvent(ic.equations, direction=1).")
@@ -87,16 +90,25 @@ class InflationEquationsT(InflationEquations):
     def postporcessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
         # end of inflation is first transition from inflating to non-inflating
-        if 'Inflation_dir-1_term1' in sol.t_events:
+        if ('Inflation_dir-1_term1' in sol.t_events
+                and sol.t_events['Inflation_dir-1_term1'].size > 0):
             sol.t_end = sol.t_events['Inflation_dir-1_term1'][0]
-        elif 'Inflation_dir-1_term0' in sol.t_events:
+            sol.N_end = sol.y_events['Inflation_dir-1_term1'][self.idx['N'], 0]
+            sol.phi_end = sol.y_events['Inflation_dir-1_term1'][self.idx['phi'], 0]
+        elif ('Inflation_dir-1_term0' in sol.t_events
+              and sol.t_events['Inflation_dir-1_term0'].size > 0):
             sol.t_end = sol.t_events['Inflation_dir-1_term0'][0]
+            sol.N_end = sol.y_events['Inflation_dir-1_term0'][self.idx['N'], 0]
+            sol.phi_end = sol.y_events['Inflation_dir-1_term0'][self.idx['phi'], 0]
         # Case: inflation did not end
         elif self.inflating(sol.x[-1], sol.y[:, -1]) <= 0:
             sol.t_end = sol.t[-1]
         else:
+            sol.t_end = np.nan
+            sol.N_end = np.nan
+            sol.phi_end = np.nan
+            sol.V_end = np.nan
             warn("In order to calculate quantities such as `N_tot`, "
                  "make sure to track the event InflationEvent(ic.equations, direction=-1).")
-        sol.N_end = sol.N[sol.t == sol.t_end]
-        sol.phi_end = sol.phi[sol.t == sol.t_end]
-        sol.V_end = sol.potential.V(sol.phi_end)
+        if sol.phi_end:
+            sol.V_end = self.potential.V(sol.phi_end)
