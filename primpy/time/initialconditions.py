@@ -23,7 +23,7 @@ class InflationStartIC_NiPi(object):
         self.equations = InflationEquationsT(K=K, potential=potential)
 
     def __call__(self, y0, **ivp_kwargs):
-        """Background equations of inflation for `N`, `phi` and `dphidt` w.r.t. time `t`."""
+        """Set background equations of inflation for `N`, `phi` and `dphidt` w.r.t. time `t`."""
         N_i = self.N_i
         phi_i = self.phi_i
         V_i = self.potential.V(phi_i)
@@ -39,7 +39,9 @@ class InflationStartIC_NiPi(object):
 
 class ISIC_mtN(InflationStartIC_NiPi):
     """Inflation start initial conditions given potential mass/Lambda, N_tot, and N_i."""
-    def __init__(self, t_i, mass, N_tot, N_i, phi_i_bracket, K, Potential, t_end=1e300, verbose=False):
+
+    def __init__(self, t_i, mass, N_tot, N_i, phi_i_bracket, K, Potential, t_end=1e300,
+                 verbose=False):
         super(ISIC_mtN, self).__init__(t_i=t_i,
                                        N_i=N_i,
                                        phi_i=phi_i_bracket[-1],
@@ -51,12 +53,13 @@ class ISIC_mtN(InflationStartIC_NiPi):
         self.verbose = verbose
 
     def __call__(self, y0, **ivp_kwargs):
+        """Set background equations of inflation w.r.t. time, optimizing for `N_tot`."""
         events = [InflationEvent(self.equations, direction=+1, terminal=False),
                   InflationEvent(self.equations, direction=-1, terminal=True),
                   CollapseEvent(self.equations)]
 
         def phii2Ntot(phi_i, kwargs):
-            """Helper function for scipy's optimize."""
+            """Convert input `phi_i` to `N_tot`."""
             ic = InflationStartIC_NiPi(t_i=self.x_ini,
                                        N_i=self.N_i,
                                        phi_i=phi_i,

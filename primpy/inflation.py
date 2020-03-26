@@ -179,7 +179,7 @@ class InflationEquations(Equations, ABC):
         def derive_approx_ns(x0=np.log(K_STAR), dx=np.log(K_STAR)/10, order=9):
             """Derive the spectral index `n_s` from `P_s_approx`."""
             def logP(logk):
-                """Help function for scipy's derivative."""
+                """Return log of PPS `P` w.r.t. log of wavenumber `k`."""
                 return np.log(sol.P_s_approx(np.exp(logk)))
 
             sol.n_s = 1 + derivative(func=logP, x0=x0, dx=dx, n=1, order=order)
@@ -188,7 +188,7 @@ class InflationEquations(Equations, ABC):
         def derive_approx_nrun(x0=np.log(K_STAR), dx=np.log(K_STAR)/10., order=9):
             """Derive the running of the spectral index `n_run` from `P_s_approx`."""
             def logP(logk):
-                """Help function for scipy's derivative."""
+                """Return log of PPS `P` w.r.t. log of wavenumber `k`."""
                 return np.log(sol.P_s_approx(np.exp(logk)))
 
             sol.n_run = derivative(func=logP, x0=x0, dx=dx, n=2, order=order)
