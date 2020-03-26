@@ -22,7 +22,7 @@ class InflationStartIC_NiPi(object):
         self.potential = potential
         self.equations = InflationEquationsT(K=K, potential=potential)
 
-    def __call__(self, y0):
+    def __call__(self, y0, **ivp_kwargs):
         """Background equations of inflation for `N`, `phi` and `dphidt` w.r.t. time `t`."""
         N_i = self.N_i
         phi_i = self.phi_i
