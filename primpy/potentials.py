@@ -93,20 +93,20 @@ class QuadraticPotential(InflationaryPotential):
     """Quadratic potential: `V(phi) = 0.5 * m**2 * phi**2`."""
 
     def __init__(self, m):
-        self.m = m
+        self.mass = m
         super(QuadraticPotential, self).__init__()
 
     def V(self, phi):
         """`V(phi) = 0.5 * m**2 * phi**2`."""
-        return self.m**2 * phi**2 / 2
+        return self.mass**2 * phi**2 / 2
 
     def dV(self, phi):
         """`V'(phi) = m**2 phi`."""
-        return self.m**2 * phi
+        return self.mass**2 * phi
 
     def d2V(self, phi):
         """`V''(phi) = m**2`."""
-        return self.m**2
+        return self.mass**2
 
     def d3V(self, phi):
         """`V'''(phi) = 0`."""
@@ -114,7 +114,7 @@ class QuadraticPotential(InflationaryPotential):
 
     def inv_V(self, V):
         """`phi(V) = sqrt(2 * V) / m`."""
-        return np.sqrt(2 * V) / self.m
+        return np.sqrt(2 * V) / self.mass
 
     @staticmethod
     def As2mass(A_s, N_star):
