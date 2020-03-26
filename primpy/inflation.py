@@ -49,8 +49,8 @@ class InflationEquations(Equations, ABC):
         if not hasattr(sol, 'logaH'):
             sol.logaH = sol.N + np.log(sol.H)
         sol.w = self.w(sol.x, sol.y)
-        if sol.N_beg and sol.N_end:
-            sol.N_tot = sol.N_end - sol.N_beg
+        sol.N_tot = sol.N_end - sol.N_beg
+        if np.isfinite(sol.N_beg) and np.isfinite(sol.N_end):
             sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
 
         def derive_a0(Omega_K0, h, delta_reh=None, w_reh=None):

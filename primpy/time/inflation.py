@@ -70,10 +70,10 @@ class InflationEquationsT(InflationEquations):
 
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""
+        sol.t_beg = np.nan
+        sol.N_beg = np.nan
         # Case 1: Universe has collapsed
         if 'Collapse' in sol.t_events and sol.t_events['Collapse'].size > 0:
-            sol.t_beg = np.nan
-            sol.N_beg = np.nan
             warn("The universe has collapsed.")
         # Case 1: inflating from the start
         elif self.inflating(sol.x[0], sol.y[:, 0]) > 0:
@@ -84,20 +84,21 @@ class InflationEquationsT(InflationEquations):
               np.size(sol.t_events['Inflation_dir1_term0']) > 0):
             sol.t_beg = sol.t_events['Inflation_dir1_term0'][0]
             sol.N_beg = sol.y_events['Inflation_dir1_term0'][0, self.idx['N']]
-        else:
-            sol.t_beg = np.nan
-            sol.N_beg = np.nan
+        elif ('Inflation_dir1_term1' not in sol.t_events and
+              'Inflation_dir1_term0' not in sol.t_events):
             warn("Inflation start not determined. In order to calculate "
                  "quantities such as `N_tot`, make sure to track the event "
                  "InflationEvent(ic.equations, direction=+1).")
+        else:
+            warn("Inflation start not determined.")
 
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
-        # end of inflation is first transition from inflating to non-inflating
         sol.t_end = np.nan
         sol.N_end = np.nan
         sol.phi_end = np.nan
         sol.V_end = np.nan
+        # end of inflation is first transition from inflating to non-inflating
         for key in ['Inflation_dir-1_term1', 'Inflation_dir-1_term0']:
             if key in sol.t_events and sol.t_events[key].size > 0:
                 sol.t_end = sol.t_events[key][0]
@@ -107,15 +108,15 @@ class InflationEquationsT(InflationEquations):
         if np.isfinite(sol.phi_end):
             sol.V_end = self.potential.V(sol.phi_end)
         else:
-            # Case: inflation did not end
-            if self.inflating(sol.x[-1], sol.y[:, -1]) < 0:
-                warn("It seems that inflation has not ended. "
-                     "Increase `t_end` or decrease initial `phi`?")
-            elif ('Inflation_dir-1_term1' not in sol.t_events or
-                  'Inflation_dir-1_term0' not in sol.t_events):
+            if ('Inflation_dir-1_term1' not in sol.t_events
+                    and 'Inflation_dir-1_term0' not in sol.t_events):
                 warn("Inflation end not determined. In order to calculate "
                      "quantities such as `N_tot`, make sure to track the event "
                      "`InflationEvent(ic.equations, direction=-1)`.")
+            # Case: inflation did not end
+            elif self.inflating(sol.x[-1], sol.y[:, -1]) > 0:
+                warn("Inflation has not ended. Increase `t_end` or decrease initial `phi`? "
+                     "End stage: t[-1]=%g, N[-1]=%g, phi[-1]=%g, w[-1]=%g"
+                     % (sol.t[-1], sol.N[-1], sol.phi[-1], self.w(sol.x[-1], sol.y[:, -1])))
             else:
-                raise Exception("something unexpected has happend. This is the solution: "
-                                "sol = %s" % sol)
+                warn("Inflation end not determined.")

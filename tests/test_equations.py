@@ -8,9 +8,9 @@ from primpy.time.initialconditions import InflationStartIC_NiPi
 from primpy.solver import solve
 
 
-@pytest.mark.filterwarnings("ignore:.*It seems that inflation has not ended.*:UserWarning")
 @pytest.mark.filterwarnings("ignore:.*Inflation start not determined.*:UserWarning")
-def test_ordering_after_postprocessing():
+@pytest.mark.filterwarnings("ignore:.*Inflation end not determined.*:UserWarning")
+def test_equations_sol_ordering_after_postprocessing():
     t_i = 1e4
     N_i = 10
     phis = [17, 6]
@@ -29,9 +29,7 @@ def test_ordering_after_postprocessing():
             ev_foreward = [InflationEvent(ic_foreward.equations, +1, terminal=False),
                            InflationEvent(ic_foreward.equations, -1, terminal=True)]
             # stop when N = 0:
-            ev_backward = [UntilNEvent(ic_backward.equations, value=0, terminal=True),
-                           InflationEvent(ic_backward.equations, +1, terminal=False),
-                           InflationEvent(ic_backward.equations, -1, terminal=False)]
+            ev_backward = [UntilNEvent(ic_backward.equations, value=0, terminal=True)]
 
             bist_foreward = solve(ic=ic_foreward, events=ev_foreward)
             bist_backward = solve(ic=ic_backward, events=ev_backward)
