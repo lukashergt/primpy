@@ -63,7 +63,6 @@ class InflationEquationsT(InflationEquations):
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
         sol = Equations.sol(self, sol, **kwargs)
-        print(sol)
         self.postprocessing_inflation_start(sol)
         self.postprocessing_inflation_end(sol)
         sol = super(InflationEquationsT, self).sol(sol, **kwargs)
@@ -83,7 +82,7 @@ class InflationEquationsT(InflationEquations):
         # Case 2: there is a transition from non-inflating to inflating
         elif 'Inflation_dir1_term0' in sol.t_events:
             sol.t_beg = sol.t_events['Inflation_dir1_term0'][0]
-            sol.N_beg = sol.y_events['Inflation_dir1_term0'][self.idx['N'], 0]
+            sol.N_beg = sol.y_events['Inflation_dir1_term0'][0, self.idx['N']]
         else:
             sol.t_beg = np.nan
             sol.N_beg = np.nan
@@ -93,19 +92,19 @@ class InflationEquationsT(InflationEquations):
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
         # end of inflation is first transition from inflating to non-inflating
+        sol.t_end = np.nan
+        sol.N_end = np.nan
+        sol.phi_end = np.nan
+        sol.V_end = np.nan
         for key in ['Inflation_dir-1_term1', 'Inflation_dir-1_term0']:
             if key in sol.t_events and sol.t_events[key].size > 0:
                 sol.t_end = sol.t_events[key][0]
-                sol.N_end = sol.y_events[key][self.idx['N'], 0]
-                sol.phi_end = sol.y_events[key][self.idx['phi'], 0]
+                sol.N_end = sol.y_events[key][0, self.idx['N']]
+                sol.phi_end = sol.y_events[key][0, self.idx['phi']]
                 break
         if np.isfinite(sol.phi_end):
             sol.V_end = self.potential.V(sol.phi_end)
         else:
-            sol.t_end = np.nan
-            sol.N_end = np.nan
-            sol.phi_end = np.nan
-            sol.V_end = np.nan
             # Case: inflation did not end
             if self.inflating(sol.x[-1], sol.y[:, -1]) <= 0:
                 warn("It seems that inflation has not ended. "
