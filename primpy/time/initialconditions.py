@@ -39,7 +39,7 @@ class InflationStartIC_NiPi(object):
 
 class ISIC_mtN(InflationStartIC_NiPi):
     """Inflation start initial conditions given potential mass/Lambda, N_tot, and N_i."""
-    def __init__(self, t_i, mass, N_tot, N_i, phi_i_bracket, K, Potential, t_end=1e300):
+    def __init__(self, t_i, mass, N_tot, N_i, phi_i_bracket, K, Potential, t_end=1e300, verbose=False):
         super(ISIC_mtN, self).__init__(t_i=t_i,
                                        N_i=N_i,
                                        phi_i=phi_i_bracket[-1],
@@ -48,6 +48,7 @@ class ISIC_mtN(InflationStartIC_NiPi):
                                        t_end=t_end)
         self.N_tot = N_tot
         self.phi_i_bracket = phi_i_bracket
+        self.verbose = verbose
 
     def __call__(self, y0, **ivp_kwargs):
         events = [InflationEvent(self.equations, direction=+1, terminal=False),
@@ -63,16 +64,20 @@ class ISIC_mtN(InflationStartIC_NiPi):
                                        potential=self.potential,
                                        t_end=self.x_end)
             sol = solve(ic, events=events, **kwargs)
-            if np.size(sol.t_events['Collapse']) > 0:
-                return 0 - self.N_tot
-            elif sol.success:
-                sol.total_efolds()
+            if np.isfinite(sol.N_tot):
+                if self.verbose:
+                    print("N_tot = %.15g" % sol.N_tot)
                 return sol.N_tot - self.N_tot
             else:
-                print("sol = %s" % sol)
-                raise Exception("solve_ivp failed with message: %s" % sol.message)
+                if np.size(sol.t_events['Collapse']) > 0:
+                    return 0 - self.N_tot
+                else:
+                    print("sol = %s" % sol)
+                    raise Exception("solve_ivp failed with message: %s" % sol.message)
 
         output = root_scalar(phii2Ntot, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
+        if self.verbose:
+            print(output)
         phi_i_new = output.root
         super(ISIC_mtN, self).__init__(t_i=self.x_ini,
                                        N_i=self.N_i,
