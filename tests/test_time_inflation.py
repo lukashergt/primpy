@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Tests for `primpy.potential` module."""
+"""Tests for `primpy.time.inflation` module."""
 import pytest
 import numpy as np
 from primpy.potentials import QuadraticPotential
