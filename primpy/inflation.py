@@ -176,32 +176,31 @@ class InflationEquations(Equations, ABC):
             derive_approx_r()
             derive_approx_As()
 
-        def derive_approx_ns():
+        def derive_approx_ns(x0=np.log(K_STAR), dx=np.log(K_STAR)/10, order=9):
             """Derive the spectral index `n_s` from `P_s_approx`."""
             def logP(logk):
                 """Help function for scipy's derivative."""
                 return np.log(sol.P_s_approx(np.exp(logk)))
 
-            sol.n_s = 1 + derivative(func=logP, x0=np.log(K_STAR),
-                                     dx=np.log(K_STAR)/10, n=1, order=9)
+            sol.n_s = 1 + derivative(func=logP, x0=x0, dx=dx, n=1, order=order)
+            return sol.n_s
 
-        def derive_approx_nrun(dx=np.log(K_STAR)/10., order=9):
+        def derive_approx_nrun(x0=np.log(K_STAR), dx=np.log(K_STAR)/10., order=9):
             """Derive the running of the spectral index `n_run` from `P_s_approx`."""
             def logP(logk):
                 """Help function for scipy's derivative."""
                 return np.log(sol.P_s_approx(np.exp(logk)))
 
-            sol.n_run = derivative(func=logP, x0=np.log(K_STAR), dx=dx, n=2,
-                                   order=order)
-            return sol.nrun
+            sol.n_run = derivative(func=logP, x0=x0, dx=dx, n=2, order=order)
+            return sol.n_run
 
-        def derive_approx_r():
+        def derive_approx_r(k_pivot=K_STAR):
             """Derive the tensor-to-scalar ratio `r` from `P_s_approx`."""
-            sol.r = sol.P_t_approx(K_STAR) / sol.P_s_approx(K_STAR)
+            sol.r = sol.P_t_approx(k_pivot) / sol.P_s_approx(k_pivot)
 
-        def derive_approx_As():
+        def derive_approx_As(k_pivot=K_STAR):
             """Derive the amplitude `A_s` from `P_s_approx`."""
-            sol.A_s = sol.P_s_approx(K_STAR)
+            sol.A_s = sol.P_s_approx(k_pivot)
 
         if self.K == 0:
             sol.derive_approx_power = calibrate_wavenumber_flat
