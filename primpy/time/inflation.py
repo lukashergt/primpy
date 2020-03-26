@@ -80,7 +80,8 @@ class InflationEquationsT(InflationEquations):
             sol.t_beg = sol.t[0]
             sol.N_beg = sol.N[0]
         # Case 2: there is a transition from non-inflating to inflating
-        elif 'Inflation_dir1_term0' in sol.t_events:
+        elif ('Inflation_dir1_term0' in sol.t_events and
+              np.size(sol.t_events['Inflation_dir1_term0']) > 0):
             sol.t_beg = sol.t_events['Inflation_dir1_term0'][0]
             sol.N_beg = sol.y_events['Inflation_dir1_term0'][0, self.idx['N']]
         else:
