@@ -45,14 +45,14 @@ class Equations(ABC):
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
         sol.x = sol.t
-        x, idx_x_unique = np.unique(sol.t, return_index=True)
-        sol.idx_x_unique = idx_x_unique
         del sol.t
+        sol.y_events = dict(zip(sol.event_keys, sol.pop('y_events')))
+        # TODO: split y_events into N_events, phi_events etc.
         for name, i in self.idx.items():
-            setattr(sol, name, sol.y[i, idx_x_unique])
+            setattr(sol, name, sol.y[i])
         x_name = self.independent_variable
         setattr(sol, x_name + '_events', dict(zip(sol.event_keys, sol.pop('t_events'))))
-        setattr(sol, x_name, x)
+        setattr(sol, x_name, sol.x)
         return sol
 
     def _set_independent_variable(self, name):
