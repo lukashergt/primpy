@@ -27,8 +27,10 @@ def solve(ic, *args, **kwargs):
     """
     events = kwargs.pop('events', [])
     y0 = np.zeros(len(ic.equations.idx))
-    ic(y0=y0, **kwargs)
+    rtol = kwargs.pop('rtol', 1e-6)
+    atol = kwargs.pop('atol', 1e-10)
+    ic(y0=y0, rtol=rtol, atol=atol, **kwargs)
     sol = integrate.solve_ivp(ic.equations, (ic.x_ini, ic.x_end), y0, events=events,
-                              *args, **kwargs)
+                              rtol=rtol, atol=atol, *args, **kwargs)
     sol.event_keys = [e.name for e in events]
     return ic.equations.sol(sol)
