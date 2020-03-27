@@ -92,8 +92,8 @@ class InflationaryPotential(object):
 class QuadraticPotential(InflationaryPotential):
     """Quadratic potential: `V(phi) = 0.5 * m**2 * phi**2`."""
 
-    def __init__(self, m):
-        self.mass = m
+    def __init__(self, mass):
+        self.mass = mass
         super(QuadraticPotential, self).__init__()
 
     def V(self, phi):

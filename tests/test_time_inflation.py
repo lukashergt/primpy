@@ -19,7 +19,7 @@ def test_postprocessing_inflation_start_warnings():
     t_i = 1e4
     N_i = 10
     phi_i = 17
-    pot = QuadraticPotential(m=6e-6)
+    pot = QuadraticPotential(mass=6e-6)
     for K in [-1, 0, +1]:
         # TODO: add KD initial conditions and test for collapse
 
@@ -54,7 +54,7 @@ def test_postprocessing_inflation_end_warnings():
     t_i = 1e4
     N_i = 10
     phi_i = 17
-    pot = QuadraticPotential(m=6e-6)
+    pot = QuadraticPotential(mass=6e-6)
     for K in [-1, 0, +1]:
         # set t_end earlier to trigger "inflation not ended warning:
         ic_early_end = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot,

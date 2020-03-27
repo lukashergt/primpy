@@ -11,7 +11,7 @@ def test_InflationStartIC_NiPi():
     t_i = 1e4
     N_i = 10
     phi_i = 17
-    pots = [QuadraticPotential(m=6e-6), StarobinskyPotential(Lambda=5e-2)]
+    pots = [QuadraticPotential(mass=6e-6), StarobinskyPotential(Lambda=5e-2)]
     for K in [-1, 0, +1]:
         for i, pot in enumerate(pots):
             ic = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot)

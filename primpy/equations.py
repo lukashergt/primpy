@@ -47,6 +47,7 @@ class Equations(ABC):
         sol.x = sol.t
         del sol.t
         sol.y_events = dict(zip(sol.event_keys, sol.pop('y_events')))
+        # TODO: split y_events into N_events, phi_events etc.
         for name, i in self.idx.items():
             setattr(sol, name, sol.y[i])
         x_name = self.independent_variable

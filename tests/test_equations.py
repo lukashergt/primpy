@@ -14,7 +14,7 @@ def test_equations_sol_ordering_after_postprocessing():
     t_i = 1e4
     N_i = 10
     phis = [17, 6]
-    pots = [QuadraticPotential(m=6e-6), StarobinskyPotential(Lambda=5e-2)]
+    pots = [QuadraticPotential(mass=6e-6), StarobinskyPotential(Lambda=5e-2)]
     for K in [-1, 0, +1]:
         for i, pot in enumerate(pots):
             phi_i = phis[i]
