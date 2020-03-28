@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 """Tests for `primpy.inflation` module."""
 import pytest
+from pytest import approx
 import numpy as np
 from primpy.potentials import QuadraticPotential
 from primpy.events import InflationEvent, UntilNEvent
 from primpy.time.initialconditions import InflationStartIC_NiPi, ISIC_msNO
 from primpy.inflation import InflationEquations
+from primpy.time.inflation import InflationEquationsT
+from primpy.efolds.inflation import InflationEquationsN
 from primpy.solver import solve
 
 
@@ -49,6 +52,34 @@ def test_w_not_implemented_error():
 def test_inflating_not_implemented_error():
     eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
     eq.inflating(x=0, y=np.zeros(4))
+
+
+def test_basic_methods_time_vs_efolds():
+    tol = 1e-12
+    t = 1
+    N = 10
+    phi = 20
+    for K in [-1, 0, 1]:
+        for mass in [1, 6e-6]:
+            pot = QuadraticPotential(mass=mass)
+            for dphidt_squared in [100 * pot.V(phi), 2 * pot.V(phi), pot.V(phi), pot.V(phi) / 100]:
+                dphidt = -np.sqrt(dphidt_squared)
+                eq_t = InflationEquationsT(K=K, potential=QuadraticPotential(mass=mass))
+                eq_N = InflationEquationsN(K=K, potential=QuadraticPotential(mass=mass))
+                assert eq_t.idx['N'] == 0
+                assert eq_t.idx['phi'] == 1
+                assert eq_t.idx['dphidt'] == 2
+                assert eq_N.idx['phi'] == 0
+                assert eq_N.idx['dphidN'] == 1
+                y1_t = np.array([N, phi, dphidt])
+                y1_N = np.array([phi, dphidt / eq_t.H(t, y1_t)])
+                assert eq_t.H2(t, y1_t) == approx(eq_N.H2(N, y1_N), rel=tol, abs=tol)
+                assert eq_t.H(t, y1_t) == approx(eq_N.H(N, y1_N), rel=tol, abs=tol)
+                assert eq_t.V(t, y1_t) == approx(eq_N.V(N, y1_N), rel=tol, abs=tol)
+                assert eq_t.dVdphi(t, y1_t) == approx(eq_N.dVdphi(N, y1_N), rel=tol, abs=tol)
+                assert eq_t.d2Vdphi2(t, y1_t) == approx(eq_N.d2Vdphi2(N, y1_N), rel=tol, abs=tol)
+                assert eq_t.w(t, y1_t) == approx(eq_N.w(N, y1_N), rel=tol, abs=tol)
+                assert eq_t.inflating(t, y1_t) == approx(eq_N.inflating(N, y1_N), rel=tol, abs=tol)
 
 
 def nan_inflation_start(background_sol):
