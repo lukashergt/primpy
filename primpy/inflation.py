@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """:mod:`primpy.inflation`: general setup for equations for cosmic inflation."""
+from warnings import warn
 from abc import ABC
 import numpy as np
 from scipy.interpolate import interp1d
@@ -41,8 +42,62 @@ class InflationEquations(Equations, ABC):
         """Equation of state parameter."""
         raise NotImplementedError("Equations must define w method")
 
+    def inflating(self, x, y):
+        """Inflation diagnostic for event tracking."""
+        raise NotImplementedError("Equations must define inflating method")
+
+    def postprocessing_inflation_start(self, sol):
+        """Extract starting point of inflation from event tracking."""
+        sol.N_beg = np.nan
+        # Case 1: Universe has collapsed
+        if 'Collapse' in sol.N_events and sol.N_events['Collapse'].size > 0:
+            warn("The universe has collapsed.")
+        # Case 1: inflating from the start
+        elif self.inflating(sol.x[0], sol.y[:, 0]) > 0:
+            sol.N_beg = sol.N[0]
+        # Case 2: there is a transition from non-inflating to inflating
+        elif ('Inflation_dir1_term0' in sol.N_events and
+              np.size(sol.N_events['Inflation_dir1_term0']) > 0):
+            sol.N_beg = sol.N_events['Inflation_dir1_term0'][0]
+        elif 'Inflation_dir1_term0' not in sol.N_events:
+            warn("Inflation start not determined. In order to calculate "
+                 "quantities such as `N_tot`, make sure to track the event "
+                 "InflationEvent(ic.equations, direction=+1, terminal=False).")
+        else:
+            warn("Inflation start not determined.")
+
+    def postprocessing_inflation_end(self, sol):
+        """Extract end point of inflation from event tracking."""
+        sol.N_end = np.nan
+        sol.phi_end = np.nan
+        sol.V_end = np.nan
+        # end of inflation is first transition from inflating to non-inflating
+        for key in ['Inflation_dir-1_term1', 'Inflation_dir-1_term0']:
+            if key in sol.N_events and sol.N_events[key].size > 0:
+                sol.N_end = sol.N_events[key][0]
+                sol.phi_end = sol.phi_events[key][0]
+                break
+        if np.isfinite(sol.phi_end):
+            sol.V_end = self.potential.V(sol.phi_end)
+        else:
+            if ('Inflation_dir-1_term1' not in sol.N_events
+                    and 'Inflation_dir-1_term0' not in sol.N_events):
+                warn("Inflation end not determined. In order to calculate "
+                     "quantities such as `N_tot`, make sure to track the event "
+                     "`InflationEvent(ic.equations, direction=-1)`.")
+            # Case: inflation did not end
+            elif self.inflating(sol.x[-1], sol.y[:, -1]) > 0:
+                warn("Inflation has not ended. Increase `t_end`/`N_end` or decrease initial `phi`?"
+                     " End stage: t[-1]=%g, N[-1]=%g, phi[-1]=%g, w[-1]=%g"
+                     % (sol.t[-1], sol.N[-1], sol.phi[-1], self.w(sol.x[-1], sol.y[:, -1])))
+            else:
+                warn("Inflation end not determined.")
+
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
+        sol = super(InflationEquations, self).sol(sol, **kwargs)
+        self.postprocessing_inflation_start(sol)
+        self.postprocessing_inflation_end(sol)
         sol.K = self.K
         sol.potential = self.potential
         sol.H = self.H(sol.x, sol.y)

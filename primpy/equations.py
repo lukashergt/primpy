@@ -50,6 +50,8 @@ class Equations(ABC):
         # TODO: split y_events into N_events, phi_events etc.
         for name, i in self.idx.items():
             setattr(sol, name, sol.y[i])
+            setattr(sol, name + '_events', {key: value[:, i] if value.size > 0 else np.array([])
+                                            for key, value in sol.y_events.items()})
         x_name = self.independent_variable
         setattr(sol, x_name + '_events', dict(zip(sol.event_keys, sol.pop('t_events'))))
         setattr(sol, x_name, sol.x)
