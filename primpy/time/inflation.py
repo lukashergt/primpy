@@ -26,7 +26,7 @@ class InflationEquationsT(InflationEquations):
         self.add_variable('N', 'phi', 'dphidt', 'eta')
 
     def __call__(self, x, y):
-        """System of coupled ODE."""
+        """System of coupled ODEs for underlying variables."""
         N = self.N(x, y)
         H = self.H(x, y)
         dphidt = self.dphidt(x, y)

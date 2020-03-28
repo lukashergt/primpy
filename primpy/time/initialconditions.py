@@ -20,16 +20,15 @@ class InflationStartIC_NiPi(object):
         self.N_i = N_i
         self.phi_i = phi_i
         self.equations = InflationEquationsT(K=K, potential=potential)
+        self.dphidt = -np.sqrt(potential.V(phi_i))
         self.aH_i = np.sqrt(potential.V(phi_i) / 2 * np.exp(2 * N_i) - K)
         self.Omega_Ki = -K / self.aH_i**2
 
     def __call__(self, y0, **ivp_kwargs):
         """Set background equations of inflation for `N`, `phi` and `dphidt` w.r.t. time `t`."""
-        phi_i = self.phi_i
-        V_i = self.equations.potential.V(phi_i)
         y0[self.equations.idx['N']] = self.N_i
-        y0[self.equations.idx['phi']] = phi_i
-        y0[self.equations.idx['dphidt']] = -np.sqrt(V_i)
+        y0[self.equations.idx['phi']] = self.phi_i
+        y0[self.equations.idx['dphidt']] = self.dphidt
 
 
 class ISIC_mtN(InflationStartIC_NiPi):
