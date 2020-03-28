@@ -29,6 +29,7 @@ class InflationStartIC_NiPi(object):
         y0[self.equations.idx['N']] = self.N_i
         y0[self.equations.idx['phi']] = self.phi_i
         y0[self.equations.idx['dphidt']] = self.dphidt
+        # TODO: add time and eta here
 
 
 class ISIC_mtN(InflationStartIC_NiPi):
@@ -66,7 +67,7 @@ class ISIC_mtN(InflationStartIC_NiPi):
                     print("N_tot = %.15g" % sol.N_tot)
                 return sol.N_tot - self.N_tot
             else:
-                if np.size(sol.t_events['Collapse']) > 0:
+                if np.size(sol.N_events['Collapse']) > 0:
                     return 0 - self.N_tot
                 else:
                     print("sol = %s" % sol)
