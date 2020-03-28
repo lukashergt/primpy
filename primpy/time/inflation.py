@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """:mod:`primpy.time.inflation`: differential equations for inflation w.r.t. time `t`."""
-from warnings import warn
 import numpy as np
-from primpy.equations import Equations
 from primpy.inflation import InflationEquations
 
 
