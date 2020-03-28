@@ -42,7 +42,7 @@ class InflationEquations(Equations, ABC):
         """Equation of state parameter."""
         raise NotImplementedError("Equations must define w method")
 
-    def inflating(self, t, y):
+    def inflating(self, x, y):
         """Inflation diagnostic for event tracking."""
         raise NotImplementedError("Equations must define inflating method")
 

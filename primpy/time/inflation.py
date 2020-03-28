@@ -27,12 +27,12 @@ class InflationEquationsT(InflationEquations):
         self._set_independent_variable('t')
         self.add_variable('N', 'phi', 'dphidt', 'eta')
 
-    def __call__(self, t, y):
+    def __call__(self, x, y):
         """System of coupled ODE."""
-        N = self.N(t, y)
-        H = self.H(t, y)
-        dphidt = self.dphidt(t, y)
-        dVdphi = self.dVdphi(t, y)
+        N = self.N(x, y)
+        H = self.H(x, y)
+        dphidt = self.dphidt(x, y)
+        dVdphi = self.dVdphi(x, y)
 
         dy = np.zeros_like(y)
         dy[self.idx['N']] = H
@@ -41,24 +41,24 @@ class InflationEquationsT(InflationEquations):
         dy[self.idx['eta']] = np.exp(-N)
         return dy
 
-    def H2(self, t, y):
+    def H2(self, x, y):
         """Compute the square of the Hubble parameter using the Friedmann equation."""
-        N = self.N(t, y)
-        V = self.V(t, y)
-        dphidt = self.dphidt(t, y)
+        N = self.N(x, y)
+        V = self.V(x, y)
+        dphidt = self.dphidt(x, y)
         return (dphidt**2 / 2 + V) / 3 - self.K * np.exp(-2 * N)
 
-    def inflating(self, t, y):
-        """Inflation diagnostic for event tracking."""
-        return self.V(t, y) - self.dphidt(t, y)**2
-
-    def w(self, t, y):
+    def w(self, x, y):
         """Compute the equation of state parameter."""
-        V = self.V(t, y)
-        dphidt = self.dphidt(t, y)
+        V = self.V(x, y)
+        dphidt = self.dphidt(x, y)
         p = dphidt**2 / 2 - V
         rho = dphidt**2 / 2 + V
         return p / rho
+
+    def inflating(self, x, y):
+        """Inflation diagnostic for event tracking."""
+        return self.V(x, y) - self.dphidt(x, y)**2
 
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""

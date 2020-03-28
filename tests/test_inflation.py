@@ -5,7 +5,50 @@ import numpy as np
 from primpy.potentials import QuadraticPotential
 from primpy.events import InflationEvent, UntilNEvent
 from primpy.time.initialconditions import InflationStartIC_NiPi, ISIC_msNO
+from primpy.inflation import InflationEquations
 from primpy.solver import solve
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_H_not_implemented_error():
+    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq.H(x=0, y=np.zeros(4))
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_H2_not_implemented_error():
+    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq.H2(x=0, y=np.zeros(4))
+
+
+@pytest.mark.xfail(raises=AttributeError)
+def test_V_attribute_error():
+    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq.V(x=0, y=np.zeros(4))
+
+
+@pytest.mark.xfail(raises=AttributeError)
+def test_dVdphi_attribute_error():
+    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq.dVdphi(x=0, y=np.zeros(4))
+
+
+@pytest.mark.xfail(raises=AttributeError)
+def test_d2Vdphi2_attribute_error():
+    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq.d2Vdphi2(x=0, y=np.zeros(4))
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_w_not_implemented_error():
+    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq.w(x=0, y=np.zeros(4))
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_inflating_not_implemented_error():
+    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq.inflating(x=0, y=np.zeros(4))
 
 
 def nan_inflation_start(background_sol):
