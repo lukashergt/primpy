@@ -6,6 +6,7 @@ from scipy.interpolate import interp1d
 import numpy as np
 from numpy.testing import assert_allclose
 from primpy.units import Mpc_m, lp_m
+from primpy.parameters import K_STAR
 from primpy.potentials import QuadraticPotential
 from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
@@ -192,6 +193,30 @@ def test_postprocessing_inflation_end_warnings():
             with pytest.warns(UserWarning, match="Inflation end not determined. In order to"):
                 bist = solve(ic=ic, events=ev_no_end)
             nan_inflation_end(background_sol=bist)
+
+
+@pytest.mark.filterwarnings("ignore:invalid value encountered:RuntimeWarning")
+@pytest.mark.filterwarnings("ignore:divide by zero encountered in log:RuntimeWarning")
+def test_Ncross_nan():
+    pot = QuadraticPotential(mass=6e-6)
+    N_i = 18
+    phi_i = 15
+    t_i = 7e4
+    h = 0.7
+    for K in [-1, +1]:
+        for eq in [InflationEquationsT(K=K, potential=pot),
+                   InflationEquationsN(K=K, potential=pot)]:
+            Omega_K0 = -K * 0.1
+            ic = InflationStartIC_NiPi(eq, N_i, phi_i, t_i)
+            ev = [InflationEvent(eq, +1, terminal=False),
+                  InflationEvent(eq, -1, terminal=True)]
+            b_sol = solve(ic=ic, events=ev)
+            print(b_sol.N_tot)
+            b_sol.derive_approx_power(Omega_K0=Omega_K0, h=h)
+            assert np.log(K_STAR) < np.min(b_sol.logk)
+            assert np.isnan(b_sol.N_cross)
+            assert np.isnan(b_sol.N_star)
+            assert np.isnan(b_sol.N_dagg)
 
 
 def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():

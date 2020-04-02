@@ -68,7 +68,7 @@ def test_ISIC_NiNt():
                 assert pytest.approx(bist.N_tot) == N_tot
             elif isinstance(eq, InflationEquationsN):
                 bisn = solve(ic=ic, events=ev, rtol=1e-10, atol=1e-10)
-                assert pytest.approx(bisn.N_tot, rel=1e-5, abs=1e-5) == N_tot
+                assert pytest.approx(bisn.N_tot, rel=1e-6, abs=1e-6) == N_tot
 
 
 def test_ISIC_NiNsOk():
@@ -100,4 +100,4 @@ def test_ISIC_NiNsOk():
                     bisn = solve(ic=ic, events=ev, rtol=1e-10, atol=1e-10)
                     assert bisn.N_tot > N_star
                     bisn.derive_approx_power(Omega_K0=Omega_K0, h=h)
-                    assert pytest.approx(bisn.N_star, rel=1e-5, abs=1e-5) == N_star
+                    assert pytest.approx(bisn.N_star, rel=1e-6, abs=1e-6) == N_star
