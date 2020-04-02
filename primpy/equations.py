@@ -46,13 +46,13 @@ class Equations(ABC):
         """Post-processing of `solve_ivp` solution."""
         sol.x = sol.t
         del sol.t
+        x_name = self.independent_variable
+        setattr(sol, x_name + '_events', dict(zip(sol.event_keys, sol.pop('t_events'))))
         sol.y_events = dict(zip(sol.event_keys, sol.pop('y_events')))
         for name, i in self.idx.items():
             setattr(sol, name, sol.y[i])
             setattr(sol, name + '_events', {key: value[:, i] if value.size > 0 else np.array([])
                                             for key, value in sol.y_events.items()})
-        x_name = self.independent_variable
-        setattr(sol, x_name + '_events', dict(zip(sol.event_keys, sol.pop('t_events'))))
         setattr(sol, x_name, sol.x)
         return sol
 
