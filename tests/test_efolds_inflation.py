@@ -8,6 +8,8 @@ from primpy.efolds.inflation import InflationEquationsN
 def test_basic_methods():
     for K in [-1, 0, 1]:
         eq = InflationEquationsN(K=K, potential=QuadraticPotential(mass=1))
+        assert hasattr(eq, 'phi')
+        assert hasattr(eq, 'dphidN')
         y0 = np.zeros(len(eq.idx))
         assert eq.H2(x=0, y=y0) == -K
         y1 = np.ones(len(eq.idx))

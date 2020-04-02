@@ -20,10 +20,13 @@ class InflationEquationsT(InflationEquations):
 
     """
 
-    def __init__(self, K, potential):
+    def __init__(self, K, potential, track_eta=False):
         super(InflationEquationsT, self).__init__(K=K, potential=potential)
         self._set_independent_variable('t')
-        self.add_variable('N', 'phi', 'dphidt', 'eta')
+        self.add_variable('phi', 'dphidt', 'N')
+        self.track_eta = track_eta
+        if track_eta:
+            self.add_variable('eta')
 
     def __call__(self, x, y):
         """System of coupled ODEs for underlying variables."""
@@ -33,10 +36,11 @@ class InflationEquationsT(InflationEquations):
         dVdphi = self.dVdphi(x, y)
 
         dy = np.zeros_like(y)
-        dy[self.idx['N']] = H
         dy[self.idx['phi']] = dphidt
         dy[self.idx['dphidt']] = -3 * H * dphidt - dVdphi
-        dy[self.idx['eta']] = np.exp(-N)
+        dy[self.idx['N']] = H
+        if self.track_eta:
+            dy[self.idx['eta']] = np.exp(-N)
         return dy
 
     def H2(self, x, y):

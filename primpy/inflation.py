@@ -24,7 +24,7 @@ class InflationEquations(Equations, ABC):
 
     def H2(self, x, y):
         """Hubble parameter squared."""
-        raise NotImplementedError("Equations must define H2 method")
+        raise NotImplementedError("Equations must define H2 method.")
 
     def V(self, x, y):
         """Inflationary Potential."""
@@ -40,31 +40,31 @@ class InflationEquations(Equations, ABC):
 
     def w(self, x, y):
         """Equation of state parameter."""
-        raise NotImplementedError("Equations must define w method")
+        raise NotImplementedError("Equations must define w method.")
 
     def inflating(self, x, y):
         """Inflation diagnostic for event tracking."""
-        raise NotImplementedError("Equations must define inflating method")
+        raise NotImplementedError("Equations must define inflating method.")
 
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""
         sol.N_beg = np.nan
-        # Case 1: Universe has collapsed
+        # Case 0: Universe has collapsed
         if 'Collapse' in sol.N_events and sol.N_events['Collapse'].size > 0:
             warn("The universe has collapsed.")
-        # Case 1: inflating from the start
-        elif self.inflating(sol.x[0], sol.y[:, 0]) > 0:
-            sol.N_beg = sol.N[0]
-        # Case 2: there is a transition from non-inflating to inflating
-        elif ('Inflation_dir1_term0' in sol.N_events and
-              np.size(sol.N_events['Inflation_dir1_term0']) > 0):
-            sol.N_beg = sol.N_events['Inflation_dir1_term0'][0]
-        elif 'Inflation_dir1_term0' not in sol.N_events:
+        elif 'Inflation_dir1_term0' in sol.N_events:
+            # Case 1: inflating from the start
+            if self.inflating(sol.x[0], sol.y[:, 0]) > 0:
+                sol.N_beg = sol.N[0]
+            # Case 2: there is a transition from non-inflating to inflating
+            elif np.size(sol.N_events['Inflation_dir1_term0']) > 0:
+                sol.N_beg = sol.N_events['Inflation_dir1_term0'][0]
+            else:
+                warn("Inflation start not determined.")
+        else:
             warn("Inflation start not determined. In order to calculate "
                  "quantities such as `N_tot`, make sure to track the event "
                  "InflationEvent(ic.equations, direction=+1, terminal=False).")
-        else:
-            warn("Inflation start not determined.")
 
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
