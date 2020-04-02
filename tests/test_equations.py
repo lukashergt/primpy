@@ -5,7 +5,8 @@ import numpy as np
 from numpy.testing import assert_equal
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, UntilNEvent, CollapseEvent
-from primpy.time.initialconditions import InflationStartIC_NiPi
+from primpy.time.inflation import InflationEquationsT
+from primpy.initialconditions import InflationStartIC_NiPi
 from primpy.solver import solve
 
 
@@ -21,10 +22,11 @@ def test_equations_sol_ordering_after_postprocessing():
             phi_i = phis[i]
 
             # integration forwards in time:
-            ic_forwards = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot)
+            eq = InflationEquationsT(K=K, potential=pot)
+            ic_forwards = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             # integration backward in time:
-            ic_backward = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot,
-                                                t_end=1)
+            ic_backward = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i,
+                                                x_end=1)
 
             # stop at end of inflation:
             ev_forwards = [InflationEvent(ic_forwards.equations, +1, terminal=False),
@@ -39,20 +41,20 @@ def test_equations_sol_ordering_after_postprocessing():
             assert np.all(np.diff(bist_forwards.x) > 0)
             assert np.all(np.diff(bist_forwards.t) > 0)
             # e-folds grow monotonically forwards in time
-            assert np.all(np.diff(bist_forwards.y[0]) > 0)
+            assert np.all(np.diff(bist_forwards.y[eq.idx['N']]) > 0)
             assert np.all(np.diff(bist_forwards.N) > 0)
             # phi shrinks monotonically forwards in time (from start to end of inflation)
-            assert np.all(np.diff(bist_forwards.y[1]) < 0)
+            assert np.all(np.diff(bist_forwards.y[eq.idx['phi']]) < 0)
             assert np.all(np.diff(bist_forwards.phi) < 0)
 
             # time shrinks monotonically backwards in time
             assert np.all(np.diff(bist_backward.x) < 0)
             assert np.all(np.diff(bist_backward.t) < 0)
             # e-folds shrink monotonically backwards in time
-            assert np.all(np.diff(bist_backward.y[0]) < 0)
+            assert np.all(np.diff(bist_backward.y[eq.idx['N']]) < 0)
             assert np.all(np.diff(bist_backward.N) < 0)
             # phi grows monotonically backwards in time (before start of inflation)
-            assert np.all(np.diff(bist_backward.y[1]) > 0)
+            assert np.all(np.diff(bist_backward.y[eq.idx['phi']]) > 0)
             assert np.all(np.diff(bist_backward.phi) > 0)
 
 
@@ -63,7 +65,8 @@ def test_equations_sol_events():
     pot = QuadraticPotential(mass=6e-6)
     N_end = 80
     for K in [-1, 0, +1]:
-        ic = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot)
+        eq = InflationEquationsT(K=K, potential=pot)
+        ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
         ev = [CollapseEvent(ic.equations),
               InflationEvent(ic.equations, +1, terminal=False),
               InflationEvent(ic.equations, -1, terminal=False),
@@ -74,7 +77,6 @@ def test_equations_sol_events():
         assert hasattr(bist, 'N_events')
         assert hasattr(bist, 'phi_events')
         assert hasattr(bist, 'dphidt_events')
-        assert hasattr(bist, 'eta_events')
 
         for key, value in bist.y_events.items():
             if value.size == 0:
@@ -82,9 +84,7 @@ def test_equations_sol_events():
                 assert_equal(bist.N_events[key], value)
                 assert_equal(bist.phi_events[key], value)
                 assert_equal(bist.dphidt_events[key], value)
-                assert_equal(bist.eta_events[key], value)
             else:
-                assert_equal(bist.N_events[key], value[:, 0])
-                assert_equal(bist.phi_events[key], value[:, 1])
-                assert_equal(bist.dphidt_events[key], value[:, 2])
-                assert_equal(bist.eta_events[key], value[:, 3])
+                assert_equal(bist.N_events[key], value[:, eq.idx['N']])
+                assert_equal(bist.phi_events[key], value[:, eq.idx['phi']])
+                assert_equal(bist.dphidt_events[key], value[:, eq.idx['dphidt']])

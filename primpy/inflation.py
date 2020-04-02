@@ -24,7 +24,7 @@ class InflationEquations(Equations, ABC):
 
     def H2(self, x, y):
         """Hubble parameter squared."""
-        raise NotImplementedError("Equations must define H2 method")
+        raise NotImplementedError("Equations must define H2 method.")
 
     def V(self, x, y):
         """Inflationary Potential."""
@@ -40,11 +40,11 @@ class InflationEquations(Equations, ABC):
 
     def w(self, x, y):
         """Equation of state parameter."""
-        raise NotImplementedError("Equations must define w method")
+        raise NotImplementedError("Equations must define w method.")
 
     def inflating(self, x, y):
         """Inflation diagnostic for event tracking."""
-        raise NotImplementedError("Equations must define inflating method")
+        raise NotImplementedError("Equations must define inflating method.")
 
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""

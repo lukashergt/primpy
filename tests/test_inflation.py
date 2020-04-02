@@ -5,53 +5,23 @@ from pytest import approx
 import numpy as np
 from primpy.potentials import QuadraticPotential
 from primpy.events import InflationEvent, UntilNEvent
-from primpy.time.initialconditions import InflationStartIC_NiPi, ISIC_msNO
 from primpy.inflation import InflationEquations
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
+from primpy.initialconditions import InflationStartIC_NiPi, ISIC_NiNsOk
 from primpy.solver import solve
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_H_not_implemented_error():
+def test_not_implemented_errors():
     eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
-    eq.H(x=0, y=np.zeros(4))
-
-
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_H2_not_implemented_error():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
-    eq.H2(x=0, y=np.zeros(4))
-
-
-@pytest.mark.xfail(raises=AttributeError)
-def test_V_attribute_error():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
-    eq.V(x=0, y=np.zeros(4))
-
-
-@pytest.mark.xfail(raises=AttributeError)
-def test_dVdphi_attribute_error():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
-    eq.dVdphi(x=0, y=np.zeros(4))
-
-
-@pytest.mark.xfail(raises=AttributeError)
-def test_d2Vdphi2_attribute_error():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
-    eq.d2Vdphi2(x=0, y=np.zeros(4))
-
-
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_w_not_implemented_error():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
-    eq.w(x=0, y=np.zeros(4))
-
-
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_inflating_not_implemented_error():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
-    eq.inflating(x=0, y=np.zeros(4))
+    with pytest.raises(NotImplementedError, match="Equations must define H2 method."):
+        eq.H(x=0, y=np.zeros(4))
+    with pytest.raises(NotImplementedError, match="Equations must define H2 method."):
+        eq.H2(x=0, y=np.zeros(4))
+    with pytest.raises(NotImplementedError, match="Equations must define w method."):
+        eq.w(x=0, y=np.zeros(4))
+    with pytest.raises(NotImplementedError, match="Equations must define inflating method."):
+        eq.inflating(x=0, y=np.zeros(4))
 
 
 def test_basic_methods_time_vs_efolds():
@@ -64,14 +34,14 @@ def test_basic_methods_time_vs_efolds():
             pot = QuadraticPotential(mass=mass)
             for dphidt_squared in [100 * pot.V(phi), 2 * pot.V(phi), pot.V(phi), pot.V(phi) / 100]:
                 dphidt = -np.sqrt(dphidt_squared)
-                eq_t = InflationEquationsT(K=K, potential=QuadraticPotential(mass=mass))
-                eq_N = InflationEquationsN(K=K, potential=QuadraticPotential(mass=mass))
-                assert eq_t.idx['N'] == 0
-                assert eq_t.idx['phi'] == 1
-                assert eq_t.idx['dphidt'] == 2
+                eq_t = InflationEquationsT(K=K, potential=pot)
+                eq_N = InflationEquationsN(K=K, potential=pot)
+                assert eq_t.idx['phi'] == 0
+                assert eq_t.idx['dphidt'] == 1
+                assert eq_t.idx['N'] == 2
                 assert eq_N.idx['phi'] == 0
                 assert eq_N.idx['dphidN'] == 1
-                y1_t = np.array([N, phi, dphidt])
+                y1_t = np.array([phi, dphidt, N])
                 y1_N = np.array([phi, dphidt / eq_t.H(t, y1_t)])
                 assert eq_t.H2(t, y1_t) == approx(eq_N.H2(N, y1_N), rel=tol, abs=tol)
                 assert eq_t.H(t, y1_t) == approx(eq_N.H(N, y1_N), rel=tol, abs=tol)
@@ -97,7 +67,8 @@ def test_postprocessing_inflation_start_warnings():
         # TODO: add KD initial conditions and test for collapse
 
         # no passing of InflationEvent(+1), i.e. inflation start not recorded
-        ic = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot)
+        eq = InflationEquationsT(K=K, potential=pot)
+        ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
         ev_no_start = [InflationEvent(ic.equations, -1, terminal=True)]
         with pytest.warns(UserWarning, match="Inflation start not determined. In order to"):
             bist = solve(ic=ic, events=ev_no_start)
@@ -105,8 +76,7 @@ def test_postprocessing_inflation_start_warnings():
 
         # no inflation start recorded, despite using event tracking
         # e.g. when integrating backwards in time
-        ic_backward = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot,
-                                            t_end=1)
+        ic_backward = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i, x_end=1)
         ev_backward = [UntilNEvent(ic_backward.equations, value=0),
                        InflationEvent(ic_backward.equations, +1, terminal=False)]
         with pytest.warns(UserWarning, match="Inflation start not determined."):
@@ -129,8 +99,9 @@ def test_postprocessing_inflation_end_warnings():
     pot = QuadraticPotential(mass=6e-6)
     for K in [-1, 0, +1]:
         # set t_end earlier to trigger "inflation not ended warning:
-        ic_early_end = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot,
-                                             t_end=1e6)
+        eq = InflationEquationsT(K=K, potential=pot)
+        ic_early_end = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i,
+                                             x_end=1e6)
         ev = [InflationEvent(ic_early_end.equations, +1, terminal=False),
               InflationEvent(ic_early_end.equations, -1, terminal=True)]
         with pytest.warns(UserWarning, match="Inflation has not ended."):
@@ -138,7 +109,7 @@ def test_postprocessing_inflation_end_warnings():
         nan_inflation_end(background_sol=bist)
 
         # no passing of InflationEvent(-1), i.e. inflation end not recorded
-        ic = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot, t_end=1e7)
+        ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i, x_end=1e7)
         ev_no_end = [InflationEvent(ic.equations, +1, terminal=False)]
         with pytest.warns(UserWarning, match="Inflation end not determined. In order to"):
             bist = solve(ic=ic, events=ev_no_end)
@@ -146,8 +117,7 @@ def test_postprocessing_inflation_end_warnings():
 
         # no inflation end recorded, despite not being in inflation, despite using event tracking
         # e.g. when integrating backwards in time
-        ic_backward = InflationStartIC_NiPi(t_i=t_i, N_i=N_i, phi_i=phi_i, K=K, potential=pot,
-                                            t_end=1)
+        ic_backward = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i, x_end=1)
         ev_backward = [UntilNEvent(ic_backward.equations, value=0),
                        InflationEvent(ic_backward.equations, -1, terminal=True)]
         with pytest.warns(UserWarning, match="Inflation end not determined."):
@@ -156,10 +126,10 @@ def test_postprocessing_inflation_end_warnings():
 
 
 def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
+    K = +1
+    pot = QuadraticPotential(mass=6e-6)
     t_i = 1e4
     N_i = 10
-    K = +1
-    mass = 6e-6
     Omega_K0 = -K * 0.01
     h = 0.7
 
@@ -176,8 +146,9 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
     for i, rtol in enumerate(rtols):
         for j, Nstar in enumerate(Nstar_range):
             print(i, Nstar)
-            ic = ISIC_msNO(t_i=t_i, mass=mass, N_star=Nstar, N_i=N_i, Omega_K0=Omega_K0, h=h, K=K,
-                           Potential=QuadraticPotential, phi_i_bracket=[15.21, 30])
+            eq = InflationEquationsT(K=K, potential=pot)
+            ic = ISIC_NiNsOk(equations=eq, N_i=N_i, N_star=Nstar, Omega_K0=Omega_K0, h=h, t_i=t_i,
+                             phi_i_bracket=[15.21, 30])
             ev = [InflationEvent(ic.equations, +1, terminal=False),
                   InflationEvent(ic.equations, -1, terminal=True)]
             bist = solve(ic=ic, events=ev, rtol=1e-10, atol=1e-10)
