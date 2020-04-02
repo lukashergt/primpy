@@ -3,7 +3,6 @@
 from abc import ABC
 from types import MethodType
 import numpy as np
-from scipy.interpolate import interp1d
 
 
 class Equations(ABC):
