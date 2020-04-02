@@ -155,8 +155,6 @@ class InflationEquations(Equations, ABC):
             sol.N_calib = sol.N + np.log(sol.a0) - sol.logaH_star + np.log(K_STAR / Mpc_m * lp_m)
             sol.a_calib = np.exp(sol.N_calib)
 
-        sol.calibrate_a_flat_universe = calibrate_a_flat_universe
-
         def derive_comoving_hubble_horizon_flat(N_star):
             """Derive the comoving Hubble horizon `cHH`."""
             # for flat universes we first need to calibrate the scale factor:
