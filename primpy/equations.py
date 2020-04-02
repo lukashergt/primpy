@@ -40,7 +40,7 @@ class Equations(ABC):
         dy : np.ndarray
             Vector of derivatives
         """
-        raise NotImplementedError("Equations class must define __call__")
+        raise NotImplementedError("Equations class must define __call__.")
 
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
@@ -113,9 +113,3 @@ class Equations(ABC):
         """ % (name, name, name)
 
         setattr(self, name, MethodType(method, self))
-
-    @staticmethod
-    def _interp1d(x, y, **kwargs):
-        kind = kwargs.pop('kind', 'cubic')
-        bounds_error = kwargs.pop('bounds_error', False)
-        return interp1d(x, y, kind=kind, bounds_error=bounds_error, **kwargs)

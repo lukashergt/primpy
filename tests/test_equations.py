@@ -7,8 +7,15 @@ from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, UntilNEvent, CollapseEvent
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
+from primpy.equations import Equations
 from primpy.initialconditions import InflationStartIC_NiPi
 from primpy.solver import solve
+
+
+def test_not_implemented_errors():
+    eq = Equations()
+    with pytest.raises(NotImplementedError, match="Equations class must define __call__."):
+        eq(x=0, y=0)
 
 
 @pytest.mark.filterwarnings("ignore:.*Inflation start not determined.*:UserWarning")
