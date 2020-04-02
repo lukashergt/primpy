@@ -88,8 +88,8 @@ class InflationEquations(Equations, ABC):
             # Case: inflation did not end
             elif self.inflating(sol.x[-1], sol.y[:, -1]) > 0:
                 warn("Inflation has not ended. Increase `t_end`/`N_end` or decrease initial `phi`?"
-                     " End stage: t[-1]=%g, N[-1]=%g, phi[-1]=%g, w[-1]=%g"
-                     % (sol.t[-1], sol.N[-1], sol.phi[-1], self.w(sol.x[-1], sol.y[:, -1])))
+                     " End stage: N[-1]=%g, phi[-1]=%g, w[-1]=%g"
+                     % (sol.N[-1], sol.phi[-1], self.w(sol.x[-1], sol.y[:, -1])))
             else:
                 warn("Inflation end not determined.")
 
@@ -209,7 +209,10 @@ class InflationEquations(Equations, ABC):
         def derive_approx_power(**interp1d_kwargs):
             """Derive the approximate primordial power spectra for scalar and tensor modes."""
             H = sol.H[sol.inflation_mask]
-            dphidt = sol.dphidt[sol.inflation_mask]
+            if hasattr(sol, 'dphidt'):
+                dphidt = sol.dphidt[sol.inflation_mask]
+            else:
+                dphidt = H * sol.dphidN[sol.inflation_mask]
             sol.P_scalar_approx = (H**2 / (2 * pi * dphidt))**2
             sol.P_tensor_approx = 2 * (H / pi)**2
 
