@@ -3,7 +3,6 @@
 import numpy as np
 from primpy.potentials import QuadraticPotential
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC_NiPi
 
 
 def test_basic_methods():

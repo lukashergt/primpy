@@ -3,7 +3,6 @@
 import numpy as np
 from primpy.potentials import QuadraticPotential
 from primpy.time.inflation import InflationEquationsT
-from primpy.initialconditions import InflationStartIC_NiPi
 
 
 def test_basic_methods():
@@ -18,4 +17,3 @@ def test_basic_methods():
         assert eq.H(x=1, y=y1) == np.sqrt(1 / 3 - K * np.exp(-2))
         assert eq.w(x=1, y=y1) == 0
         assert eq.inflating(x=1, y=y1) == -0.5
-
