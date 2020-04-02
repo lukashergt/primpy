@@ -101,7 +101,7 @@ class ISIC_NiNt(InflationStartIC_NiPi):
 
         if isinstance(self.equations, InflationEquationsN):
             output = root_scalar(phii2Ntot, args=(ivp_kwargs,), bracket=self.phi_i_bracket,
-                                 rtol=1e-5, xtol=1e-5)
+                                 rtol=1e-6, xtol=1e-6)
         else:
             output = root_scalar(phii2Ntot, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
         if self.verbose:
@@ -163,7 +163,11 @@ class ISIC_NiNsOk(InflationStartIC_NiPi):
                     print("sol = %s" % sol)
                     raise Exception("solve_ivp failed with message: %s" % sol.message)
 
-        output = root_scalar(phii2Nstar, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
+        if isinstance(self.equations, InflationEquationsN):
+            output = root_scalar(phii2Nstar, args=(ivp_kwargs,), bracket=self.phi_i_bracket,
+                                 rtol=1e-6, xtol=1e-6)
+        else:
+            output = root_scalar(phii2Nstar, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
         phi_i_new = output.root
         super(ISIC_NiNsOk, self).__init__(equations=self.equations,
                                           N_i=self.N_i,

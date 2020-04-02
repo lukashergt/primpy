@@ -2,7 +2,10 @@
 """Tests for `primpy.inflation` module."""
 import pytest
 from pytest import approx
+from scipy.interpolate import interp1d
 import numpy as np
+from numpy.testing import assert_allclose
+from primpy.units import Mpc_m, lp_m
 from primpy.potentials import QuadraticPotential
 from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
@@ -80,6 +83,63 @@ def test_basic_methods_time_vs_efolds():
                 assert eq_t.inflating(t, y1_t) == approx(eq_N.inflating(N, y1_N), rel=tol, abs=tol)
 
 
+def test_sol_time_efolds():
+    rtol = 1e-5
+    atol = 1e-5
+    pot = QuadraticPotential(mass=6e-6)
+    N_i = 10
+    phi_i = 17
+    t_i = 7e4
+    eta_i = 0
+    h = 0.7
+    k = np.logspace(-3, 1, 4 * 10 + 1)
+    for K in [-1, 0, +1]:
+        Omega_K0 = -K * 0.01
+        eq_t = InflationEquationsT(K=K, potential=pot, track_eta=True)
+        eq_N = InflationEquationsN(K=K, potential=pot, track_eta=True, track_time=True)
+        ic_t = InflationStartIC_NiPi(eq_t, N_i, phi_i, t_i, eta_i)
+        ic_N = InflationStartIC_NiPi(eq_N, N_i, phi_i, t_i, eta_i)
+        ev_t = [InflationEvent(eq_t, +1, terminal=False),
+                InflationEvent(eq_t, -1, terminal=True)]
+        ev_N = [InflationEvent(eq_N, +1, terminal=False),
+                InflationEvent(eq_N, -1, terminal=True)]
+        bist = solve(ic=ic_t, events=ev_t, rtol=1e-10, atol=1e-10)
+        bisn = solve(ic=ic_N, events=ev_N, rtol=1e-12, atol=1e-12)
+        assert bist.N_tot == approx(bisn.N_tot)
+
+        N2t = interp1d(bisn.N, bisn.t, kind='cubic')
+        N2phi = interp1d(bisn.N, bisn.phi, kind='cubic')
+        N2H = interp1d(bisn.N, bisn.H, kind='cubic')
+        assert_allclose(bist.t[1:-1], N2t(bist.N[1:-1]), rtol=rtol, atol=atol)
+        assert_allclose(bist.phi[1:-1], N2phi(bist.N[1:-1]), rtol=rtol, atol=atol)
+        assert_allclose(bist.H[1:-1], N2H(bist.N[1:-1]), rtol=rtol, atol=atol)
+
+        bist.derive_a0(Omega_K0=Omega_K0, h=h)
+        bisn.derive_a0(Omega_K0=Omega_K0, h=h)
+        assert bist.K == K
+        assert bisn.K == K
+        assert bist.Omega_K0 == Omega_K0
+        assert bisn.Omega_K0 == Omega_K0
+        if K != 0:
+            assert bisn.a0_Mpc * Mpc_m == bisn.a0_lp * lp_m
+            bist.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
+            bisn.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
+            bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
+            bisn.derive_approx_power(Omega_K0=Omega_K0, h=h)
+        elif K == 0:
+            assert bisn.a0 == 1
+            bist.derive_comoving_hubble_horizon(N_star=55)
+            bisn.derive_comoving_hubble_horizon(N_star=55)
+            bist.derive_approx_power(N_star=55)
+            bisn.derive_approx_power(N_star=55)
+        N2cHH = interp1d(bisn.N, bisn.cHH_Mpc, kind='cubic')
+        assert_allclose(bist.cHH_Mpc[1:-1], N2cHH(bist.N[1:-1]), rtol=rtol*1e1, atol=1e-15)
+        assert bist.N_star == approx(bisn.N_star)
+        assert bist.N_dagg == approx(bisn.N_dagg)
+        assert_allclose(bist.P_s_approx(k), bisn.P_s_approx(k), rtol=rtol, atol=1e-9*1e-3)
+        assert_allclose(bist.P_t_approx(k), bisn.P_t_approx(k), rtol=rtol, atol=1e-9*1e-3*1e-1)
+
+
 @pytest.mark.filterwarnings("ignore:Inflation start not determined. In order to:UserWarning")
 def test_postprocessing_inflation_start_warnings():
     t_i = 7e4
@@ -154,13 +214,12 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
 
     for i, rtol in enumerate(rtols):
         for j, Nstar in enumerate(Nstar_range):
-            print(i, Nstar)
             eq = InflationEquationsT(K=K, potential=pot)
             ic = ISIC_NiNsOk(equations=eq, N_i=N_i, N_star=Nstar, Omega_K0=Omega_K0, h=h, t_i=t_i,
                              phi_i_bracket=[15.21, 30])
             ev = [InflationEvent(ic.equations, +1, terminal=False),
                   InflationEvent(ic.equations, -1, terminal=True)]
-            bist = solve(ic=ic, events=ev, rtol=1e-10, atol=1e-10)
+            bist = solve(ic=ic, events=ev, rtol=rtol, atol=1e-10)
             bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
             n_s = bist.n_s
             r = bist.r
@@ -172,12 +231,12 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
             nrun_range[i, j] = bist.n_run
             r_range[i, j] = bist.r
 
-    np.testing.assert_allclose(ns_range[0], ns_slow_roll, rtol=0.005)
-    np.testing.assert_allclose(ns_range[1], ns_slow_roll, rtol=0.005)
-    np.testing.assert_allclose(r_range[0], r_slow_roll, rtol=0.005)
-    np.testing.assert_allclose(r_range[1], r_slow_roll, rtol=0.005)
+    assert_allclose(ns_range[0], ns_slow_roll, rtol=0.005)
+    assert_allclose(ns_range[1], ns_slow_roll, rtol=0.005)
+    assert_allclose(r_range[0], r_slow_roll, rtol=0.005)
+    assert_allclose(r_range[1], r_slow_roll, rtol=0.005)
 
-    np.testing.assert_allclose(As_range[0], As_range[1], rtol=1e-4)
-    np.testing.assert_allclose(ns_range[0], ns_range[1], rtol=1e-4)
-    np.testing.assert_allclose(nrun_range[0], nrun_range[1], rtol=1e-4)
-    np.testing.assert_allclose(r_range[0], r_range[1], rtol=1e-4)
+    assert_allclose(As_range[0], As_range[1], rtol=1e-4, atol=1e-9*1e-3)
+    assert_allclose(ns_range[0], ns_range[1], rtol=1e-4)
+    assert_allclose(nrun_range[0], nrun_range[1], rtol=1e-4, atol=1e-4)
+    assert_allclose(r_range[0], r_range[1], rtol=1e-4)
