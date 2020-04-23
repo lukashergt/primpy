@@ -18,6 +18,10 @@ class InflationEquations(Equations, ABC):
         self.K = K
         self.potential = potential
 
+    def a(self, x, y):
+        """scale factor."""
+        return np.exp(self.N(x, y))
+
     def H(self, x, y):
         """Hubble parameter."""
         return np.sqrt(self.H2(x, y))
@@ -124,21 +128,29 @@ class InflationEquations(Equations, ABC):
                 sol.Omega_K0 = - sol.K * c**2 / (sol.a0_Mpc * 100e3 * h)**2
             # for flat universes the scale factor can be freely rescaled
             elif Omega_K0 == 0:
-                assert sol.K == 0, \
-                    ("The global geometry needs to match, "
-                     "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
+                assert sol.K == 0, ("The global geometry needs to match, "
+                                    "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
                 sol.Omega_K0 = Omega_K0
                 sol.a0 = 1.
             # derive a0 from Omega_K0
             else:
-                assert np.sign(Omega_K0) == -sol.K, \
-                    ("The global geometry needs to match, "
-                     "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
+                assert np.sign(Omega_K0) == -sol.K, ("The global geometry needs to match, "
+                                                     "but Omega_K0=%s whereas K=%s."
+                                                     % (Omega_K0, sol.K))
                 sol.Omega_K0 = Omega_K0
                 sol.a0_Mpc = c / (100e3 * h) * np.sqrt(-sol.K / Omega_K0)
                 sol.a0_lp = sol.a0_Mpc * Mpc_m / lp_m
 
         sol.derive_a0 = derive_a0
+
+        def derive_logaH_star_flat():
+            # Calibrate aH=k using N_star at pivot scale K_STAR:
+            N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
+            sol.logaH_star = N2logaH(sol.N_cross)
+            sol.aH2k = lambda aH: K_STAR * aH / np.exp(sol.logaH_star)
+            sol.k2aH = lambda k: k / K_STAR * np.exp(sol.logaH_star)
+            # sol.logaH2k = lambda logaH: K_STAR * np.exp(logaH - sol.logaH_star)
+            # TODO: define functions k2aH and aH2k for curved universes
 
         def calibrate_a_flat_universe(N_star):
             """Calibrate the scale factor `a` for a flat universe using a given `N_star`."""
@@ -148,9 +160,8 @@ class InflationEquations(Equations, ABC):
             sol.N_cross = sol.N_end - sol.N_star  # horizon crossing of pivot scale
             derive_a0(Omega_K0=0, h=None)
 
-            # Calibrate aH=k using N_star at pivot scale K_STAR:
-            N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
-            sol.logaH_star = N2logaH(sol.N_cross)
+            if not hasattr(sol, 'logaH_star'):
+                derive_logaH_star_flat()
 
             sol.N_calib = sol.N + np.log(sol.a0) - sol.logaH_star + np.log(K_STAR / Mpc_m * lp_m)
             sol.a_calib = np.exp(sol.N_calib)
