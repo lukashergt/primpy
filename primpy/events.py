@@ -133,3 +133,18 @@ class ModeExitEvent(Event):
         """Root of `logaH - log(value)`."""
         logH = np.log(np.abs(self.equations.H2(x, y))) / 2
         return logH + self.equations.N(x, y) - np.log(self.value)
+
+
+class FreezeEvent(Event):
+    """Stop when mode `k` is well outside the horizon, i.e. when `k << aH`."""
+
+    def __init__(self, equations, value=1e5, direction=-1, terminal=True):
+        super(FreezeEvent, self).__init__(equations, direction, terminal, value)
+        self.name = 'Freeze_%d' % self.value
+
+    def __call__(self, x, y):
+        """Root of `k - aH * value`."""
+        if self.equations.inflating(x, y) >= 0:
+            return self.equations.k - self.equations.a(x, y) * self.equations.H(x, y) / self.value
+        else:
+            return self.equations.k
