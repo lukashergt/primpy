@@ -19,7 +19,7 @@ class InflationEquations(Equations, ABC):
         self.potential = potential
 
     def a(self, x, y):
-        """scale factor."""
+        """Scale factor."""
         return np.exp(self.N(x, y))
 
     def H(self, x, y):
