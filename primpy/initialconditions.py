@@ -8,8 +8,23 @@ from primpy.solver import solve
 from primpy.events import InflationEvent, CollapseEvent
 
 
+class InitialPerturbations(object):
+    """Initial conditions for comoving curvature perturbations."""
+
+    def __init__(self, equations):
+        self.equations = equations
+
+    def __call__(self, y0, **ivp_kwargs):
+        """Set initial values for the comoving curvature perturbations."""
+        if all(key in self.equations.idx for key in ['R1', 'dR1', 'R2', 'dR2']):
+            y0[self.equations.idx['R1']] = 1
+            y0[self.equations.idx['dR1']] = 0
+            y0[self.equations.idx['R2']] = 0
+            y0[self.equations.idx['dR2']] = self.equations.k
+
+
 # noinspection PyPep8Naming
-class InflationStartIC_NiPi(object):
+class InflationStartIC_NiPi(InitialPerturbations):
     """Inflation start initial conditions given N_i, phi_i.
 
     Class for setting up initial conditions at the start of inflation, when
@@ -17,7 +32,7 @@ class InflationStartIC_NiPi(object):
     """
 
     def __init__(self, equations, N_i, phi_i, t_i=None, eta_i=None, x_end=1e300):
-        self.equations = equations
+        super(InflationStartIC_NiPi, self).__init__(equations=equations)
         self.N_i = N_i
         self.phi_i = phi_i
         self.t_i = t_i
@@ -31,6 +46,7 @@ class InflationStartIC_NiPi(object):
 
     def __call__(self, y0, **ivp_kwargs):
         """Set background equations of inflation for `N`, `phi` and `dphi`."""
+        super(InflationStartIC_NiPi, self).__call__(y0, **ivp_kwargs)
         if isinstance(self.equations, InflationEquationsT):
             self.x_ini = self.t_i
             self.x_end = self.x_end
@@ -93,7 +109,11 @@ class ISIC_NiNt(InflationStartIC_NiPi):
                     print("N_tot = %.15g" % sol.N_tot)
                 return sol.N_tot - self.N_tot
             else:
-                if np.size(sol.N_events['Collapse']) > 0:
+                if (('Collapse' in sol.N_events and np.size(sol.N_events['Collapse']) > 0) or
+                        ('Inflation_dir-1_term0' in sol.N_events and
+                         sol.N_events['Inflation_dir-1_term0'] == sol.N[0]) or
+                        ('Inflation_dir-1_term1' in sol.N_events and
+                         sol.N_events['Inflation_dir-1_term1'] == sol.N[0])):
                     return 0 - self.N_tot
                 else:
                     print("sol = %s" % sol)
