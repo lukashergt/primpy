@@ -53,6 +53,7 @@ class InflationEquations(Equations, ABC):
 
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""
+        # TODO: clean up and mirror end?
         sol.N_beg = np.nan
         # Case 0: Universe has collapsed
         if 'Collapse' in sol.N_events and sol.N_events['Collapse'].size > 0:
@@ -119,7 +120,7 @@ class InflationEquations(Equations, ABC):
             """Derive the scale factor today `a_0` either from reheating or from `Omega_K0`."""
             # derive a0 and Omega_K0 from reheating:
             if Omega_K0 is None:
-                rho_r0_SI = a_B * T_CMB**4 / c**2
+                rho_r0_SI = a_B * T_CMB**4 / c**2  # TODO: fix rho_r0 = rho_photon0 + rho_nu0 ?
                 rho_r0 = rho_r0_SI / mp_kg * lp_m**3
                 # just from instant reheating:
                 N0 = sol.N_end + np.log(3 / 2) / 4 + np.log(sol.V_end / rho_r0) / 4

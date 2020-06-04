@@ -12,7 +12,7 @@ from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC_NiPi, ISIC_NiNsOk
+from primpy.initialconditions import InflationStartIC, ISIC_NiNsOk
 from primpy.solver import solve
 
 
@@ -41,7 +41,7 @@ def test_track_eta():
             assert hasattr(eq, 'N')
             assert hasattr(eq, 'eta')
             assert 'eta' in eq.idx
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, eta_i=eta_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, eta_i=eta_i)
             y0 = np.zeros(len(eq.idx))
             ic(y0=y0)
             dy0 = eq(x=ic.x_ini, y=y0)
@@ -98,8 +98,8 @@ def test_sol_time_efolds():
         Omega_K0 = -K * 0.01
         eq_t = InflationEquationsT(K=K, potential=pot, track_eta=True)
         eq_N = InflationEquationsN(K=K, potential=pot, track_eta=True, track_time=True)
-        ic_t = InflationStartIC_NiPi(eq_t, N_i, phi_i, t_i, eta_i)
-        ic_N = InflationStartIC_NiPi(eq_N, N_i, phi_i, t_i, eta_i)
+        ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
+        ic_N = InflationStartIC(eq_N, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
         ev_t = [InflationEvent(eq_t, +1, terminal=False),
                 InflationEvent(eq_t, -1, terminal=True)]
         ev_N = [InflationEvent(eq_N, +1, terminal=False),
@@ -153,7 +153,7 @@ def test_postprocessing_inflation_start_warnings():
             # TODO: add KD initial conditions and test for collapse
 
             # no passing of InflationEvent(+1), i.e. inflation start not recorded
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev_no_start = [InflationEvent(ic.equations, -1, terminal=True)]
             sol = solve(ic=ic, events=ev_no_start)
             assert not np.isfinite(sol.N_beg)
@@ -178,7 +178,7 @@ def test_postprocessing_inflation_end_warnings():
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot, track_time=True)]:
             # stop at N=30 to trigger "Inflation has not ended." warning:
-            ic_early_end = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic_early_end = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev = [InflationEvent(ic_early_end.equations, +1, terminal=False),
                   InflationEvent(ic_early_end.equations, -1, terminal=True),
                   UntilNEvent(ic_early_end.equations, 30)]
@@ -187,7 +187,7 @@ def test_postprocessing_inflation_end_warnings():
             nan_inflation_end(background_sol=bist)
 
             # no passing of InflationEvent(-1), i.e. inflation end not recorded
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev_no_end = [InflationEvent(ic.equations, +1, terminal=False),
                          UntilNEvent(ic.equations, N_i + 65)]
             with pytest.warns(UserWarning, match="Inflation end not determined. In order to"):
@@ -207,7 +207,7 @@ def test_Ncross_nan():
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot)]:
             Omega_K0 = -K * 0.1
-            ic = InflationStartIC_NiPi(eq, N_i, phi_i, t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev = [InflationEvent(eq, +1, terminal=False),
                   InflationEvent(eq, -1, terminal=True)]
             b_sol = solve(ic=ic, events=ev)

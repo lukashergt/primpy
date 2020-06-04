@@ -8,7 +8,7 @@ from primpy.events import UntilTEvent, UntilNEvent, InflationEvent
 from primpy.events import AfterInflationEndEvent, Phi0Event
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC_NiPi
+from primpy.initialconditions import InflationStartIC
 from primpy.solver import solve
 
 
@@ -23,7 +23,7 @@ def test_UntilTEvent():
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot, track_time=True)]:
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev = [UntilTEvent(eq, t_end)]
             sol = solve(ic=ic, events=ev)
             assert sol.t[-1] == approx(t_end)
@@ -41,7 +41,7 @@ def test_UntilNEvent():
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot)]:
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev = [UntilNEvent(eq, N_end)]
             sol = solve(ic=ic, events=ev)
             assert sol.N[-1] == approx(N_end)
@@ -57,7 +57,7 @@ def test_InflationEvent():
             pot = QuadraticPotential(mass=mass)
             for eq in [InflationEquationsT(K=K, potential=pot),
                        InflationEquationsN(K=K, potential=pot)]:
-                ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+                ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
                 ev = [InflationEvent(eq, +1, terminal=False),
                       InflationEvent(eq, -1, terminal=True)]
                 sol = solve(ic=ic, events=ev)
@@ -76,7 +76,7 @@ def test_AfterInflationEndEvent():
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot)]:
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev = [InflationEvent(eq, +1, terminal=False),
                   InflationEvent(eq, -1, terminal=False),
                   AfterInflationEndEvent(eq)]
@@ -98,7 +98,7 @@ def test_Phi0Event():
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot)]:
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev = [InflationEvent(eq, +1, terminal=False),
                   InflationEvent(eq, -1, terminal=False),
                   Phi0Event(eq)]

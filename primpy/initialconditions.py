@@ -10,25 +10,41 @@ from primpy.events import InflationEvent, CollapseEvent
 
 
 # noinspection PyPep8Naming
-class InflationStartIC_NiPi(object):
+class InflationStartIC(object):
     """Inflation start initial conditions given N_i, phi_i.
 
     Class for setting up initial conditions at the start of inflation, when
     the curvature density parameter was maximal after kinetic dominance.
     """
 
-    def __init__(self, equations, N_i, phi_i, t_i=None, eta_i=None, x_end=1e300):
+    def __init__(self, equations, phi_i, t_i=None, eta_i=None, x_end=1e300, **kwargs):
         self.equations = equations
-        self.N_i = N_i
         self.phi_i = phi_i
         self.t_i = t_i
         self.eta_i = eta_i
         self.x_end = x_end
 
         self.V_i = equations.potential.V(self.phi_i)
-        self.H_i = np.sqrt(self.V_i / 2 - equations.K * np.exp(-2 * N_i))
-        self.aH_i = np.sqrt(self.V_i / 2 * np.exp(2 * N_i) - equations.K)
-        self.Omega_Ki = -equations.K / self.aH_i**2
+        if 'N_i' in kwargs:
+            assert 'Omega_Ki' not in kwargs, "Only either N_i or Omega_Ki should be specified. " \
+                                             "The other will be inferred."
+            self.N_i = kwargs.pop('N_i')
+            self.input_kwarg = {'N_i': self.N_i}  # TODO: contemplate naming "input"
+            assert self.V_i / 2 * np.exp(2 * self.N_i) - equations.K > 0, \
+                ("V_i / 2 * exp(2 N_i) - 1 = %s < 0 but needs to be > 0. "
+                 "Increase either N_i or phi_i." % (self.V_i / 2 * np.exp(2 * self.N_i) - 1))
+            self.aH_i = np.sqrt(self.V_i / 2 * np.exp(2 * self.N_i) - equations.K)
+            self.Omega_Ki = -equations.K / self.aH_i**2
+        elif 'Omega_Ki' in kwargs:
+            assert 'N_i' not in kwargs, "Only either N_i or Omega_Ki should be specified. " \
+                                        "The other will be inferred."
+            self.Omega_Ki = kwargs.pop('Omega_Ki')
+            self.input_kwarg = {'Omega_Ki': self.Omega_Ki}  # TODO: contemplate naming "input"
+            self.N_i = np.log(2 * equations.K / self.V_i * (1 - 1 / self.Omega_Ki)) / 2
+            self.aH_i = np.sqrt(-equations.K / self.Omega_Ki)
+        else:
+            raise IOError("Need to specify either N_i or Omega_Ki.")
+        self.H_i = np.sqrt(self.V_i / 2 - equations.K * np.exp(-2 * self.N_i))
 
     def __call__(self, y0, **ivp_kwargs):
         """Set background equations of inflation for `N`, `phi` and `dphi`."""
@@ -59,17 +75,17 @@ class InflationStartIC_NiPi(object):
 
 
 # noinspection PyPep8Naming
-class ISIC_NiNt(InflationStartIC_NiPi):
+class ISIC_NiNt(InflationStartIC):
     """Inflation start initial conditions given potential mass/Lambda, N_tot, and N_i."""
 
-    def __init__(self, equations, N_i, N_tot, phi_i_bracket,
-                 t_i=None, eta_i=None, x_end=1e300, verbose=False):
+    def __init__(self, equations, N_tot, phi_i_bracket, t_i=None, eta_i=None,
+                 x_end=1e300, verbose=False, **kwargs):
         super(ISIC_NiNt, self).__init__(equations=equations,
-                                        N_i=N_i,
                                         phi_i=phi_i_bracket[-1],
                                         t_i=t_i,
                                         eta_i=eta_i,
-                                        x_end=x_end)
+                                        x_end=x_end,
+                                        **kwargs)
         self.N_tot = N_tot
         self.phi_i_bracket = phi_i_bracket
         self.verbose = verbose
@@ -82,12 +98,12 @@ class ISIC_NiNt(InflationStartIC_NiPi):
 
         def phii2Ntot(phi_i, kwargs):
             """Convert input `phi_i` to `N_tot`."""
-            ic = InflationStartIC_NiPi(equations=self.equations,
-                                       N_i=self.N_i,
-                                       phi_i=phi_i,
-                                       t_i=self.t_i,
-                                       eta_i=self.eta_i,
-                                       x_end=self.x_end)
+            ic = InflationStartIC(equations=self.equations,
+                                  phi_i=phi_i,
+                                  t_i=self.t_i,
+                                  eta_i=self.eta_i,
+                                  x_end=self.x_end,
+                                  **self.input_kwarg)
             with warnings.catch_warnings():
                 warnings.filterwarnings(action='ignore',
                                         message="Inflation",
@@ -118,28 +134,28 @@ class ISIC_NiNt(InflationStartIC_NiPi):
             print(output)
         phi_i_new = output.root
         super(ISIC_NiNt, self).__init__(equations=self.equations,
-                                        N_i=self.N_i,
                                         phi_i=phi_i_new,
                                         t_i=self.t_i,
                                         eta_i=self.eta_i,
-                                        x_end=self.x_end)
+                                        x_end=self.x_end,
+                                        **self.input_kwarg)
         super(ISIC_NiNt, self).__call__(y0=y0, **ivp_kwargs)
         return phi_i_new, output
 
 
 # noinspection PyPep8Naming
-class ISIC_NiNsOk(InflationStartIC_NiPi):
+class ISIC_NiNsOk(InflationStartIC):
     """Inflation start initial conditions given potential mass/Lambda, N_star, N_i, Omega_K0, h."""
 
-    def __init__(self, equations, N_i, N_star, Omega_K0, h, phi_i_bracket,
-                 t_i=None, eta_i=None, x_end=1e300, verbose=False):
+    def __init__(self, equations, N_star, Omega_K0, h, phi_i_bracket, t_i=None, eta_i=None,
+                 x_end=1e300, verbose=False, **kwargs):
         assert Omega_K0 != 0, "Curved universes only, here! Flat universes can set N_star freely."
         super(ISIC_NiNsOk, self).__init__(equations=equations,
-                                          N_i=N_i,
                                           phi_i=phi_i_bracket[-1],
                                           t_i=t_i,
                                           eta_i=eta_i,
-                                          x_end=x_end)
+                                          x_end=x_end,
+                                          **kwargs)
         self.N_star = N_star
         self.Omega_K0 = Omega_K0
         self.h = h
@@ -154,12 +170,12 @@ class ISIC_NiNsOk(InflationStartIC_NiPi):
 
         def phii2Nstar(phi_i, kwargs):
             """Convert input `phi_i` to `N_star`."""
-            ic = InflationStartIC_NiPi(equations=self.equations,
-                                       N_i=self.N_i,
-                                       phi_i=phi_i,
-                                       t_i=self.t_i,
-                                       eta_i=self.eta_i,
-                                       x_end=self.x_end)
+            ic = InflationStartIC(equations=self.equations,
+                                  phi_i=phi_i,
+                                  t_i=self.t_i,
+                                  eta_i=self.eta_i,
+                                  x_end=self.x_end,
+                                  **self.input_kwarg)
             sol = solve(ic, events=events, **kwargs)
             if sol.success and np.isfinite(sol.N_tot):
                 sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h)
@@ -180,10 +196,10 @@ class ISIC_NiNsOk(InflationStartIC_NiPi):
             output = root_scalar(phii2Nstar, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
         phi_i_new = output.root
         super(ISIC_NiNsOk, self).__init__(equations=self.equations,
-                                          N_i=self.N_i,
                                           phi_i=phi_i_new,
                                           t_i=self.t_i,
                                           eta_i=self.eta_i,
-                                          x_end=self.x_end)
+                                          x_end=self.x_end,
+                                          **self.input_kwarg)
         super(ISIC_NiNsOk, self).__call__(y0=y0, **ivp_kwargs)
         return phi_i_new, output

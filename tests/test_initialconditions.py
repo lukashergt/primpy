@@ -6,7 +6,7 @@ from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC_NiPi, ISIC_NiNt, ISIC_NiNsOk
+from primpy.initialconditions import InflationStartIC, ISIC_NiNt, ISIC_NiNsOk
 from primpy.solver import solve
 
 
@@ -43,7 +43,7 @@ def test_InflationStartIC_NiPi():
         for K in [-1, 0, +1]:
             for i, pot in enumerate(pots):
                 eq = InflationEquations(K=K, potential=pot)
-                ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+                ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
                 y0 = np.zeros(len(ic.equations.idx))
                 ic(y0)
                 basic_ic_asserts(y0, ic, K, pot, N_i, phi_i, t_i)
