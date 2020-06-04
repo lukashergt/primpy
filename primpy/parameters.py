@@ -5,4 +5,4 @@
 K_STAR = 0.05
 
 # parameters
-T_CMB = 2.725  # in Kelvin
+T_CMB = 2.72548  # +- 0.00057, in Kelvin, arXiv:0911.1955
