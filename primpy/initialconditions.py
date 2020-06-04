@@ -29,7 +29,7 @@ class InflationStartIC(object):
             assert 'Omega_Ki' not in kwargs, "Only either N_i or Omega_Ki should be specified. " \
                                              "The other will be inferred."
             self.N_i = kwargs.pop('N_i')
-            self.input_kwarg = {'N_i': self.N_i}  # TODO: contemplate naming "input"
+            self.ic_input_param = {'N_i': self.N_i}
             assert self.V_i / 2 * np.exp(2 * self.N_i) - equations.K > 0, \
                 ("V_i / 2 * exp(2 N_i) - 1 = %s < 0 but needs to be > 0. "
                  "Increase either N_i or phi_i." % (self.V_i / 2 * np.exp(2 * self.N_i) - 1))
@@ -39,7 +39,7 @@ class InflationStartIC(object):
             assert 'N_i' not in kwargs, "Only either N_i or Omega_Ki should be specified. " \
                                         "The other will be inferred."
             self.Omega_Ki = kwargs.pop('Omega_Ki')
-            self.input_kwarg = {'Omega_Ki': self.Omega_Ki}  # TODO: contemplate naming "input"
+            self.ic_input_param = {'Omega_Ki': self.Omega_Ki}
             self.N_i = np.log(2 * equations.K / self.V_i * (1 - 1 / self.Omega_Ki)) / 2
             self.aH_i = np.sqrt(-equations.K / self.Omega_Ki)
         else:
@@ -103,7 +103,7 @@ class ISIC_NiNt(InflationStartIC):
                                   t_i=self.t_i,
                                   eta_i=self.eta_i,
                                   x_end=self.x_end,
-                                  **self.input_kwarg)
+                                  **self.ic_input_param)
             with warnings.catch_warnings():
                 warnings.filterwarnings(action='ignore',
                                         message="Inflation",
@@ -138,7 +138,7 @@ class ISIC_NiNt(InflationStartIC):
                                         t_i=self.t_i,
                                         eta_i=self.eta_i,
                                         x_end=self.x_end,
-                                        **self.input_kwarg)
+                                        **self.ic_input_param)
         super(ISIC_NiNt, self).__call__(y0=y0, **ivp_kwargs)
         return phi_i_new, output
 
@@ -175,7 +175,7 @@ class ISIC_NiNsOk(InflationStartIC):
                                   t_i=self.t_i,
                                   eta_i=self.eta_i,
                                   x_end=self.x_end,
-                                  **self.input_kwarg)
+                                  **self.ic_input_param)
             sol = solve(ic, events=events, **kwargs)
             if sol.success and np.isfinite(sol.N_tot):
                 sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h)
@@ -200,6 +200,6 @@ class ISIC_NiNsOk(InflationStartIC):
                                           t_i=self.t_i,
                                           eta_i=self.eta_i,
                                           x_end=self.x_end,
-                                          **self.input_kwarg)
+                                          **self.ic_input_param)
         super(ISIC_NiNsOk, self).__call__(y0=y0, **ivp_kwargs)
         return phi_i_new, output
