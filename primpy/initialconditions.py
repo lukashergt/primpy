@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """:mod:`primpy.initialconditions`: initial conditions for inflation."""
+import warnings
 import numpy as np
 from scipy.optimize import root_scalar
 from primpy.time.inflation import InflationEquationsT
@@ -87,13 +88,22 @@ class ISIC_NiNt(InflationStartIC_NiPi):
                                        t_i=self.t_i,
                                        eta_i=self.eta_i,
                                        x_end=self.x_end)
-            sol = solve(ic, events=events, **kwargs)
+            with warnings.catch_warnings():
+                warnings.filterwarnings(action='ignore',
+                                        message="Inflation",
+                                        category=UserWarning)
+                sol = solve(ic, events=events, **kwargs)
             if np.isfinite(sol.N_tot):
                 if self.verbose:
                     print("N_tot = %.15g" % sol.N_tot)
                 return sol.N_tot - self.N_tot
             else:
-                if np.size(sol.N_events['Collapse']) > 0:
+                if (('Collapse' in sol.N_events and np.size(sol.N_events['Collapse']) > 0) or
+                        ('Inflation_dir-1_term0' in sol.N_events and
+                         sol.N_events['Inflation_dir-1_term0'] == sol.N[0]) or
+                        ('Inflation_dir-1_term1' in sol.N_events and
+                         sol.N_events['Inflation_dir-1_term1'] == sol.N[0])):
+                    warnings.warn("foo")
                     return 0 - self.N_tot
                 else:
                     print("sol = %s" % sol)

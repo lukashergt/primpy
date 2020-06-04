@@ -13,8 +13,9 @@ from primpy.equations import Equations
 class InflationEquations(Equations, ABC):
     """Base class for inflation equations."""
 
-    def __init__(self, K, potential):
+    def __init__(self, K, potential, verbose_warnings=True):
         super(InflationEquations, self).__init__()
+        self.verbose_warnings = verbose_warnings
         self.K = K
         self.potential = potential
 
@@ -62,9 +63,10 @@ class InflationEquations(Equations, ABC):
             else:
                 warn("Inflation start not determined.")
         else:
-            warn("Inflation start not determined. In order to calculate "
-                 "quantities such as `N_tot`, make sure to track the event "
-                 "InflationEvent(ic.equations, direction=+1, terminal=False).")
+            if self.verbose_warnings:
+                warn("Inflation start not determined. In order to calculate "
+                     "quantities such as `N_tot`, make sure to track the event "
+                     "InflationEvent(ic.equations, direction=+1, terminal=False).")
 
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
@@ -82,9 +84,10 @@ class InflationEquations(Equations, ABC):
         else:
             if ('Inflation_dir-1_term1' not in sol.N_events
                     and 'Inflation_dir-1_term0' not in sol.N_events):
-                warn("Inflation end not determined. In order to calculate "
-                     "quantities such as `N_tot`, make sure to track the event "
-                     "`InflationEvent(ic.equations, direction=-1)`.")
+                if self.verbose_warnings:
+                    warn("Inflation end not determined. In order to calculate "
+                         "quantities such as `N_tot`, make sure to track the event "
+                         "`InflationEvent(ic.equations, direction=-1)`.")
             # Case: inflation did not end
             elif self.inflating(sol.x[-1], sol.y[:, -1]) > 0:
                 warn("Inflation has not ended. Increase `t_end`/`N_end` or decrease initial `phi`?"
@@ -124,16 +127,15 @@ class InflationEquations(Equations, ABC):
                 sol.Omega_K0 = - sol.K * c**2 / (sol.a0_Mpc * 100e3 * h)**2
             # for flat universes the scale factor can be freely rescaled
             elif Omega_K0 == 0:
-                assert sol.K == 0, \
-                    ("The global geometry needs to match, "
-                     "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
+                assert sol.K == 0, ("The global geometry needs to match, "
+                                    "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
                 sol.Omega_K0 = Omega_K0
                 sol.a0 = 1.
             # derive a0 from Omega_K0
             else:
-                assert np.sign(Omega_K0) == -sol.K, \
-                    ("The global geometry needs to match, "
-                     "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
+                assert np.sign(Omega_K0) == -sol.K, ("The global geometry needs to match, "
+                                                     "but Omega_K0=%s whereas K=%s."
+                                                     % (Omega_K0, sol.K))
                 sol.Omega_K0 = Omega_K0
                 sol.a0_Mpc = c / (100e3 * h) * np.sqrt(-sol.K / Omega_K0)
                 sol.a0_lp = sol.a0_Mpc * Mpc_m / lp_m
