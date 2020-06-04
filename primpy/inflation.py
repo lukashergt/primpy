@@ -19,6 +19,10 @@ class InflationEquations(Equations, ABC):
         self.K = K
         self.potential = potential
 
+    def a(self, x, y):
+        """Scale factor."""
+        return np.exp(self.N(x, y))
+
     def H(self, x, y):
         """Hubble parameter."""
         return np.sqrt(self.H2(x, y))
