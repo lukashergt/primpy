@@ -93,6 +93,7 @@ class QuadraticPotential(InflationaryPotential):
     """Quadratic potential: `V(phi) = 0.5 * m**2 * phi**2`."""
 
     def __init__(self, mass):
+        self.tag = 'mn2'
         self.mass = mass
         super(QuadraticPotential, self).__init__()
 
@@ -147,6 +148,7 @@ class StarobinskyPotential(InflationaryPotential):
     gamma = np.sqrt(2 / 3)
 
     def __init__(self, Lambda):
+        self.tag = 'stb'
         self.Lambda = Lambda
         super(StarobinskyPotential, self).__init__()
 
