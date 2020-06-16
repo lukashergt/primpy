@@ -183,7 +183,7 @@ class ISIC_NsOk(InflationStartIC):
                     print("N_tot = %.15g, \t N_star = %.15g" % (sol.N_tot, sol.N_star))
                 return sol.N_star - self.N_star
             else:
-                if np.size(sol.t_events['Collapse']) > 0 or sol.N_tot <= self.N_star:
+                if np.size(sol.N_events['Collapse']) > 0 or sol.N_tot <= self.N_star:
                     return 0 - self.N_star
                 else:
                     print("sol = %s" % sol)
