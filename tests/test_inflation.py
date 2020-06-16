@@ -12,7 +12,7 @@ from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC, ISIC_NiNsOk
+from primpy.initialconditions import InflationStartIC, ISIC_NsOk
 from primpy.solver import solve
 
 
@@ -240,8 +240,8 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
     for i, rtol in enumerate(rtols):
         for j, Nstar in enumerate(Nstar_range):
             eq = InflationEquationsT(K=K, potential=pot)
-            ic = ISIC_NiNsOk(equations=eq, N_i=N_i, N_star=Nstar, Omega_K0=Omega_K0, h=h, t_i=t_i,
-                             phi_i_bracket=[15.21, 30])
+            ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=Nstar, Omega_K0=Omega_K0, h=h, t_i=t_i,
+                           phi_i_bracket=[15.21, 30])
             ev = [InflationEvent(ic.equations, +1, terminal=False),
                   InflationEvent(ic.equations, -1, terminal=True)]
             bist = solve(ic=ic, events=ev, rtol=rtol, atol=1e-10)

@@ -6,7 +6,7 @@ from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC, ISIC_NiNt, ISIC_NiNsOk
+from primpy.initialconditions import InflationStartIC, ISIC_Nt, ISIC_NsOk
 from primpy.solver import solve
 
 
@@ -56,7 +56,7 @@ def test_ISIC_NiNt():
     for t_i, InflationEquations in zip([1e4, None], [InflationEquationsT, InflationEquationsN]):
         for K in [-1, 0, +1]:
             eq = InflationEquations(K=K, potential=pot)
-            ic = ISIC_NiNt(equations=eq, N_i=N_i, N_tot=N_tot, t_i=t_i, phi_i_bracket=[15.5, 30])
+            ic = ISIC_Nt(equations=eq, N_i=N_i, N_tot=N_tot, t_i=t_i, phi_i_bracket=[15.5, 30])
             y0 = np.zeros(len(ic.equations.idx))
             ic(y0)
             basic_ic_asserts(y0, ic, K, pot, N_i, ic.phi_i, t_i)
@@ -80,8 +80,8 @@ def test_ISIC_NiNsOk():
         for K in [-1, +1]:
             Omega_K0 = -K * 0.01
             eq = InflationEquations(K=K, potential=pot)
-            ic = ISIC_NiNsOk(equations=eq, N_i=N_i, N_star=N_star, Omega_K0=Omega_K0, h=h,
-                             t_i=t_i, phi_i_bracket=[15.5, 30])
+            ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=N_star, Omega_K0=Omega_K0, h=h,
+                           t_i=t_i, phi_i_bracket=[15.5, 30])
             y0 = np.zeros(len(ic.equations.idx))
             ic(y0)
             basic_ic_asserts(y0, ic, K, pot, N_i, ic.phi_i, t_i)

@@ -11,7 +11,7 @@ from primpy.events import InflationEvent, CollapseEvent
 
 # noinspection PyPep8Naming
 class InflationStartIC(object):
-    """Inflation start initial conditions given N_i, phi_i.
+    """Inflation start initial conditions given phi_i and either of N_i or Omega_Ki.
 
     Class for setting up initial conditions at the start of inflation, when
     the curvature density parameter was maximal after kinetic dominance.
@@ -75,17 +75,17 @@ class InflationStartIC(object):
 
 
 # noinspection PyPep8Naming
-class ISIC_NiNt(InflationStartIC):
-    """Inflation start initial conditions given potential mass/Lambda, N_tot, and N_i."""
+class ISIC_Nt(InflationStartIC):
+    """Inflation start initial conditions given N_tot and either of N_i or Omega_Ki."""
 
     def __init__(self, equations, N_tot, phi_i_bracket, t_i=None, eta_i=None,
                  x_end=1e300, verbose=False, **kwargs):
-        super(ISIC_NiNt, self).__init__(equations=equations,
-                                        phi_i=phi_i_bracket[-1],
-                                        t_i=t_i,
-                                        eta_i=eta_i,
-                                        x_end=x_end,
-                                        **kwargs)
+        super(ISIC_Nt, self).__init__(equations=equations,
+                                      phi_i=phi_i_bracket[-1],
+                                      t_i=t_i,
+                                      eta_i=eta_i,
+                                      x_end=x_end,
+                                      **kwargs)
         self.N_tot = N_tot
         self.phi_i_bracket = phi_i_bracket
         self.verbose = verbose
@@ -133,29 +133,29 @@ class ISIC_NiNt(InflationStartIC):
         if self.verbose:
             print(output)
         phi_i_new = output.root
-        super(ISIC_NiNt, self).__init__(equations=self.equations,
-                                        phi_i=phi_i_new,
-                                        t_i=self.t_i,
-                                        eta_i=self.eta_i,
-                                        x_end=self.x_end,
-                                        **self.ic_input_param)
-        super(ISIC_NiNt, self).__call__(y0=y0, **ivp_kwargs)
+        super(ISIC_Nt, self).__init__(equations=self.equations,
+                                      phi_i=phi_i_new,
+                                      t_i=self.t_i,
+                                      eta_i=self.eta_i,
+                                      x_end=self.x_end,
+                                      **self.ic_input_param)
+        super(ISIC_Nt, self).__call__(y0=y0, **ivp_kwargs)
         return phi_i_new, output
 
 
 # noinspection PyPep8Naming
-class ISIC_NiNsOk(InflationStartIC):
-    """Inflation start initial conditions given potential mass/Lambda, N_star, N_i, Omega_K0, h."""
+class ISIC_NsOk(InflationStartIC):
+    """Inflation start initial conditions given N_star, Omega_K0, h and either N_i or Omega_Ki."""
 
     def __init__(self, equations, N_star, Omega_K0, h, phi_i_bracket, t_i=None, eta_i=None,
                  x_end=1e300, verbose=False, **kwargs):
         assert Omega_K0 != 0, "Curved universes only, here! Flat universes can set N_star freely."
-        super(ISIC_NiNsOk, self).__init__(equations=equations,
-                                          phi_i=phi_i_bracket[-1],
-                                          t_i=t_i,
-                                          eta_i=eta_i,
-                                          x_end=x_end,
-                                          **kwargs)
+        super(ISIC_NsOk, self).__init__(equations=equations,
+                                        phi_i=phi_i_bracket[-1],
+                                        t_i=t_i,
+                                        eta_i=eta_i,
+                                        x_end=x_end,
+                                        **kwargs)
         self.N_star = N_star
         self.Omega_K0 = Omega_K0
         self.h = h
@@ -195,11 +195,11 @@ class ISIC_NiNsOk(InflationStartIC):
         else:
             output = root_scalar(phii2Nstar, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
         phi_i_new = output.root
-        super(ISIC_NiNsOk, self).__init__(equations=self.equations,
-                                          phi_i=phi_i_new,
-                                          t_i=self.t_i,
-                                          eta_i=self.eta_i,
-                                          x_end=self.x_end,
-                                          **self.ic_input_param)
-        super(ISIC_NiNsOk, self).__call__(y0=y0, **ivp_kwargs)
+        super(ISIC_NsOk, self).__init__(equations=self.equations,
+                                        phi_i=phi_i_new,
+                                        t_i=self.t_i,
+                                        eta_i=self.eta_i,
+                                        x_end=self.x_end,
+                                        **self.ic_input_param)
+        super(ISIC_NsOk, self).__call__(y0=y0, **ivp_kwargs)
         return phi_i_new, output
