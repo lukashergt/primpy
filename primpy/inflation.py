@@ -60,7 +60,7 @@ class InflationEquations(Equations, ABC):
             warn("The universe has collapsed.")
         elif 'Inflation_dir1_term0' in sol.N_events:
             # Case 1: inflating from the start
-            if self.inflating(sol.x[0], sol.y[:, 0]) > 0:
+            if self.inflating(sol.x[0], sol.y[:, 0]) >= 0 or self.w(sol.x[0], sol.y[:, 0]) <= -1/3:
                 sol.N_beg = sol.N[0]
             # Case 2: there is a transition from non-inflating to inflating
             elif np.size(sol.N_events['Inflation_dir1_term0']) > 0:
