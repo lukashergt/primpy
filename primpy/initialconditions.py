@@ -177,13 +177,13 @@ class ISIC_NiNsOk(InflationStartIC):
                                   x_end=self.x_end,
                                   **self.ic_input_param)
             sol = solve(ic, events=events, **kwargs)
-            if sol.success and np.isfinite(sol.N_tot):
-                sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h)
+            if sol.success and np.isfinite(sol.N_tot) and sol.N_tot > self.N_star:
+                sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h, kind='linear')
                 if self.verbose:
-                    print("N_star = %.15g" % sol.N_star)
+                    print("N_tot = %.15g, \t N_star = %.15g" % (sol.N_tot, sol.N_star))
                 return sol.N_star - self.N_star
             else:
-                if np.size(sol.t_events['Collapse']) > 0:
+                if np.size(sol.t_events['Collapse']) > 0 or sol.N_tot <= self.N_star:
                     return 0 - self.N_star
                 else:
                     print("sol = %s" % sol)
