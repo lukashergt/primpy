@@ -20,8 +20,9 @@ class InflationEquationsT(InflationEquations):
 
     """
 
-    def __init__(self, K, potential, track_eta=False):
-        super(InflationEquationsT, self).__init__(K=K, potential=potential)
+    def __init__(self, K, potential, track_eta=False, verbose_warnings=True):
+        super(InflationEquationsT, self).__init__(K=K, potential=potential,
+                                                  verbose_warnings=verbose_warnings)
         self._set_independent_variable('t')
         self.add_variable('phi', 'dphidt', 'N')
         self.track_eta = track_eta

@@ -8,7 +8,7 @@ from primpy.events import InflationEvent, UntilNEvent, CollapseEvent
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.equations import Equations
-from primpy.initialconditions import InflationStartIC_NiPi
+from primpy.initialconditions import InflationStartIC
 from primpy.solver import solve
 
 
@@ -32,10 +32,10 @@ def test_equations_sol_ordering_after_postprocessing():
                 phi_i = phis[i]
 
                 # integration forwards in time:
-                ic_forwards = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+                ic_forwards = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
                 # integration backward in time:
-                ic_backward = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i,
-                                                    x_end=1)
+                ic_backward = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i,
+                                               x_end=1)
 
                 # stop at end of inflation:
                 ev_forwards = [InflationEvent(ic_forwards.equations, +1, terminal=False),
@@ -72,7 +72,7 @@ def test_equations_sol_events():
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot, track_time=True)]:
-            ic = InflationStartIC_NiPi(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
             ev = [CollapseEvent(ic.equations),
                   InflationEvent(ic.equations, +1, terminal=False),
                   InflationEvent(ic.equations, -1, terminal=False),

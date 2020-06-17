@@ -13,10 +13,15 @@ from primpy.equations import Equations
 class InflationEquations(Equations, ABC):
     """Base class for inflation equations."""
 
-    def __init__(self, K, potential):
+    def __init__(self, K, potential, verbose_warnings=True):
         super(InflationEquations, self).__init__()
+        self.verbose_warnings = verbose_warnings
         self.K = K
         self.potential = potential
+
+    def a(self, x, y):
+        """Scale factor."""
+        return np.exp(self.N(x, y))
 
     def H(self, x, y):
         """Hubble parameter."""
@@ -48,13 +53,15 @@ class InflationEquations(Equations, ABC):
 
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""
+        # TODO: clean up and mirror end?
         sol.N_beg = np.nan
         # Case 0: Universe has collapsed
         if 'Collapse' in sol.N_events and sol.N_events['Collapse'].size > 0:
-            warn("The universe has collapsed.")
+            if self.verbose_warnings:
+                warn("The universe has collapsed.")
         elif 'Inflation_dir1_term0' in sol.N_events:
             # Case 1: inflating from the start
-            if self.inflating(sol.x[0], sol.y[:, 0]) > 0:
+            if self.inflating(sol.x[0], sol.y[:, 0]) >= 0 or self.w(sol.x[0], sol.y[:, 0]) <= -1/3:
                 sol.N_beg = sol.N[0]
             # Case 2: there is a transition from non-inflating to inflating
             elif np.size(sol.N_events['Inflation_dir1_term0']) > 0:
@@ -62,9 +69,10 @@ class InflationEquations(Equations, ABC):
             else:
                 warn("Inflation start not determined.")
         else:
-            warn("Inflation start not determined. In order to calculate "
-                 "quantities such as `N_tot`, make sure to track the event "
-                 "InflationEvent(ic.equations, direction=+1, terminal=False).")
+            if self.verbose_warnings:
+                warn("Inflation start not determined. In order to calculate "
+                     "quantities such as `N_tot`, make sure to track the event "
+                     "InflationEvent(ic.equations, direction=+1, terminal=False).")
 
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
@@ -82,9 +90,10 @@ class InflationEquations(Equations, ABC):
         else:
             if ('Inflation_dir-1_term1' not in sol.N_events
                     and 'Inflation_dir-1_term0' not in sol.N_events):
-                warn("Inflation end not determined. In order to calculate "
-                     "quantities such as `N_tot`, make sure to track the event "
-                     "`InflationEvent(ic.equations, direction=-1)`.")
+                if self.verbose_warnings:
+                    warn("Inflation end not determined. In order to calculate "
+                         "quantities such as `N_tot`, make sure to track the event "
+                         "`InflationEvent(ic.equations, direction=-1)`.")
             # Case: inflation did not end
             elif self.inflating(sol.x[-1], sol.y[:, -1]) > 0:
                 warn("Inflation has not ended. Increase `t_end`/`N_end` or decrease initial `phi`?"
@@ -112,7 +121,7 @@ class InflationEquations(Equations, ABC):
             """Derive the scale factor today `a_0` either from reheating or from `Omega_K0`."""
             # derive a0 and Omega_K0 from reheating:
             if Omega_K0 is None:
-                rho_r0_SI = a_B * T_CMB**4 / c**2
+                rho_r0_SI = a_B * T_CMB**4 / c**2  # TODO: fix rho_r0 = rho_photon0 + rho_nu0 ?
                 rho_r0 = rho_r0_SI / mp_kg * lp_m**3
                 # just from instant reheating:
                 N0 = sol.N_end + np.log(3 / 2) / 4 + np.log(sol.V_end / rho_r0) / 4
@@ -124,16 +133,15 @@ class InflationEquations(Equations, ABC):
                 sol.Omega_K0 = - sol.K * c**2 / (sol.a0_Mpc * 100e3 * h)**2
             # for flat universes the scale factor can be freely rescaled
             elif Omega_K0 == 0:
-                assert sol.K == 0, \
-                    ("The global geometry needs to match, "
-                     "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
+                assert sol.K == 0, ("The global geometry needs to match, "
+                                    "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
                 sol.Omega_K0 = Omega_K0
                 sol.a0 = 1.
             # derive a0 from Omega_K0
             else:
-                assert np.sign(Omega_K0) == -sol.K, \
-                    ("The global geometry needs to match, "
-                     "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
+                assert np.sign(Omega_K0) == -sol.K, ("The global geometry needs to match, "
+                                                     "but Omega_K0=%s whereas K=%s."
+                                                     % (Omega_K0, sol.K))
                 sol.Omega_K0 = Omega_K0
                 sol.a0_Mpc = c / (100e3 * h) * np.sqrt(-sol.K / Omega_K0)
                 sol.a0_lp = sol.a0_Mpc * Mpc_m / lp_m
