@@ -55,7 +55,7 @@ class UntilTEvent(Event):
 
     def __init__(self, equations, value, direction=0, terminal=True):
         super(UntilTEvent, self).__init__(equations, direction, terminal, value)
-        self.name = 'UntilT_%g' % self.value
+        self.name = 'UntilT'
 
     def __call__(self, x, y):
         """Root of `t - value`."""
@@ -67,7 +67,7 @@ class UntilNEvent(Event):
 
     def __init__(self, equations, value, direction=0, terminal=True):
         super(UntilNEvent, self).__init__(equations, direction, terminal, value)
-        self.name = 'UntilN_%g' % self.value
+        self.name = 'UntilN'
 
     def __call__(self, x, y):
         """Root of `N - value`."""
