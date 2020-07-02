@@ -3,10 +3,11 @@
 import warnings
 import numpy as np
 from scipy.optimize import root_scalar
+from primpy.units import Mpc_m, tp_s
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.solver import solve
-from primpy.events import InflationEvent, CollapseEvent
+from primpy.events import InflationEvent, CollapseEvent, UntilNEvent
 
 
 # noinspection PyPep8Naming
@@ -92,9 +93,6 @@ class ISIC_Nt(InflationStartIC):
 
     def __call__(self, y0, **ivp_kwargs):
         """Set background equations of inflation optimizing for `N_tot`."""
-        events = [InflationEvent(self.equations, direction=+1, terminal=False),
-                  InflationEvent(self.equations, direction=-1, terminal=True),
-                  CollapseEvent(self.equations)]
 
         def phii2Ntot(phi_i, kwargs):
             """Convert input `phi_i` to `N_tot`."""
@@ -104,6 +102,10 @@ class ISIC_Nt(InflationStartIC):
                                   eta_i=self.eta_i,
                                   x_end=self.x_end,
                                   **self.ic_input_param)
+            events = [InflationEvent(self.equations, direction=+1, terminal=False),
+                      InflationEvent(self.equations, direction=-1, terminal=True),
+                      UntilNEvent(self.equations, ic.N_i + self.N_tot + 10),
+                      CollapseEvent(self.equations)]
             with warnings.catch_warnings():
                 warnings.filterwarnings(action='ignore',
                                         message="Inflation",
@@ -114,12 +116,13 @@ class ISIC_Nt(InflationStartIC):
                     print("N_tot = %.15g" % sol.N_tot)
                 return sol.N_tot - self.N_tot
             else:
-                if (('Collapse' in sol.N_events and np.size(sol.N_events['Collapse']) > 0) or
+                if (np.size(sol.N_events['Collapse']) > 0 or
                         ('Inflation_dir-1_term0' in sol.N_events and
                          sol.N_events['Inflation_dir-1_term0'] == sol.N[0]) or
                         ('Inflation_dir-1_term1' in sol.N_events and
                          sol.N_events['Inflation_dir-1_term1'] == sol.N[0])):
-                    warnings.warn("foo")
+                    if self.verbose:
+                        warnings.warn("Universe has collapsed or otherwise ended early.")
                     return 0 - self.N_tot
                 else:
                     print("sol = %s" % sol)
@@ -161,12 +164,12 @@ class ISIC_NsOk(InflationStartIC):
         self.h = h
         self.phi_i_bracket = phi_i_bracket
         self.verbose = verbose
+        H0_planck = h * 100e3 / Mpc_m * tp_s
+        self.a0 = 1 / H0_planck / np.sqrt(np.abs(Omega_K0))
+        self.N0 = np.log(self.a0)
 
     def __call__(self, y0, **ivp_kwargs):
         """Set background equations of inflation optimizing for `N_star`."""
-        events = [InflationEvent(self.equations, direction=+1, terminal=False),
-                  InflationEvent(self.equations, direction=-1, terminal=True),
-                  CollapseEvent(self.equations)]
 
         def phii2Nstar(phi_i, kwargs):
             """Convert input `phi_i` to `N_star`."""
@@ -176,8 +179,18 @@ class ISIC_NsOk(InflationStartIC):
                                   eta_i=self.eta_i,
                                   x_end=self.x_end,
                                   **self.ic_input_param)
-            sol = solve(ic, events=events, **kwargs)
-            if sol.success and np.isfinite(sol.N_tot) and sol.N_tot > self.N_star:
+            events = [InflationEvent(self.equations, direction=+1, terminal=False),
+                      InflationEvent(self.equations, direction=-1, terminal=True),
+                      UntilNEvent(self.equations, self.N0 - ic.N_i),
+                      CollapseEvent(self.equations)]
+            with warnings.catch_warnings():
+                warnings.filterwarnings(action='ignore',
+                                        message="Inflation",
+                                        category=UserWarning)
+                sol = solve(ic, events=events, **kwargs)
+            if np.size(sol.N_events['UntilN']) > 0:
+                return sol.N[-1]
+            elif sol.success and np.isfinite(sol.N_tot) and sol.N_tot > self.N_star:
                 sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h, kind='linear')
                 if self.verbose:
                     print("N_tot = %.15g, \t N_star = %.15g" % (sol.N_tot, sol.N_star))
