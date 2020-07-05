@@ -55,7 +55,7 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
     """Hubble parameter (in reduced Planck units) at N=ln(a) during standard Big Bang.
 
     Parameters
-    ==========
+    ----------
         N : float, np.ndarray
             e-folds of the scale factor N=ln(a) during standard Big Bang
             evolution, where the scale factor would be given in reduced Planck
@@ -71,7 +71,7 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
     Omega_L0 is derived from the other density parameters to sum to one.
 
     Returns
-    =======
+    -------
         H : float
             Hubble parameter during standard Big Bang evolution of the Universe.
             In reduced Planck units [tp^-1].
@@ -92,7 +92,7 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
     """Comoving Hubble horizon at N=ln(a) during standard Big Bang.
 
     Parameters
-    ==========
+    ----------
         N : float, np.ndarray
             e-folds of the scale factor N=ln(a) during standard Big Bang
             evolution, where the scale factor would be given in reduced Planck
@@ -111,7 +111,7 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
     Omega_L0 is derived from the other density parameters to sum to one.
 
     Returns
-    =======
+    -------
         cHH : float
             Comoving Hubble horizon during standard Big Bang evolution of the Universe.
 
@@ -126,7 +126,7 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
     """Conformal time during standard Big Bang evolution from N_start to N.
 
     Parameters
-    ==========
+    ----------
         N_start : float
             e-folds of the scale factor N=ln(a) during standard Big Bang
             evolution at lower integration limit (e.g. at end of inflation),
@@ -148,7 +148,7 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
     Omega_L0 is derived from the other density parameters to sum to one.
 
     Returns
-    =======
+    -------
         eta : float
             conformal time passing between `a_start` and `a`
             during standard Big Bang evolution of the Universe.
