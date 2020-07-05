@@ -110,9 +110,9 @@ def test_sol_time_efolds(K):
     bisn = solve(ic=ic_N, events=ev_N, dense_output=True, rtol=1e-12, atol=1e-12)
     assert bist.N_tot == approx(bisn.N_tot)
 
-    N2t = interp1d(bisn.N, bisn.t, kind='linear')
-    N2phi = interp1d(bisn.N, bisn.phi, kind='linear')
-    N2H = interp1d(bisn.N, bisn.H, kind='linear')
+    N2t = interp1d(bisn.N, bisn.t, kind='cubic')
+    N2phi = interp1d(bisn.N, bisn.phi, kind='cubic')
+    N2H = interp1d(bisn.N, bisn.H, kind='cubic')
     assert_allclose(bist.t[1:-1], N2t(bist.N[1:-1]), rtol=rtol, atol=atol)
     assert_allclose(bist.phi[1:-1], N2phi(bist.N[1:-1]), rtol=rtol, atol=atol)
     assert_allclose(bist.H[1:-1], N2H(bist.N[1:-1]), rtol=rtol, atol=atol)
