@@ -87,8 +87,8 @@ def test_basic_methods_time_vs_efolds():
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
 def test_sol_time_efolds(K):
-    rtol = 1e-5
-    atol = 1e-5
+    rtol = 3e-5
+    atol = 3e-5
     pot = QuadraticPotential(mass=6e-6)
     N_i = 10
     phi_i = 17
@@ -106,7 +106,7 @@ def test_sol_time_efolds(K):
             InflationEvent(eq_t, -1, terminal=True)]
     ev_N = [InflationEvent(eq_N, +1, terminal=False),
             InflationEvent(eq_N, -1, terminal=True)]
-    bist = solve(ic=ic_t, events=ev_t, dense_output=True, rtol=1e-12, atol=1e-12)
+    bist = solve(ic=ic_t, events=ev_t, dense_output=True, rtol=1e-10, atol=1e-10)
     bisn = solve(ic=ic_N, events=ev_N, dense_output=True, rtol=1e-12, atol=1e-12)
     assert bist.N_tot == approx(bisn.N_tot)
 
