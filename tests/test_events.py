@@ -27,7 +27,7 @@ def test_UntilTEvent():
             ev = [UntilTEvent(eq, t_end)]
             sol = solve(ic=ic, events=ev)
             assert sol.t[-1] == approx(t_end)
-            assert sol.t_events['UntilT_1e+06'][-1] == approx(t_end)
+            assert sol.t_events['UntilT'][-1] == approx(t_end)
 
 
 @pytest.mark.filterwarnings("ignore:Inflation start not determined. In order to:UserWarning")
@@ -45,7 +45,7 @@ def test_UntilNEvent():
             ev = [UntilNEvent(eq, N_end)]
             sol = solve(ic=ic, events=ev)
             assert sol.N[-1] == approx(N_end)
-            assert sol.N_events['UntilN_73'][-1] == approx(N_end)
+            assert sol.N_events['UntilN'][-1] == approx(N_end)
 
 
 def test_InflationEvent():
