@@ -881,5 +881,3 @@ class HilltopPotential(InflationaryPotential):
     def inv_V(self, V):
         """`phi(V) = phi0 * (1 - sqrt(V) / Lambda**2)**(1/p)`."""
         return self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
-
-
