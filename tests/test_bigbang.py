@@ -39,6 +39,11 @@ def test_get_a0(h, Omega_K0):
     assert effequal(a0__lp * lp_m) == a0_Mpc * Mpc_m
 
 
+@pytest.mark.parametrize('units', ['Mpc', 'planck', 'SI'])
+def test_get_a0_flat(units):
+    assert 1 == bb.get_a0(h=0.7, Omega_K0=0, units=units)
+
+
 @pytest.mark.parametrize('h', [0.3, 0.5, 0.7, 0.9])
 def test_Omega_r0(h):
     assert 0 < bb.get_Omega_r0(h) < 1e-4 / h**2
@@ -54,6 +59,7 @@ def test_Hubble_parameter(h, Omega_K0):
 def test_no_Big_Bang_line():
     assert 1 == bb.no_Big_Bang_line(Omega_m0=0)
     assert 2 == bb.no_Big_Bang_line(Omega_m0=0.5)
+    bb.no_Big_Bang_line(Omega_m0=1)
     with pytest.raises(ValueError, match="Matter density can't be negative"):
         bb.no_Big_Bang_line(Omega_m0=-1)
 
@@ -109,3 +115,5 @@ def test_conformal_time_exceptions():
         bb.conformal_time(N_start=100, N=200, Omega_m0=0, Omega_K0=-0.01, h=0.7)
     with pytest.raises(Exception, match="Universe recollapses"):
         bb.conformal_time(N_start=100, N=200, Omega_m0=1, Omega_K0=0.01, h=0.7)
+    with pytest.raises(Exception, match="`N` needs to be either float or np.ndarray"):
+        bb.conformal_time(N_start=100, N=[150, 200], Omega_m0=1, Omega_K0=0.01, h=0.7)
