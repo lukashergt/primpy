@@ -85,7 +85,8 @@ def test_basic_methods_time_vs_efolds():
                 assert eq_t.inflating(t, y1_t) == approx(eq_N.inflating(N, y1_N), rel=tol, abs=tol)
 
 
-def test_sol_time_efolds():
+@pytest.mark.parametrize('K', [-1, 0, +1])
+def test_sol_time_efolds(K):
     rtol = 1e-5
     atol = 1e-5
     pot = QuadraticPotential(mass=6e-6)
@@ -95,51 +96,51 @@ def test_sol_time_efolds():
     eta_i = 0
     h = 0.7
     k = np.logspace(-3, 1, 4 * 10 + 1)
-    for K in [-1, 0, +1]:
-        Omega_K0 = -K * 0.01
-        eq_t = InflationEquationsT(K=K, potential=pot, track_eta=True)
-        eq_N = InflationEquationsN(K=K, potential=pot, track_eta=True, track_time=True)
-        ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
-        ic_N = InflationStartIC(eq_N, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
-        ev_t = [InflationEvent(eq_t, +1, terminal=False),
-                InflationEvent(eq_t, -1, terminal=True)]
-        ev_N = [InflationEvent(eq_N, +1, terminal=False),
-                InflationEvent(eq_N, -1, terminal=True)]
-        bist = solve(ic=ic_t, events=ev_t, rtol=1e-10, atol=1e-10)
-        bisn = solve(ic=ic_N, events=ev_N, rtol=1e-12, atol=1e-12)
-        assert bist.N_tot == approx(bisn.N_tot)
+    Omega_K0 = -K * 0.01
 
-        N2t = interp1d(bisn.N, bisn.t, kind='cubic')
-        N2phi = interp1d(bisn.N, bisn.phi, kind='cubic')
-        N2H = interp1d(bisn.N, bisn.H, kind='cubic')
-        assert_allclose(bist.t[1:-1], N2t(bist.N[1:-1]), rtol=rtol, atol=atol)
-        assert_allclose(bist.phi[1:-1], N2phi(bist.N[1:-1]), rtol=rtol, atol=atol)
-        assert_allclose(bist.H[1:-1], N2H(bist.N[1:-1]), rtol=rtol, atol=atol)
+    eq_t = InflationEquationsT(K=K, potential=pot, track_eta=True)
+    eq_N = InflationEquationsN(K=K, potential=pot, track_eta=True, track_time=True)
+    ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
+    ic_N = InflationStartIC(eq_N, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
+    ev_t = [InflationEvent(eq_t, +1, terminal=False),
+            InflationEvent(eq_t, -1, terminal=True)]
+    ev_N = [InflationEvent(eq_N, +1, terminal=False),
+            InflationEvent(eq_N, -1, terminal=True)]
+    bist = solve(ic=ic_t, events=ev_t, dense_output=True, rtol=1e-10, atol=1e-10)
+    bisn = solve(ic=ic_N, events=ev_N, dense_output=True, rtol=1e-12, atol=1e-12)
+    assert bist.N_tot == approx(bisn.N_tot)
 
-        bist.derive_a0(Omega_K0=Omega_K0, h=h)
-        bisn.derive_a0(Omega_K0=Omega_K0, h=h)
-        assert bist.K == K
-        assert bisn.K == K
-        assert bist.Omega_K0 == Omega_K0
-        assert bisn.Omega_K0 == Omega_K0
-        if K != 0:
-            assert bisn.a0_Mpc * Mpc_m == bisn.a0_lp * lp_m
-            bist.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
-            bisn.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
-            bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
-            bisn.derive_approx_power(Omega_K0=Omega_K0, h=h)
-        elif K == 0:
-            assert bisn.a0 == 1
-            bist.derive_comoving_hubble_horizon(N_star=55)
-            bisn.derive_comoving_hubble_horizon(N_star=55)
-            bist.derive_approx_power(N_star=55)
-            bisn.derive_approx_power(N_star=55)
-        N2cHH = interp1d(bisn.N, bisn.cHH_Mpc, kind='cubic')
-        assert_allclose(bist.cHH_Mpc[1:-1], N2cHH(bist.N[1:-1]), rtol=rtol*1e1, atol=1e-15)
-        assert bist.N_star == approx(bisn.N_star)
-        assert bist.N_dagg == approx(bisn.N_dagg)
-        assert_allclose(bist.P_s_approx(k), bisn.P_s_approx(k), rtol=rtol, atol=1e-9*1e-3)
-        assert_allclose(bist.P_t_approx(k), bisn.P_t_approx(k), rtol=rtol, atol=1e-9*1e-3*1e-1)
+    N2t = interp1d(bisn.N, bisn.t, kind='linear')
+    N2phi = interp1d(bisn.N, bisn.phi, kind='linear')
+    N2H = interp1d(bisn.N, bisn.H, kind='linear')
+    assert_allclose(bist.t[1:-1], N2t(bist.N[1:-1]), rtol=rtol, atol=atol)
+    assert_allclose(bist.phi[1:-1], N2phi(bist.N[1:-1]), rtol=rtol, atol=atol)
+    assert_allclose(bist.H[1:-1], N2H(bist.N[1:-1]), rtol=rtol, atol=atol)
+
+    bist.derive_a0(Omega_K0=Omega_K0, h=h)
+    bisn.derive_a0(Omega_K0=Omega_K0, h=h)
+    assert bist.K == K
+    assert bisn.K == K
+    assert bist.Omega_K0 == Omega_K0
+    assert bisn.Omega_K0 == Omega_K0
+    if K != 0:
+        assert bisn.a0_Mpc * Mpc_m == bisn.a0_lp * lp_m
+        bist.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
+        bisn.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
+        bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
+        bisn.derive_approx_power(Omega_K0=Omega_K0, h=h)
+    elif K == 0:
+        assert bisn.a0 == 1
+        bist.derive_comoving_hubble_horizon(N_star=55)
+        bisn.derive_comoving_hubble_horizon(N_star=55)
+        bist.derive_approx_power(N_star=55)
+        bisn.derive_approx_power(N_star=55)
+    N2cHH = interp1d(bisn.N, bisn.cHH_Mpc, kind='cubic')
+    assert_allclose(bist.cHH_Mpc[1:-1], N2cHH(bist.N[1:-1]), rtol=rtol*1e1, atol=1e-15)
+    assert bist.N_star == approx(bisn.N_star)
+    assert bist.N_dagg == approx(bisn.N_dagg)
+    assert_allclose(bist.P_s_approx(k), bisn.P_s_approx(k), rtol=rtol, atol=1e-9*1e-3)
+    assert_allclose(bist.P_t_approx(k), bisn.P_t_approx(k), rtol=rtol, atol=1e-9*1e-3*1e-1)
 
 
 @pytest.mark.filterwarnings("ignore:Inflation start not determined. In order to:UserWarning")
