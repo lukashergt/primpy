@@ -106,7 +106,7 @@ def test_sol_time_efolds(K):
             InflationEvent(eq_t, -1, terminal=True)]
     ev_N = [InflationEvent(eq_N, +1, terminal=False),
             InflationEvent(eq_N, -1, terminal=True)]
-    bist = solve(ic=ic_t, events=ev_t, dense_output=True, rtol=1e-10, atol=1e-10)
+    bist = solve(ic=ic_t, events=ev_t, dense_output=True, rtol=1e-12, atol=1e-12)
     bisn = solve(ic=ic_N, events=ev_N, dense_output=True, rtol=1e-12, atol=1e-12)
     assert bist.N_tot == approx(bisn.N_tot)
 
