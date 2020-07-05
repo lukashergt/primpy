@@ -750,8 +750,8 @@ class NaturalPotential(InflationaryPotential):
 
     @staticmethod
     def sr_r(N_star, phi0):
+        """Slow-roll approximation for the tensor-to-scalar ratio `r`."""
         f = phi0 / pi
-        """Slow-roll approximation for the spectral index `n_s`."""
         return 16 / (-2 * f**2 + np.exp(N_star / f**2) * (1 + 2 * f**2))
 
     @classmethod
