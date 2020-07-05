@@ -93,7 +93,7 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
 
 
 def no_Big_Bang_line(Omega_m0):
-    """Returns `Omega_L0` for dividing line between universes with/without Big Bang.
+    """Return `Omega_L0` for dividing line between universes with/without Big Bang.
 
     Parameters
     ----------
@@ -118,7 +118,7 @@ def no_Big_Bang_line(Omega_m0):
 
 
 def expand_recollapse_line(Omega_m0):
-    """Returns `Omega_L0` for dividing line between expanding/recollapsing universes.
+    """Return `Omega_L0` for dividing line between expanding/recollapsing universes.
 
     Parameters
     ----------
