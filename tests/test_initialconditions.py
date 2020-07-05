@@ -40,14 +40,10 @@ def basic_ic_asserts(y0, ic, K, pot, N_i, Omega_Ki, phi_i, t_i):
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
 def test_InflationStartIC(pot, K, t_i, Eq):
-    # pots = [QuadraticPotential(mass=6e-6), StarobinskyPotential(Lambda=5e-2)]
     phi_i = 17
 
     # for N_i:
     N_i = 10
-    # for t_i, InflationEquations in zip([1e4, None], [InflationEquationsT, InflationEquationsN]):
-        # for K in [-1, 0, +1]:
-            # for i, pot in enumerate(pots):
     eq = Eq(K=K, potential=pot)
     ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
     y0 = np.zeros(len(ic.equations.idx))
@@ -57,10 +53,7 @@ def test_InflationStartIC(pot, K, t_i, Eq):
     # for Omega_Ki:
     if K != 0:
         abs_Omega_Ki = 0.9
-        # for t_i, InflationEquations in zip([1e4, None], [InflationEquationsT, InflationEquationsN]):
-            # for K in [-1, 0, +1]:
         Omega_Ki = -K * abs_Omega_Ki
-                # for i, pot in enumerate(pots):
         eq = Eq(K=K, potential=pot)
         ic = InflationStartIC(equations=eq, Omega_Ki=Omega_Ki, phi_i=phi_i, t_i=t_i)
         y0 = np.zeros(len(ic.equations.idx))
@@ -77,8 +70,6 @@ def test_ISIC_Nt(K, t_i, Eq):
 
     # for N_i:
     N_i = 11
-    # for t_i, InflationEquations in zip([1e4, None], [InflationEquationsT, InflationEquationsN]):
-    #     for K in [-1, 0, +1]:
     eq = Eq(K=K, potential=pot)
     ic = ISIC_Nt(equations=eq, N_i=N_i, N_tot=N_tot, t_i=t_i, phi_i_bracket=[15, 30])
     y0 = np.zeros(len(ic.equations.idx))
@@ -95,11 +86,8 @@ def test_ISIC_Nt(K, t_i, Eq):
         assert pytest.approx(bisn.N_tot, rel=1e-6, abs=1e-6) == N_tot
 
     # for Omega_Ki:
-    # if K != 0:
-    if K > 10:
+    if K != 0:
         abs_Omega_Ki = 0.9
-        # for t_i, InflationEquations in zip([1e4, None], [InflationEquationsT, InflationEquationsN]):
-        #     for K in [-1, 0, +1]:
         Omega_Ki = -K * abs_Omega_Ki
         eq = Eq(K=K, potential=pot)
         ic = ISIC_Nt(equations=eq, Omega_Ki=Omega_Ki, N_tot=N_tot, t_i=t_i, phi_i_bracket=[15, 30])
@@ -127,8 +115,6 @@ def test_ISIC_NsOk(K, t_i, Eq):
 
     # for N_i:
     N_i = 11
-    # for t_i, InflationEquations in zip([1e4, None], [InflationEquationsT, InflationEquationsN]):
-    #     for K in [-1, +1]:
     Omega_K0 = -K * 0.01
     eq = Eq(K=K, potential=pot)
     ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=N_star, Omega_K0=Omega_K0, h=h, t_i=t_i,
@@ -154,8 +140,6 @@ def test_ISIC_NsOk(K, t_i, Eq):
 
     # for Omega_Ki:
     abs_Omega_Ki = 0.9
-    # for t_i, InflationEquations in zip([1e4, None], [InflationEquationsT, InflationEquationsN]):
-    #     for K in [-1, +1]:
     Omega_Ki = -K * abs_Omega_Ki
     Omega_K0 = -K * 0.01
     eq = Eq(K=K, potential=pot)
