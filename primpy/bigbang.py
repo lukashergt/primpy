@@ -15,8 +15,8 @@ def get_H0(h, units='planck'):
     elif units == 'SI':
         return h * 100e3 / Mpc_m  # in SI units, i.e. s^-1
     else:
-        NotImplementedError("%s not implemented for units, please choose one of "
-                            "{'planck', 'H0', 'SI'}." % units)
+        raise NotImplementedError("%s not implemented for units, please choose "
+                                  "one of {'planck', 'H0', 'SI'}." % units)
 
 
 def get_a0(h, Omega_K0, units='planck'):
@@ -33,8 +33,8 @@ def get_a0(h, Omega_K0, units='planck'):
     elif units == 'SI':
         return a0 * lp_m  # in SI units, i.e. m
     else:
-        NotImplementedError("%s not implemented for units, please choose one of "
-                            "{'planck', 'Mpc', 'SI'}." % units)
+        raise NotImplementedError("%s not implemented for units, please choose "
+                                  "one of {'planck', 'Mpc', 'SI'}." % units)
 
 
 def get_rho_crit_kg_im3(h):
@@ -77,7 +77,7 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
             In reduced Planck units [tp^-1].
     """
     a = np.exp(N)
-    H0 = get_H0(h=h, units='tp^-1')  # in reduced Planck units
+    H0 = get_H0(h=h, units='planck')  # in reduced Planck units
     Omega_r0 = get_Omega_r0(h=h)
     Omega_L0 = 1 - Omega_r0 - Omega_m0 - Omega_K0
     a0 = get_a0(h=h, Omega_K0=Omega_K0, units='planck')
