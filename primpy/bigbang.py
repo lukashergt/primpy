@@ -80,12 +80,64 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
     H0 = get_H0(h=h, units='planck')  # in reduced Planck units
     Omega_r0 = get_Omega_r0(h=h)
     Omega_L0 = 1 - Omega_r0 - Omega_m0 - Omega_K0
+    if Omega_L0 > no_Big_Bang_line(Omega_m0=Omega_m0):
+        raise Exception("no Big Bang for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
+    elif Omega_L0 < expand_recollapse_line(Omega_m0=Omega_m0):
+        raise Exception("Universe recollapses for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
     a0 = get_a0(h=h, Omega_K0=Omega_K0, units='planck')
     H = H0 * np.sqrt(Omega_r0 * (a0 / a)**4 +
                      Omega_m0 * (a0 / a)**3 +
                      Omega_K0 * (a0 / a)**2 +
                      Omega_L0)
     return H
+
+
+def no_Big_Bang_line(Omega_m0):
+    """Returns `Omega_L0` for dividing line between universes with/without Big Bang.
+
+    Parameters
+    ----------
+        Omega_m0 : float
+            matter density parameter today
+
+    Returns
+    -------
+        Omega_L0 : float
+            Density parameter of cosmological constant `Lambda` along the
+            dividing line between a Big Bang evolution (for smaller Omega_L0)
+            and universes without a Big Bang (for larger Omega_L0).
+    """
+    if Omega_m0 == 0:
+        return 1
+    if 0 < Omega_m0 <= 0.5:
+        return 4 * Omega_m0 * np.cosh(np.arccosh((1 - Omega_m0) / Omega_m0) / 3)**3
+    elif 0.5 <= Omega_m0:
+        return 4 * Omega_m0 * np.cos(np.arccos((1 - Omega_m0) / Omega_m0) / 3)**3
+    else:
+        raise ValueError("Matter density can't be negative but, Omega_m0=%g" % Omega_m0)
+
+
+def expand_recollapse_line(Omega_m0):
+    """Returns `Omega_L0` for dividing line between expanding/recollapsing universes.
+
+    Parameters
+    ----------
+        Omega_m0 : float
+            matter density parameter today
+
+    Returns
+    -------
+        Omega_L0 : float
+            Density parameter of cosmological constant `Lambda` along the
+            dividing line between expanding (for larger Omega_L0) and
+            recollapsing (for smaller Omega_L0) universes.
+    """
+    if 0 <= Omega_m0 < 1:
+        return 0
+    elif 1 <= Omega_m0:
+        return 4 * Omega_m0 * np.cos(np.arccos((1 - Omega_m0) / Omega_m0) / 3 + 4*pi/3)**3
+    else:
+        raise ValueError("Matter density can't be negative but, Omega_m0=%g" % Omega_m0)
 
 
 def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
@@ -149,12 +201,19 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
 
     Returns
     -------
-        eta : float
+        eta : float, np.ndarray
             conformal time passing between `a_start` and `a`
             during standard Big Bang evolution of the Universe.
+            Same shape as `N`.
     """
-
-    def integrand(n):
-        return np.exp(-n) / Hubble_parameter(N=n, Omega_m0=Omega_m0, h=h, Omega_K0=Omega_K0)
-    eta = integrate.quad(func=integrand, a=N_start, b=N)
-    return eta
+    if isinstance(N, np.ndarray):
+        return np.array([conformal_time(N_start=N_start, N=n, Omega_m0=Omega_m0,
+                                        Omega_K0=Omega_K0, h=h)[0] for n in N])
+    elif isinstance(N, float) or isinstance(N, int):
+        def integrand(n):
+            return np.exp(-n) / Hubble_parameter(N=n, Omega_m0=Omega_m0, h=h, Omega_K0=Omega_K0)
+        eta = integrate.quad(func=integrand, a=N_start, b=N)
+        return eta
+    else:
+        raise Exception("`N` needs to be either float or np.ndarray of floats, "
+                        "but is type(N)=%s" % type(N))
