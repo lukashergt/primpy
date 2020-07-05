@@ -13,6 +13,7 @@ def effequal(expected, rel=1e-15, abs=1e-15, **kwargs):
 def test_not_implemented_units():
     with pytest.raises(NotImplementedError):
         bb.get_H0(h=0.7, units='Mpc')
+    with pytest.raises(NotImplementedError):
         bb.get_a0(h=0.7, Omega_K0=-0.01, units='H0')
 
 
