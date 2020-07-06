@@ -13,10 +13,15 @@ import primpy.potentials as pp
                                              (pp.QuarticPotential, {}),
                                              (pp.StarobinskyPotential, {}),
                                              (pp.NaturalPotential, dict(phi0=100)),
+                                             (pp.DoubleWellPotential, dict(phi0=100, p=2)),
                                              (pp.DoubleWell2Potential, dict(phi0=100)),
                                              (pp.DoubleWell4Potential, dict(phi0=100))])
 @pytest.mark.parametrize('Lambda, phi', [(1, 1), (2e-3, 10)])
 def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
+    with pytest.raises(Exception):
+        kwargs = pot_kwargs.copy()
+        kwargs['foo'] = 0
+        Pot(Lambda=Lambda, **kwargs)
     pot = Pot(Lambda=Lambda, **pot_kwargs)
     assert isinstance(pot.tag, str)
     assert isinstance(pot.name, str)
@@ -26,20 +31,20 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     pot.d2V(phi=phi)
     pot.d3V(phi=phi)
     assert pot.inv_V(V=Lambda**4/2) > 0
-    L, p, N = pot.power_to_potential(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
-    assert L > 0
-    assert p > 0
-    assert N == 60
-    L, p, N = pot.power_to_potential(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
-    assert L > 0
-    assert p == 5
-    assert 0 < N < 100
-    with pytest.raises(Exception):
-        pot.power_to_potential(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
-    with pytest.raises(Exception):
-        kwargs = pot_kwargs.copy()
-        kwargs['foo'] = 0
-        Pot(Lambda=Lambda, **kwargs)
+    if type(pot) == pp.DoubleWellPotential:
+        with pytest.raises(NotImplementedError):
+            pot.power_to_potential(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
+    else:
+        L, p, N = pot.power_to_potential(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
+        assert L > 0
+        assert p > 0
+        assert N == 60
+        L, p, N = pot.power_to_potential(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
+        assert L > 0
+        assert p == 5
+        assert 0 < N < 100
+        with pytest.raises(Exception):
+            pot.power_to_potential(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
 
 
 @pytest.mark.parametrize('mass, phi', [(1, 1), (6e-6, 20)])
@@ -80,3 +85,14 @@ def test_starobinsky_inflation_power_to_potential():
     pot = pp.StarobinskyPotential(Lambda=1e-3)
     assert 0 < pot.power_to_potential(2e-9, None, 55)[1] < 10
     assert 0 < pot.power_to_potential(2e-9, 5, None)[2] < 100
+
+
+@pytest.mark.parametrize('Pot, pot_kwargs', [(pp.NaturalPotential, dict(phi0=20)),
+                                             (pp.NaturalPotential, dict(phi0=50)),
+                                             (pp.NaturalPotential, dict(phi0=100)),
+                                             (pp.NaturalPotential, dict(phi0=200)),
+                                             (pp.NaturalPotential, dict(phi0=500))])
+@pytest.mark.parametrize('N_star', [50, 60])
+def test_slow_roll_methods(Pot, pot_kwargs, N_star, ):
+    assert 0.9 < Pot.sr_n_s(N_star=N_star, **pot_kwargs) < 1
+    assert 1e-3 < Pot.sr_r(N_star=N_star, **pot_kwargs) < 1
