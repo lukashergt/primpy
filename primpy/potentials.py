@@ -137,7 +137,7 @@ class InflationaryPotential(ABC):
 
     @classmethod
     @abstractmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`."""
 
 
@@ -173,7 +173,7 @@ class MonomialPotential(InflationaryPotential):
         return (V / self.Lambda**4)**(1/self.p)
 
     @staticmethod
-    def power_to_potential(A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -224,7 +224,7 @@ class LinearPotential(MonomialPotential):
         super(LinearPotential, self).__init__(p=1, **pot_kwargs)
 
     @classmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -252,7 +252,7 @@ class LinearPotential(MonomialPotential):
             from horizon crossing till the end of inflation.
 
         """
-        return super(LinearPotential, cls).power_to_potential(A_s, phi_star, N_star, p=1)
+        return super(LinearPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=1)
 
 
 class QuadraticPotential(InflationaryPotential):
@@ -291,7 +291,7 @@ class QuadraticPotential(InflationaryPotential):
         return np.sqrt(2 * V) / self.mass
 
     @staticmethod
-    def power_to_potential(A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton mass `m` (i.e. essentially the potential amplitude)
@@ -341,7 +341,7 @@ class CubicPotential(MonomialPotential):
         super(CubicPotential, self).__init__(p=3, **pot_kwargs)
 
     @classmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -369,7 +369,7 @@ class CubicPotential(MonomialPotential):
             from horizon crossing till the end of inflation.
 
         """
-        return super(CubicPotential, cls).power_to_potential(A_s, phi_star, N_star, p=3)
+        return super(CubicPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=3)
 
 
 class QuarticPotential(MonomialPotential):
@@ -383,7 +383,7 @@ class QuarticPotential(MonomialPotential):
         super(QuarticPotential, self).__init__(p=4, **pot_kwargs)
 
     @classmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -411,7 +411,7 @@ class QuarticPotential(MonomialPotential):
             from horizon crossing till the end of inflation.
 
         """
-        return super(QuarticPotential, cls).power_to_potential(A_s, phi_star, N_star, p=4)
+        return super(QuarticPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=4)
 
 
 class StarobinskyPotential(InflationaryPotential):
@@ -472,7 +472,7 @@ class StarobinskyPotential(InflationaryPotential):
                 - gamma * (phi - phi_end)) / (2 * gamma**2)
 
     @classmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -593,7 +593,7 @@ class NaturalPotential(InflationaryPotential):
         return -f**2 * (np.log(1 + 1 / (2 * f**2)) + 2 * np.log(np.cos(phi / (2 * f))))
 
     @classmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -700,7 +700,7 @@ class DoubleWellPotential(InflationaryPotential):
         return self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
 
     @staticmethod
-    def power_to_potential(A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`."""
         raise NotImplementedError("This function is not implemented for DoubleWellPotential, yet. "
                                   "It is implemented for DoubleWell2Potential and "
@@ -748,7 +748,7 @@ class DoubleWell2Potential(DoubleWellPotential):
         return (phi2 - phi_end2 - phi0**2 * np.log(phi2 / phi_end2)) / 8
 
     @classmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -855,7 +855,7 @@ class DoubleWell4Potential(DoubleWellPotential):
         return (phi2 - phi_end2 + phi0**4 * (1/phi2 - 1/phi_end2)) / 16
 
     @classmethod
-    def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -901,6 +901,7 @@ class DoubleWell4Potential(DoubleWellPotential):
         return Lambda, phi_star, N_star
 
 
+# TODO:
 # class HilltopPotential(InflationaryPotential):
 #     """Double-Well potential: `V(phi) = Lambda**4 * (1 - (phi/phi0)**p)**2`.
 #

@@ -33,18 +33,18 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     assert pot.inv_V(V=Lambda**4/2) > 0
     if type(pot) == pp.DoubleWellPotential:
         with pytest.raises(NotImplementedError):
-            pot.power_to_potential(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
+            pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
     else:
-        L, p, N = pot.power_to_potential(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
+        L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
         assert L > 0
         assert p > 0
         assert N == 60
-        L, p, N = pot.power_to_potential(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
+        L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
         assert L > 0
         assert p == 5
         assert 0 < N < 100
         with pytest.raises(Exception):
-            pot.power_to_potential(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
+            pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
 
 
 @pytest.mark.parametrize('mass, phi', [(1, 1), (6e-6, 20)])
@@ -64,8 +64,8 @@ def test_quadratic_inflation_V(mass, phi):
 
 def test_quadratic_inflation_power_to_potential():
     pot = pp.QuadraticPotential(Lambda=np.sqrt(6e-6))
-    assert pot.power_to_potential(2e-9, None, 55)[1] == np.sqrt(4 * 55 + 2)
-    assert pot.power_to_potential(2e-9, 20, None)[2] == (20**2 - 2) / 4
+    assert pot.sr_As2Lambda(2e-9, None, 55)[1] == np.sqrt(4 * 55 + 2)
+    assert pot.sr_As2Lambda(2e-9, 20, None)[2] == (20 ** 2 - 2) / 4
 
 
 @pytest.mark.parametrize('Lambda, phi', [(1, 1), (1e-3, 10)])
@@ -83,8 +83,8 @@ def test_starobinsky_inflation_V(Lambda, phi):
 
 def test_starobinsky_inflation_power_to_potential():
     pot = pp.StarobinskyPotential(Lambda=1e-3)
-    assert 0 < pot.power_to_potential(2e-9, None, 55)[1] < 10
-    assert 0 < pot.power_to_potential(2e-9, 5, None)[2] < 100
+    assert 0 < pot.sr_As2Lambda(2e-9, None, 55)[1] < 10
+    assert 0 < pot.sr_As2Lambda(2e-9, 5, None)[2] < 100
 
 
 @pytest.mark.parametrize('Pot, pot_kwargs', [(pp.NaturalPotential, dict(phi0=20)),
