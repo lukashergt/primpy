@@ -36,7 +36,8 @@ def basic_ic_asserts(y0, ic, K, pot, N_i, Omega_Ki, phi_i, t_i):
     assert ic.equations.potential.d3V(phi_i) == pot.d3V(phi_i)
 
 
-@pytest.mark.parametrize('pot', [QuadraticPotential(mass=6e-6), StarobinskyPotential(Lambda=5e-2)])
+@pytest.mark.parametrize('pot', [QuadraticPotential(Lambda=np.sqrt(6e-6)),
+                                 StarobinskyPotential(Lambda=5e-2)])
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
 def test_InflationStartIC(pot, K, t_i, Eq):
@@ -65,7 +66,7 @@ def test_InflationStartIC(pot, K, t_i, Eq):
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
 def test_ISIC_Nt(K, t_i, Eq):
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     N_tot = 60
 
     # for N_i:
@@ -109,7 +110,7 @@ def test_ISIC_Nt(K, t_i, Eq):
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
 def test_ISIC_NsOk(K, t_i, Eq):
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     N_star = 55
     h = 0.7
 

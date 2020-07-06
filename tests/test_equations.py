@@ -24,7 +24,7 @@ def test_equations_sol_ordering_after_postprocessing():
     t_i = 1e4
     N_i = 10
     phis = [17, 6]
-    pots = [QuadraticPotential(mass=6e-6), StarobinskyPotential(Lambda=5e-2)]
+    pots = [QuadraticPotential(Lambda=np.sqrt(6e-6)), StarobinskyPotential(Lambda=5e-2)]
     for K in [-1, 0, +1]:
         for i, pot in enumerate(pots):
             for eq in [InflationEquationsT(K=K, potential=pot),
@@ -67,7 +67,7 @@ def test_equations_sol_events():
     t_i = 7e4
     N_i = 10
     phi_i = 17
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     N_end = 80
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),

@@ -15,7 +15,7 @@ from primpy.solver import solve
 @pytest.mark.filterwarnings("ignore:Inflation start not determined. In order to:UserWarning")
 @pytest.mark.filterwarnings("ignore:Inflation end not determined. In order to:UserWarning")
 def test_UntilTEvent():
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     t_i = 7e4
     N_i = 10
     phi_i = 17
@@ -33,7 +33,7 @@ def test_UntilTEvent():
 @pytest.mark.filterwarnings("ignore:Inflation start not determined. In order to:UserWarning")
 @pytest.mark.filterwarnings("ignore:Inflation end not determined. In order to:UserWarning")
 def test_UntilNEvent():
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     t_i = 7e4
     N_i = 10
     phi_i = 17
@@ -53,8 +53,8 @@ def test_InflationEvent():
     N_i = 10
     phi_i = 17
     for K in [-1, 0, +1]:
-        for mass in [1, 6e-6]:
-            pot = QuadraticPotential(mass=mass)
+        for Lambda in [1, np.sqrt(6e-6)]:
+            pot = QuadraticPotential(Lambda=Lambda)
             for eq in [InflationEquationsT(K=K, potential=pot),
                        InflationEquationsN(K=K, potential=pot)]:
                 ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
@@ -69,7 +69,7 @@ def test_InflationEvent():
 
 
 def test_AfterInflationEndEvent():
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     t_i = 7e4
     N_i = 10
     phi_i = 17
@@ -91,7 +91,7 @@ def test_AfterInflationEndEvent():
 
 
 def test_Phi0Event():
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     t_i = 7e4
     N_i = 10
     phi_i = 17

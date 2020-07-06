@@ -7,7 +7,7 @@ from primpy.time.inflation import InflationEquationsT
 
 def test_basic_methods():
     for K in [-1, 0, 1]:
-        eq = InflationEquationsT(K=K, potential=QuadraticPotential(mass=1))
+        eq = InflationEquationsT(K=K, potential=QuadraticPotential(Lambda=1))
         assert hasattr(eq, 'phi')
         assert hasattr(eq, 'dphidt')
         y0 = np.zeros(len(eq.idx))

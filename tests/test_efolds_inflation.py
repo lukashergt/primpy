@@ -7,7 +7,7 @@ from primpy.efolds.inflation import InflationEquationsN
 
 def test_basic_methods():
     for K in [-1, 0, 1]:
-        eq = InflationEquationsN(K=K, potential=QuadraticPotential(mass=1))
+        eq = InflationEquationsN(K=K, potential=QuadraticPotential(Lambda=1))
         assert hasattr(eq, 'phi')
         assert hasattr(eq, 'dphidN')
         y0 = np.zeros(len(eq.idx))
