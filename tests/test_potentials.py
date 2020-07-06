@@ -36,17 +36,25 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     assert 0 < N < 100
     with pytest.raises(Exception):
         pot.power_to_potential(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
+    with pytest.raises(Exception):
+        kwargs = pot_kwargs.copy()
+        kwargs['foo'] = 0
+        Pot(Lambda=Lambda, **kwargs)
 
 
 @pytest.mark.parametrize('mass, phi', [(1, 1), (6e-6, 20)])
 def test_quadratic_inflation_V(mass, phi):
     """Tests for `QuadraticPotential`."""
-    pot = pp.QuadraticPotential(Lambda=np.sqrt(mass))
-    assert pot.V(phi=phi) == effequal(0.5 * mass**2 * phi**2)
-    assert pot.dV(phi=phi) == effequal(mass**2 * phi)
-    assert pot.d2V(phi=phi) == effequal(mass**2)
-    assert pot.d3V(phi=phi) == effequal(0)
-    assert pot.inv_V(V=mass**2) == effequal(np.sqrt(2))
+    pot1 = pp.QuadraticPotential(Lambda=np.sqrt(mass))
+    assert pot1.V(phi=phi) == effequal(0.5 * mass**2 * phi**2)
+    assert pot1.dV(phi=phi) == effequal(mass**2 * phi)
+    assert pot1.d2V(phi=phi) == effequal(mass**2)
+    assert pot1.d3V(phi=phi) == effequal(0)
+    assert pot1.inv_V(V=mass**2) == effequal(np.sqrt(2))
+    pot2 = pp.QuadraticPotential(mass=mass)
+    assert pot1.V(phi=phi) == pot2.V(phi=phi)
+    with pytest.raises(Exception):
+        pp.QuadraticPotential(mass=mass, Lambda=np.sqrt(mass))
 
 
 def test_quadratic_inflation_power_to_potential():
