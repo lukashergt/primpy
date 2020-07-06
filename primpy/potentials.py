@@ -238,6 +238,10 @@ class QuadraticPotential(InflationaryPotential):
     tex = r'$\phi^2$'
 
     def __init__(self, **pot_kwargs):
+        if 'mass' in pot_kwargs:
+            if 'Lambda' in pot_kwargs:
+                raise Exception("'mass' and 'Lambda' must not be specified simultaneously.")
+            pot_kwargs['Lambda'] = np.sqrt(pot_kwargs.pop('mass'))
         super(QuadraticPotential, self).__init__(**pot_kwargs)
         self.mass = self.Lambda**2
 
