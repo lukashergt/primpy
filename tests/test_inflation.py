@@ -17,7 +17,7 @@ from primpy.solver import solve
 
 
 def test_not_implemented_errors():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(mass=6e-6))
+    eq = InflationEquations(K=1, potential=QuadraticPotential(Lambda=np.sqrt(6e-6)))
     with pytest.raises(NotImplementedError, match="Equations must define H2 method."):
         eq.H(x=0, y=np.zeros(4))
     with pytest.raises(NotImplementedError, match="Equations must define H2 method."):
@@ -29,7 +29,7 @@ def test_not_implemented_errors():
 
 
 def test_track_eta():
-    pot = QuadraticPotential(mass=1)
+    pot = QuadraticPotential(Lambda=1)
     N_i = 10
     phi_i = 17
     eta_i = 0
@@ -62,8 +62,8 @@ def test_basic_methods_time_vs_efolds():
     N = 10
     phi = 20
     for K in [-1, 0, 1]:
-        for mass in [1, 6e-6]:
-            pot = QuadraticPotential(mass=mass)
+        for Lambda in [1, np.sqrt(6e-6)]:
+            pot = QuadraticPotential(Lambda=Lambda)
             for dphidt_squared in [100 * pot.V(phi), 2 * pot.V(phi), pot.V(phi), pot.V(phi) / 100]:
                 dphidt = -np.sqrt(dphidt_squared)
                 eq_t = InflationEquationsT(K=K, potential=pot)
@@ -89,7 +89,7 @@ def test_basic_methods_time_vs_efolds():
 def test_sol_time_efolds(K):
     rtol = 3e-5
     atol = 3e-5
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     N_i = 10
     phi_i = 17
     t_i = 7e4
@@ -148,7 +148,7 @@ def test_postprocessing_inflation_start_warnings():
     t_i = 7e4
     N_i = 10
     phi_i = 17
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot, track_time=True)]:
@@ -175,7 +175,7 @@ def test_postprocessing_inflation_end_warnings():
     t_i = 1e4
     N_i = 10
     phi_i = 17
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     for K in [-1, 0, +1]:
         for eq in [InflationEquationsT(K=K, potential=pot),
                    InflationEquationsN(K=K, potential=pot, track_time=True)]:
@@ -200,7 +200,7 @@ def test_postprocessing_inflation_end_warnings():
 @pytest.mark.filterwarnings("ignore:invalid value encountered:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:divide by zero encountered in log:RuntimeWarning")
 def test_Ncross_nan():
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     N_i = 18
     phi_i = 15
     t_i = 7e4
@@ -223,7 +223,7 @@ def test_Ncross_nan():
 
 def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
     K = +1
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     t_i = 1e4
     N_i = 10
     Omega_K0 = -K * 0.01

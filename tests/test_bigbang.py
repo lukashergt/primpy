@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-"""Tests for `primpy.potential` module."""
+"""Tests for `primpy.bigbang` module."""
 import pytest
+from tests.test_tools import effequal
 import numpy as np
 from primpy.units import Mpc_m, tp_s, lp_m
 import primpy.bigbang as bb
-
-
-def effequal(expected, rel=1e-15, abs=1e-15, **kwargs):
-    return pytest.approx(expected, rel=rel, abs=abs, **kwargs)
 
 
 def test_not_implemented_units():
