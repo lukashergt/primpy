@@ -110,6 +110,11 @@ class InflationaryPotential(ABC):
 
         """
 
+    # TODO:
+    # @abstractmethod
+    # def sr_phi_end(self):
+    #     """Inflaton value at the end of inflation."""
+
     @classmethod
     @abstractmethod
     def power_to_potential(cls, A_s, phi_star, N_star, **pot_kwargs):
@@ -528,16 +533,18 @@ class NaturalPotential(InflationaryPotential):
         return np.arccos(1 - 2 * V / self.Lambda**4) * self.phi0 / pi
 
     @staticmethod
-    def sr_n_s(N_star, phi0):
+    def sr_n_s(N_star, **pot_kwargs):
         """Slow-roll approximation for the spectral index `n_s`."""
+        phi0 = pot_kwargs.pop('phi0')
         f = phi0 / pi
         numerator = 1 + 4 * f**2
         denominator = (-1 + np.exp(N_star / f**2)) * (1 + 2 * f**2)
         return 1 - 1 / f**2 * (1 + numerator / denominator)
 
     @staticmethod
-    def sr_r(N_star, phi0):
+    def sr_r(N_star, **pot_kwargs):
         """Slow-roll approximation for the tensor-to-scalar ratio `r`."""
+        phi0 = pot_kwargs.pop('phi0')
         f = phi0 / pi
         return 16 / (-2 * f**2 + np.exp(N_star / f**2) * (1 + 2 * f**2))
 
