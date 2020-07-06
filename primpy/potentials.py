@@ -24,7 +24,6 @@ class InflationaryPotential(ABC):
             Inflationary potential `V(phi)`.
 
         """
-        raise NotImplementedError("Potential must define V method.")
 
     @abstractmethod
     def dV(self, phi):
@@ -41,7 +40,6 @@ class InflationaryPotential(ABC):
             1st derivative of inflationary potential: `V'(phi)`.
 
         """
-        raise NotImplementedError("Potential must define dV method.")
 
     @abstractmethod
     def d2V(self, phi):
@@ -58,8 +56,8 @@ class InflationaryPotential(ABC):
             2nd derivative of inflationary potential: `V''(phi)`.
 
         """
-        raise NotImplementedError("Potential must define d2V method.")
 
+    @abstractmethod
     def d3V(self, phi):
         """Third derivative `V'''(phi)` w.r.t. inflaton `phi`.
 
@@ -74,8 +72,8 @@ class InflationaryPotential(ABC):
             3rd derivative of inflationary potential: `V'''(phi)`.
 
         """
-        raise NotImplementedError("Potential must define d3V method.")
 
+    @abstractmethod
     def inv_V(self, V):
         """Inverse function `phi(V)` w.r.t. potential `V`.
 
@@ -90,7 +88,6 @@ class InflationaryPotential(ABC):
             Inflaton field `phi`.
 
         """
-        raise NotImplementedError("Potential must define inv_V method.")
 
 
 class MonomialPotential(InflationaryPotential):
