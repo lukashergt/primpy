@@ -2,6 +2,8 @@
 """:mod:`primpy.solver`: general setup for running `solve_ivp`."""
 import numpy as np
 from scipy import integrate
+import pyoscode
+from primpy.time.perturbations import CurvaturePerturbationT
 
 
 def solve(ic, *args, **kwargs):
@@ -34,3 +36,14 @@ def solve(ic, *args, **kwargs):
                               rtol=rtol, atol=atol, *args, **kwargs)
     sol.event_keys = [e.name for e in events]
     return ic.equations.sol(sol)
+
+
+def solve_oscode(background, k):
+    pert = CurvaturePerturbationT(background=background, k=k)
+    sol1 = pyoscode.solve(ts=background.t, ws=pert.ms_frequency, gs=pert.ms_damping,
+                          ti=background.t[0], tf=background.t[-1], x0=1, dx0=0,
+                          logw=False, logg=False, rtol=1e-6)
+    sol2 = pyoscode.solve(ts=background.t, ws=pert.ms_frequency, gs=pert.ms_damping,
+                          ti=background.t[0], tf=background.t[-1], x0=0, dx0=1,  # TODO: dx0=k?
+                          logw=False, logg=False, rtol=1e-6)
+    return pert.sol(sol=pert, sol1=sol1, sol2=sol2)
