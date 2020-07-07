@@ -46,13 +46,16 @@ class Equations(ABC):
         sol.x = sol.t
         del sol.t
         x_name = self.independent_variable
+        for name, i in self.idx.items():
+            setattr(sol, name, sol.y[i])
+        setattr(sol, x_name, sol.x)
+        if not hasattr(sol, 'event_keys'):
+            return sol
         setattr(sol, x_name + '_events', dict(zip(sol.event_keys, sol.pop('t_events'))))
         sol.y_events = dict(zip(sol.event_keys, sol.pop('y_events')))
         for name, i in self.idx.items():
-            setattr(sol, name, sol.y[i])
             setattr(sol, name + '_events', {key: value[:, i] if value.size > 0 else np.array([])
                                             for key, value in sol.y_events.items()})
-        setattr(sol, x_name, sol.x)
         return sol
 
     def _set_independent_variable(self, name):
