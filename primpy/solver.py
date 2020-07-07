@@ -60,12 +60,12 @@ def solve_oscode(background, k):
         wavenumber `k`.
     """
     pert = CurvaturePerturbationT(background=background, k=k)
-    sol1 = pyoscode.solve(ts=background.t, ws=pert.ms_frequency, gs=pert.ms_damping,
+    sol1 = pyoscode.solve(ts=background.t, ws=np.log(pert.ms_frequency), gs=pert.ms_damping,
                           ti=background.t[0], tf=background.t[-1], x0=1, dx0=0,
-                          logw=False, logg=False, rtol=1e-6)
-    sol2 = pyoscode.solve(ts=background.t, ws=pert.ms_frequency, gs=pert.ms_damping,
+                          logw=True, logg=False, rtol=1e-4)
+    sol2 = pyoscode.solve(ts=background.t, ws=np.log(pert.ms_frequency), gs=pert.ms_damping,
                           ti=background.t[0], tf=background.t[-1], x0=0, dx0=1,
-                          logw=False, logg=False, rtol=1e-6)
+                          logw=True, logg=False, rtol=1e-4)
     return pert.sol(sol=pert, sol1=sol1, sol2=sol2)
 
 
