@@ -27,9 +27,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install --no-cache-dir -r requirements.txt
+        git clone https://github.com/eigenteam/eigen-git-mirror
+        export CPLUS_INCLUDE_PATH="$PWD/eigen-git-mirror/:$CPLUS_INCLUDE_PATH"
         git clone https://github.com/fruzsinaagocs/oscode.git
-        cd oscode
-        CPLUS_INCLUDE_PATH=/usr/include/eigen3 pip install .
+        pip install oscode
     - name: Install testing packages
       run: |
         pip install flake8
