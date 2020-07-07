@@ -57,6 +57,7 @@ class CurvaturePerturbationT(Equations):
         return np.sqrt(frequency2), damping
 
     def sol(self, sol, **kwargs):
+        """Post-processing for `pyoscode.solve` solution."""
         sol1 = kwargs.pop('sol1')
         sol2 = kwargs.pop('sol2')
         # translate oscode output to solve_ivp output:
@@ -79,7 +80,7 @@ class CurvaturePerturbationT(Equations):
         return sol
 
     def get_Rk_i(self):
-        """Set vacuum initial conditions for `R_k`."""
+        """Get vacuum initial conditions for curvature perturbation `R_k`."""
         a_i = self.background.a[0]
         dphidt_i = self.background.dphidt[0]
         H_i = self.background.H[0]
@@ -87,6 +88,7 @@ class CurvaturePerturbationT(Equations):
         return 1 / np.sqrt(2 * self.k) / z_i
 
     def get_vacuum_RST(self):
+        """Get vacuum according to the renormalised stress-energy tensor (RST)."""
         a_i = self.background.a[0]
         Rk_i = self.get_Rk_i()
         dRk_i = -1j * self.k / a_i * Rk_i
@@ -94,6 +96,7 @@ class CurvaturePerturbationT(Equations):
 
     @staticmethod
     def _get_coefficients_a_b(Rk_i, dRk_i, y1_i, dy1_i, y2_i, dy2_i):
+        """Coefficients to a linear combination of 2 solutions."""
         a = (Rk_i * dy2_i - dRk_i * y2_i) / (y1_i * dy2_i - dy1_i * y2_i)
         b = (Rk_i * dy1_i - dRk_i * y1_i) / (y2_i * dy1_i - dy2_i * y1_i)
         return a, b
