@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 """:mod:`primpy.__version__`: version file for primpy."""
 
-__version__ = '2.2.0'
+__version__ = '2.3.0'
