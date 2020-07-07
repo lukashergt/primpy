@@ -44,6 +44,10 @@ def solve_oscode(background, k):
                           ti=background.t[0], tf=background.t[-1], x0=1, dx0=0,
                           logw=False, logg=False, rtol=1e-6)
     sol2 = pyoscode.solve(ts=background.t, ws=pert.ms_frequency, gs=pert.ms_damping,
-                          ti=background.t[0], tf=background.t[-1], x0=0, dx0=1,  # TODO: dx0=k?
+                          ti=background.t[0], tf=background.t[-1], x0=0, dx0=1,
                           logw=False, logg=False, rtol=1e-6)
     return pert.sol(sol=pert, sol1=sol1, sol2=sol2)
+
+
+def solve_pps(background, ks):
+    return np.array([solve_oscode(background, k).PPS_RST for k in ks])
