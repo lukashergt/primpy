@@ -31,8 +31,10 @@ jobs:
         pip install --no-cache-dir -r requirements.txt
         git clone https://github.com/eigenteam/eigen-git-mirror
         export CPLUS_INCLUDE_PATH="$PWD/eigen-git-mirror/:$CPLUS_INCLUDE_PATH"
+        echo $PWD
         git clone https://github.com/fruzsinaagocs/oscode.git
         cd oscode
+        echo $CPLUS_INCLUDE_PATH
         pip install .
     - name: Install testing packages
       run: |
