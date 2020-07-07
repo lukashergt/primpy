@@ -56,7 +56,7 @@ jobs:
     # Run tests
     - name: Test with pytest
       run: |
-        pytest --cov=primpy
+        pytest --cov=primpy tests
     
 #     # Check code coverage
 #     - name: Upload coverage to Codecov  
