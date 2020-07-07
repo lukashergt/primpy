@@ -109,6 +109,7 @@ class InflationEquations(Equations, ABC):
         self.postprocessing_inflation_end(sol)
         sol.K = self.K
         sol.potential = self.potential
+        sol.a = self.a(sol.x, sol.y)
         sol.H = self.H(sol.x, sol.y)
         if not hasattr(sol, 'logaH'):
             sol.logaH = sol.N + np.log(sol.H)
