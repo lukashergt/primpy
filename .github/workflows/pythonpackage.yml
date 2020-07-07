@@ -24,18 +24,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
-      env:
-        CPLUS_INCLUDE_PATH: $PWD/eigen-git-mirror/
       run: |
         python -m pip install --upgrade pip
         pip install --no-cache-dir -r requirements.txt
-        git clone https://github.com/eigenteam/eigen-git-mirror
-        export CPLUS_INCLUDE_PATH="$PWD/eigen-git-mirror/:$CPLUS_INCLUDE_PATH"
         echo $PWD
+        git clone https://github.com/eigenteam/eigen-git-mirror
         git clone https://github.com/fruzsinaagocs/oscode.git
         cd oscode
-        echo $CPLUS_INCLUDE_PATH
-        pip install .
+        CPLUS_INCLUDE_PATH=/home/runner/work/primpy2/primpy2/eigen-git-mirror pip install .
     - name: Install testing packages
       run: |
         pip install flake8
