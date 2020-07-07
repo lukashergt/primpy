@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """:mod:`primpy.time.perturbations`: comoving curvature perturbations w.r.t. time `t`."""
 import numpy as np
+from scipy.integrate import solve_ivp
+from primpy.units import pi
 from primpy.equations import Equations
 
 
@@ -23,8 +25,8 @@ class CurvaturePerturbationT(Equations):
         self.k = k
         self._set_independent_variable('t')
         self.add_variable('Rk', 'dRk', 'steptype')
-        self.one = None
-        self.two = None
+        self.one = solve_ivp(lambda x, y: y, (0, 0), y0=[0, 0, 0])
+        self.two = solve_ivp(lambda x, y: y, (0, 0), y0=[0, 0, 0])
         self.ms_frequency, self.ms_damping = self.mukhanov_sasaki_frequency_damping(background, k)
 
     def __call__(self, x, y):
@@ -39,42 +41,41 @@ class CurvaturePerturbationT(Equations):
         comoving curvature perturbations `R` w.r.t. time `t`, where the e.o.m. is
         written as `ddR + 2 * damping * dR + frequency**2 R = 0`.
         """
-        k = k
         K = background.K
         a2 = np.exp(2 * background.N)
         dphi = background.dphidt
         H = background.H
         dV = background.potential.dV(background.phi)
 
-        k2 = k**2 - 3 * K + k * (K + 1) * K
-        kappa2 = dphi**2 / 2 / H**2 * K + k2
-        E = -2 * (3 * H + dV / dphi + K / a2 / H)
+        kappa2 = k**2 + k * K * (K + 1) - 3 * K
+        shared = 2 * kappa2 / (kappa2 + K * dphi**2 / (2 * H**2))
+        terms = dphi**2 / (2 * H**2) - 3 - dV / (H * dphi) - K / (a2 * H**2)
 
-        frequency2 = (k2 * (2 * k2 / kappa2 - 1) + K * (k2 / kappa2 * E / H + 1)) / a2
-        damping = (k2 / kappa2 * (E + dphi**2 / H) + 3 * H) / 2
+        frequency2 = kappa2 / a2 - K / a2 * (1 + shared * terms)
+        damping = (3 * H + shared * terms * H) / 2
+
         return np.sqrt(frequency2), damping
 
     def sol(self, sol, **kwargs):
         sol1 = kwargs.pop('sol1')
         sol2 = kwargs.pop('sol2')
         # translate oscode output to solve_ivp output:
-        sol1.t = sol1['t']
-        sol2.t = sol2['t']
-        sol1.y = np.vstack((sol1['sol'], sol1['dsol'], sol1['types']))
-        sol2.y = np.vstack((sol2['sol'], sol2['dsol'], sol2['types']))
-        self.one = super(CurvaturePerturbationT, self).sol(sol1, **kwargs)
-        self.two = super(CurvaturePerturbationT, self).sol(sol2, **kwargs)
+        sol.one.t = sol1['t']
+        sol.two.t = sol2['t']
+        sol.one.y = np.vstack((sol1['sol'], sol1['dsol'], sol1['types']))
+        sol.two.y = np.vstack((sol2['sol'], sol2['dsol'], sol2['types']))
+        self.one = super(CurvaturePerturbationT, self).sol(sol.one, **kwargs)
+        self.two = super(CurvaturePerturbationT, self).sol(sol.two, **kwargs)
 
         for key in ['RST']:
             Rk_i, dRk_i = getattr(self, 'get_vacuum_%s' % key)()
             a, b = self._get_coefficients_a_b(Rk_i=Rk_i, dRk_i=dRk_i,
                                               y1_i=self.one.Rk[0], dy1_i=self.one.dRk[0],
                                               y2_i=self.two.Rk[0], dy2_i=self.two.dRk[0])
-            setattr(sol, 'Rk_%s' % key, a * self.one.Rk + b * self.two.Rk)
-            setattr(sol, 'dRk_%s' % key, a * self.one.dRk + b * self.two.dRk)
-            setattr(sol, 'Rk_%s_end' % key, getattr(sol, 'Rk_%s' % key)[-1])
-            setattr(sol, 'dRk_%s_end' % key, getattr(sol, 'dRk_%s' % key)[-1])
-
+            setattr(sol, 'Rk_%s_end' % key, a * self.one.Rk[-1] + b * self.two.Rk[-1])
+            setattr(sol, 'dRk_%s_end' % key, a * self.one.dRk[-1] + b * self.two.dRk[-1])
+            norm = self.k**3 / (2 * pi**2)
+            setattr(sol, 'PPS_%s' % key, np.abs(getattr(sol, 'Rk_%s_end' % key))**2 * norm)
         return sol
 
     def get_Rk_i(self):
