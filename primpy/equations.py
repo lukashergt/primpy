@@ -43,6 +43,7 @@ class Equations(ABC):
 
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
+        sol.independent_variable = self.independent_variable
         sol.x = sol.t
         del sol.t
         x_name = self.independent_variable
