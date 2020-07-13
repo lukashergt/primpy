@@ -43,18 +43,20 @@ class CurvaturePerturbationT(Equations):
         """
         K = background.K
         a2 = np.exp(2 * background.N)
-        dphi = background.dphidt
+        dphidt = background.dphidt
         H = background.H
         dV = background.potential.dV(background.phi)
 
         kappa2 = k**2 + k * K * (K + 1) - 3 * K
-        shared = 2 * kappa2 / (kappa2 + K * dphi**2 / (2 * H**2))
-        terms = dphi**2 / (2 * H**2) - 3 - dV / (H * dphi) - K / (a2 * H**2)
+        shared = 2 * kappa2 / (kappa2 + K * dphidt**2 / (2 * H**2))
+        terms = dphidt**2 / (2 * H**2) - 3 - dV / (H * dphidt) - K / (a2 * H**2)
 
         frequency2 = kappa2 / a2 - K / a2 * (1 + shared * terms)
         damping = (3 * H + shared * terms * H) / 2
-
-        return np.sqrt(frequency2), damping
+        if np.all(frequency2 > 0):
+            return np.sqrt(frequency2), damping
+        else:
+            return np.sqrt(frequency2 + 0j), damping
 
     def sol(self, sol, **kwargs):
         """Post-processing for `pyoscode.solve` solution."""
