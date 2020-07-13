@@ -111,6 +111,8 @@ class InflationEquations(Equations, ABC):
         sol.potential = self.potential
         sol.a = self.a(sol.x, sol.y)
         sol.H = self.H(sol.x, sol.y)
+        sol.aH = sol.a * sol.H
+        sol.Omega_K = -sol.K / sol.aH**2
         if not hasattr(sol, 'logaH'):
             sol.logaH = sol.N + np.log(sol.H)
         sol.w = self.w(sol.x, sol.y)
@@ -177,7 +179,6 @@ class InflationEquations(Equations, ABC):
             derive_a0(Omega_K0=Omega_K0, h=h, delta_reh=delta_reh, w_reh=w_reh)
             sol.cHH_Mpc = np.exp(-sol.logaH) * sol.a0_Mpc
             sol.cHH_lp = np.exp(-sol.logaH) * sol.a0_lp
-            sol.Omega_K = -sol.K * np.exp(-2 * sol.logaH)
 
         if sol.K == 0:
             sol.derive_comoving_hubble_horizon = derive_comoving_hubble_horizon_flat
