@@ -77,12 +77,15 @@ class UntilNEvent(Event):
 class InflationEvent(Event):
     """Track inflation start/end."""
 
-    def __init__(self, equations, direction=0, terminal=False, value=0):
+    def __init__(self, equations, direction=0, terminal=False, value=0, **kwargs):
         super(InflationEvent, self).__init__(equations, direction, terminal, value)
         self.name = 'Inflation_dir%d_term%d' % (self.direction, self.terminal)
+        self.t_i = kwargs.pop('t_i', None)
 
     def __call__(self, x, y):
         """Root of `V - dphidt**2`."""
+        if x == self.t_i:
+            return self.direction
         return self.equations.inflating(x, y) - self.value
 
 
