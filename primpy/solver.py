@@ -157,26 +157,3 @@ def solve_oscode_N(background, k, **kwargs):
         return pps
     else:
         return pert
-
-
-def solve_pps(background, ks):
-    """Run `pyoscode.solve` for a range of wavenumbers to get the PPS.
-
-    This is a wrapper around ``pyoscode.solve`` to calculate the primordial
-    power spectrum (PPS) for a range of wavenumbers `ks`.
-
-    Parameters
-    ----------
-    background : Bunch object as returned by `primpy.solver.solve`
-        Solution to the inflationary background equations used to calculate
-        the frequency and damping term passed to oscode.
-    ks : np.ndarray
-        Array of comoving wavenumbers.
-
-    Returns
-    -------
-    PPS : np.ndarray
-        Array of the primordial power spectrum matching to the
-        wavenumbers `ks`.
-    """
-    return np.array([solve_oscode(background, k).PPS_RST for k in ks])
