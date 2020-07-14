@@ -61,13 +61,13 @@ def test_background_setup(K, f_i, Omega_K0):
         setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
 
 
-# def test_import_pyoscode():
-#     import pyoscode
-#     n = 10
-#     ts = np.arange(n)
-#     ws = np.ones(n)
-#     gs = np.zeros(n)
-#     pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
+def test_import_pyoscode():
+    import pyoscode
+    n = 10
+    ts = np.arange(n)
+    ws = np.ones(n)
+    gs = np.zeros(n)
+    pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
 #
 #
 # @pytest.mark.parametrize('K', [-1, +1])
