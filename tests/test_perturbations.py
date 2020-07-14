@@ -74,7 +74,7 @@ def test_import_pyoscode():
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
 @pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
-@pytest.mark.parametrize('k_iMpc', np.logspace(-6, 1, 8))
+@pytest.mark.parametrize('k_iMpc', np.logspace(-6, 0, 6 + 1))
 def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
