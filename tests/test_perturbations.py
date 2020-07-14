@@ -14,15 +14,6 @@ from primpy.efolds.perturbations import CurvaturePerturbationN
 from primpy.solver import solve, solve_oscode
 
 
-def test_import_pyoscode():
-    import pyoscode
-    n = 10
-    ts = np.arange(n)
-    ws = np.ones(n)
-    gs = np.zeros(n)
-    pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
-
-
 def setup_background(K, f_i, Omega_K0):
     pot = QuadraticPotential(mass=6e-6)
     phi_i = 16
@@ -67,6 +58,15 @@ def test_background_setup(K, f_i, Omega_K0):
             setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
     else:
         setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+
+
+def test_import_pyoscode():
+    import pyoscode
+    n = 10
+    ts = np.arange(n)
+    ws = np.ones(n)
+    gs = np.zeros(n)
+    pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
