@@ -70,6 +70,7 @@ def test_import_pyoscode():
     pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
 
 
+# noinspection DuplicatedCode
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
 @pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
@@ -83,12 +84,32 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         k = k_iMpc * bist.a0_Mpc
         pert_t = CurvaturePerturbationT(background=bist, k=k)
         pert_n = CurvaturePerturbationN(background=bisn, k=k)
+        with pytest.raises(NotImplementedError):
+            pert_t(bist.x[0], bist.y[0])
+        with pytest.raises(NotImplementedError):
+            pert_n(bisn.x[0], bisn.y[0])
         freq_t, damp_t = pert_t.mukhanov_sasaki_frequency_damping(background=bist, k=k)
         freq_n, damp_n = pert_n.mukhanov_sasaki_frequency_damping(background=bisn, k=k)
         assert np.all(freq_t > 0)
         assert np.all(freq_n > 0)
         assert np.isfinite(damp_t).all()
         assert np.isfinite(damp_n).all()
+
+        pert_t = solve_oscode(bist, k, rtol=1e-5)
+        pert_n = solve_oscode(bisn, k, rtol=1e-5)
+        assert np.all(np.isfinite(pert_t.one.t))
+        assert np.all(np.isfinite(pert_t.two.t))
+        assert np.all(np.isfinite(pert_n.one.N))
+        assert np.all(np.isfinite(pert_n.two.N))
+        assert np.all(np.isfinite(pert_t.one.Rk))
+        assert np.all(np.isfinite(pert_t.two.Rk))
+        assert np.all(np.isfinite(pert_n.one.Rk))
+        assert np.all(np.isfinite(pert_n.two.Rk))
+        assert np.all(np.isfinite(pert_t.one.dRk))
+        assert np.all(np.isfinite(pert_t.two.dRk))
+        assert np.all(np.isfinite(pert_n.one.dRk))
+        assert np.all(np.isfinite(pert_n.two.dRk))
+        assert pert_n.PPS_RST == approx(pert_t.PPS_RST)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
