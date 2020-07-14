@@ -60,96 +60,96 @@ def test_background_setup(K, f_i, Omega_K0):
         setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
 
 
-def test_import_pyoscode():
-    import pyoscode
-    n = 10
-    ts = np.arange(n)
-    ws = np.ones(n)
-    gs = np.zeros(n)
-    pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
-
-
-@pytest.mark.parametrize('K', [-1, +1])
-@pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 1000 work as well
-@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
-@pytest.mark.parametrize('k_iMpc', np.logspace(-6, 1, 8))
-def test_perturbations_frequency_damping(K, f_i, Omega_K0, k_iMpc):
-    if -K * f_i * Omega_K0 >= 1:
-        with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-    else:
-        bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-        k = k_iMpc * bist.a0_Mpc
-        pert_t = CurvaturePerturbationT(background=bist, k=k)
-        pert_n = CurvaturePerturbationN(background=bisn, k=k)
-        freq_t, damp_t = pert_t.mukhanov_sasaki_frequency_damping(background=bist, k=k)
-        freq_n, damp_n = pert_n.mukhanov_sasaki_frequency_damping(background=bisn, k=k)
-        assert np.all(freq_t > 0)
-        assert np.all(freq_n > 0)
-        assert np.isfinite(damp_t).all()
-        assert np.isfinite(damp_n).all()
-
-
-@pytest.mark.parametrize('K', [-1, +1])
-@pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 1000 work as well
-@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
-def test_perturbations_discrete_time_efolds(K, f_i, Omega_K0):
-    if -K * f_i * Omega_K0 >= 1:
-        with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-    else:
-        bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-        rtol = 1e-3
-        atol = 1e-5
-        ks_disc = np.arange(1, 50, 1)  # FIXME: make this work up to 100 at least?
-        pps_disc_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5) * 1e9
-        pps_disc_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5) * 1e9
-        assert np.isfinite(pps_disc_t).all()
-        assert np.isfinite(pps_disc_n).all()
-        assert_allclose(pps_disc_t, pps_disc_n, rtol=rtol, atol=atol)
-
-
-@pytest.mark.parametrize('K', [-1, +1])
-@pytest.mark.parametrize('f_i', [10, 100, 1000])
-@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
-def test_perturbations_continuous_time_vs_efolds(K, f_i, Omega_K0):
-    if -K * f_i * Omega_K0 >= 1:
-        with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-    else:
-        bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-        rtol = 5e-3
-        atol = 1e-5
-        ks_iMpc = np.logspace(-4, -1, 3 * 10 + 1)  # FIXME: make this work for smaller k?
-        ks_cont = ks_iMpc * bist.a0_Mpc
-        pps_cont_t = solve_oscode(background=bist, k=ks_cont, rtol=1e-5) * 1e9
-        pps_cont_n = solve_oscode(background=bisn, k=ks_cont, rtol=1e-5) * 1e9
-        mask = np.isfinite(pps_cont_t) & np.isfinite(pps_cont_n)  # FIXME: manage without masking
-        # assert np.isfinite(pps_cont_t).all()
-        # assert np.isfinite(pps_cont_n).all()
-        assert_allclose(pps_cont_t[mask], pps_cont_n[mask], rtol=rtol, atol=atol)
-
-
-@pytest.mark.parametrize('K', [-1, +1])
-@pytest.mark.parametrize('f_i', [10, 100, 1000])
-@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
-def test_perturbations_large_scales_pyoscode_vs_background(K, f_i, Omega_K0):
-    if -K * f_i * Omega_K0 >= 1:
-        with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-    else:
-        bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-        rtol = 0.05
-        atol = 1e-5
-        ks_iMpc = np.logspace(-2, 1, 50)  # FIXME: more samples without breaking github actions?
-        ks_cont = ks_iMpc * bist.a0_Mpc
-        pps_cont_t = solve_oscode(background=bist, k=ks_cont) * 1e9
-        pps_cont_n = solve_oscode(background=bisn, k=ks_cont) * 1e9
-        mask_t = np.isfinite(pps_cont_t)  # FIXME: manage without masking
-        mask_n = np.isfinite(pps_cont_n)  # FIXME: manage without masking
-        # assert np.isfinite(pps_cont_t).all()
-        # assert np.isfinite(pps_cont_n).all()
-        assert_allclose(pps_cont_t[mask_t], bist.P_s_approx(ks_iMpc[mask_t]) * 1e9,
-                        rtol=rtol, atol=atol)
-        assert_allclose(pps_cont_n[mask_n], bisn.P_s_approx(ks_iMpc[mask_n]) * 1e9,
-                        rtol=rtol, atol=atol)
+# def test_import_pyoscode():
+#     import pyoscode
+#     n = 10
+#     ts = np.arange(n)
+#     ws = np.ones(n)
+#     gs = np.zeros(n)
+#     pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
+#
+#
+# @pytest.mark.parametrize('K', [-1, +1])
+# @pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 1000 work as well
+# @pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
+# @pytest.mark.parametrize('k_iMpc', np.logspace(-6, 1, 8))
+# def test_perturbations_frequency_damping(K, f_i, Omega_K0, k_iMpc):
+#     if -K * f_i * Omega_K0 >= 1:
+#         with pytest.raises(Exception):
+#             setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#     else:
+#         bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#         k = k_iMpc * bist.a0_Mpc
+#         pert_t = CurvaturePerturbationT(background=bist, k=k)
+#         pert_n = CurvaturePerturbationN(background=bisn, k=k)
+#         freq_t, damp_t = pert_t.mukhanov_sasaki_frequency_damping(background=bist, k=k)
+#         freq_n, damp_n = pert_n.mukhanov_sasaki_frequency_damping(background=bisn, k=k)
+#         assert np.all(freq_t > 0)
+#         assert np.all(freq_n > 0)
+#         assert np.isfinite(damp_t).all()
+#         assert np.isfinite(damp_n).all()
+#
+#
+# @pytest.mark.parametrize('K', [-1, +1])
+# @pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 1000 work as well
+# @pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
+# def test_perturbations_discrete_time_efolds(K, f_i, Omega_K0):
+#     if -K * f_i * Omega_K0 >= 1:
+#         with pytest.raises(Exception):
+#             setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#     else:
+#         bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#         rtol = 1e-3
+#         atol = 1e-5
+#         ks_disc = np.arange(1, 50, 1)  # FIXME: make this work up to 100 at least?
+#         pps_disc_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5) * 1e9
+#         pps_disc_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5) * 1e9
+#         assert np.isfinite(pps_disc_t).all()
+#         assert np.isfinite(pps_disc_n).all()
+#         assert_allclose(pps_disc_t, pps_disc_n, rtol=rtol, atol=atol)
+#
+#
+# @pytest.mark.parametrize('K', [-1, +1])
+# @pytest.mark.parametrize('f_i', [10, 100, 1000])
+# @pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
+# def test_perturbations_continuous_time_vs_efolds(K, f_i, Omega_K0):
+#     if -K * f_i * Omega_K0 >= 1:
+#         with pytest.raises(Exception):
+#             setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#     else:
+#         bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#         rtol = 5e-3
+#         atol = 1e-5
+#         ks_iMpc = np.logspace(-4, -1, 3 * 10 + 1)  # FIXME: make this work for smaller k?
+#         ks_cont = ks_iMpc * bist.a0_Mpc
+#         pps_cont_t = solve_oscode(background=bist, k=ks_cont, rtol=1e-5) * 1e9
+#         pps_cont_n = solve_oscode(background=bisn, k=ks_cont, rtol=1e-5) * 1e9
+#         mask = np.isfinite(pps_cont_t) & np.isfinite(pps_cont_n)  # FIXME: manage without masking
+#         # assert np.isfinite(pps_cont_t).all()
+#         # assert np.isfinite(pps_cont_n).all()
+#         assert_allclose(pps_cont_t[mask], pps_cont_n[mask], rtol=rtol, atol=atol)
+#
+#
+# @pytest.mark.parametrize('K', [-1, +1])
+# @pytest.mark.parametrize('f_i', [10, 100, 1000])
+# @pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
+# def test_perturbations_large_scales_pyoscode_vs_background(K, f_i, Omega_K0):
+#     if -K * f_i * Omega_K0 >= 1:
+#         with pytest.raises(Exception):
+#             setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#     else:
+#         bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+#         rtol = 0.05
+#         atol = 1e-5
+#         ks_iMpc = np.logspace(-2, 1, 50)  # FIXME: more samples without breaking github actions?
+#         ks_cont = ks_iMpc * bist.a0_Mpc
+#         pps_cont_t = solve_oscode(background=bist, k=ks_cont) * 1e9
+#         pps_cont_n = solve_oscode(background=bisn, k=ks_cont) * 1e9
+#         mask_t = np.isfinite(pps_cont_t)  # FIXME: manage without masking
+#         mask_n = np.isfinite(pps_cont_n)  # FIXME: manage without masking
+#         # assert np.isfinite(pps_cont_t).all()
+#         # assert np.isfinite(pps_cont_n).all()
+#         assert_allclose(pps_cont_t[mask_t], bist.P_s_approx(ks_iMpc[mask_t]) * 1e9,
+#                         rtol=rtol, atol=atol)
+#         assert_allclose(pps_cont_n[mask_n], bisn.P_s_approx(ks_iMpc[mask_n]) * 1e9,
+#                         rtol=rtol, atol=atol)
