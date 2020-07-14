@@ -61,15 +61,6 @@ def test_background_setup(K, f_i, abs_Omega_K0):
         setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
 
 
-def test_import_pyoscode():
-    import pyoscode
-    n = 10
-    ts = np.arange(n)
-    ws = np.ones(n)
-    gs = np.zeros(n)
-    pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
-
-
 # noinspection DuplicatedCode
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
