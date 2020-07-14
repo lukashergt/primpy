@@ -9,8 +9,8 @@ from primpy.events import InflationEvent, CollapseEvent
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.initialconditions import InflationStartIC
-# from primpy.time.perturbations import CurvaturePerturbationT
-# from primpy.efolds.perturbations import CurvaturePerturbationN
+from primpy.time.perturbations import CurvaturePerturbationT
+from primpy.efolds.perturbations import CurvaturePerturbationN
 from primpy.solver import solve
 # from primpy.solver import solve_oscode
 
@@ -68,27 +68,27 @@ def test_import_pyoscode():
     ws = np.ones(n)
     gs = np.zeros(n)
     pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
-#
-#
-# @pytest.mark.parametrize('K', [-1, +1])
-# @pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 1000 work as well
-# @pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
-# @pytest.mark.parametrize('k_iMpc', np.logspace(-6, 1, 8))
-# def test_perturbations_frequency_damping(K, f_i, Omega_K0, k_iMpc):
-#     if -K * f_i * Omega_K0 >= 1:
-#         with pytest.raises(Exception):
-#             setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-#     else:
-#         bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-#         k = k_iMpc * bist.a0_Mpc
-#         pert_t = CurvaturePerturbationT(background=bist, k=k)
-#         pert_n = CurvaturePerturbationN(background=bisn, k=k)
-#         freq_t, damp_t = pert_t.mukhanov_sasaki_frequency_damping(background=bist, k=k)
-#         freq_n, damp_n = pert_n.mukhanov_sasaki_frequency_damping(background=bisn, k=k)
-#         assert np.all(freq_t > 0)
-#         assert np.all(freq_n > 0)
-#         assert np.isfinite(damp_t).all()
-#         assert np.isfinite(damp_n).all()
+
+
+@pytest.mark.parametrize('K', [-1, +1])
+@pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 1000 work as well
+@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
+@pytest.mark.parametrize('k_iMpc', np.logspace(-6, 1, 8))
+def test_perturbations_frequency_damping(K, f_i, Omega_K0, k_iMpc):
+    if -K * f_i * Omega_K0 >= 1:
+        with pytest.raises(Exception):
+            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+    else:
+        bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+        k = k_iMpc * bist.a0_Mpc
+        pert_t = CurvaturePerturbationT(background=bist, k=k)
+        pert_n = CurvaturePerturbationN(background=bisn, k=k)
+        freq_t, damp_t = pert_t.mukhanov_sasaki_frequency_damping(background=bist, k=k)
+        freq_n, damp_n = pert_n.mukhanov_sasaki_frequency_damping(background=bisn, k=k)
+        assert np.all(freq_t > 0)
+        assert np.all(freq_n > 0)
+        assert np.isfinite(damp_t).all()
+        assert np.isfinite(damp_n).all()
 #
 #
 # @pytest.mark.parametrize('K', [-1, +1])
