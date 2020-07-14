@@ -3,15 +3,16 @@
 import pytest
 from pytest import approx
 import numpy as np
-from numpy.testing import assert_allclose
+# from numpy.testing import assert_allclose
 from primpy.potentials import QuadraticPotential
 from primpy.events import InflationEvent, CollapseEvent
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.initialconditions import InflationStartIC
-from primpy.time.perturbations import CurvaturePerturbationT
-from primpy.efolds.perturbations import CurvaturePerturbationN
-from primpy.solver import solve, solve_oscode
+# from primpy.time.perturbations import CurvaturePerturbationT
+# from primpy.efolds.perturbations import CurvaturePerturbationN
+from primpy.solver import solve
+# from primpy.solver import solve_oscode
 
 
 def setup_background(K, f_i, Omega_K0):
