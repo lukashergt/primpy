@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """:mod:`primpy.solver`: general setup for running `solve_ivp`."""
 import numpy as np
-from scipy import integrate, interpolate
+from scipy import integrate
 import pyoscode
 from primpy.time.perturbations import CurvaturePerturbationT
 from primpy.efolds.perturbations import CurvaturePerturbationN
