@@ -52,7 +52,7 @@ def setup_background(K, f_i, Omega_K0):
 
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
-@pytest.mark.parametrize('Omega_K0', [0.09])  # FIXME: add 0.009
+@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
 def test_background_setup(K, f_i, Omega_K0):
     if -K * f_i * Omega_K0 >= 1:
         with pytest.raises(Exception):
