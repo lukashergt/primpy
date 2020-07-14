@@ -14,6 +14,15 @@ from primpy.efolds.perturbations import CurvaturePerturbationN
 from primpy.solver import solve, solve_oscode
 
 
+def test_import_pyoscode():
+    import pyoscode
+    n = 10
+    ts = np.arange(n)
+    ws = np.ones(n)
+    gs = np.zeros(n)
+    pyoscode.solve(ts=ts, ws=ws, gs=gs, ti=ts[0], tf=ts[-1], x0=1, dx0=0)
+
+
 def setup_background(K, f_i, Omega_K0):
     pot = QuadraticPotential(mass=6e-6)
     phi_i = 16
@@ -47,6 +56,17 @@ def setup_background(K, f_i, Omega_K0):
     assert bist.N_star == approx(bisn.N_star)
 
     return bist, bisn
+
+
+@pytest.mark.parametrize('K', [-1, +1])
+@pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 1000 work as well
+@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
+def test_background_setup(K, f_i, Omega_K0):
+    if -K * f_i * Omega_K0 >= 1:
+        with pytest.raises(Exception):
+            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+    else:
+        setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
@@ -121,7 +141,7 @@ def test_perturbations_large_scales_pyoscode_vs_background(K, f_i, Omega_K0):
         bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
         rtol = 0.05
         atol = 1e-5
-        ks_iMpc = np.logspace(-2, 1, 500)
+        ks_iMpc = np.logspace(-2, 1, 50)  # FIXME: more samples without breaking github actions?
         ks_cont = ks_iMpc * bist.a0_Mpc
         pps_cont_t = solve_oscode(background=bist, k=ks_cont) * 1e9
         pps_cont_n = solve_oscode(background=bisn, k=ks_cont) * 1e9
