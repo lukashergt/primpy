@@ -3,7 +3,7 @@
 import pytest
 from pytest import approx
 import numpy as np
-# from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose
 from primpy.potentials import QuadraticPotential
 from primpy.events import InflationEvent, CollapseEvent
 from primpy.time.inflation import InflationEquationsT
@@ -12,14 +12,14 @@ from primpy.initialconditions import InflationStartIC
 from primpy.time.perturbations import CurvaturePerturbationT
 from primpy.efolds.perturbations import CurvaturePerturbationN
 from primpy.solver import solve
-# from primpy.solver import solve_oscode
+from primpy.solver import solve_oscode
 
 
-def setup_background(K, f_i, Omega_K0):
+def setup_background(K, f_i, abs_Omega_K0):
     pot = QuadraticPotential(mass=6e-6)
     phi_i = 16
     t_i = 5e4
-    Omega_K0 = -K * Omega_K0
+    Omega_K0 = -K * abs_Omega_K0
     Omega_Ki = f_i * Omega_K0
     h = 0.7
 
@@ -52,13 +52,13 @@ def setup_background(K, f_i, Omega_K0):
 
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
-@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
-def test_background_setup(K, f_i, Omega_K0):
-    if -K * f_i * Omega_K0 >= 1:
+@pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
+def test_background_setup(K, f_i, abs_Omega_K0):
+    if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
-        setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+        setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
 
 
 def test_import_pyoscode():
@@ -72,14 +72,14 @@ def test_import_pyoscode():
 
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
-@pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
+@pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
 @pytest.mark.parametrize('k_iMpc', np.logspace(-6, 1, 8))
-def test_perturbations_frequency_damping(K, f_i, Omega_K0, k_iMpc):
-    if -K * f_i * Omega_K0 >= 1:
+def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
+    if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
-        bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
+        bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
         k = k_iMpc * bist.a0_Mpc
         pert_t = CurvaturePerturbationT(background=bist, k=k)
         pert_n = CurvaturePerturbationN(background=bisn, k=k)
@@ -89,25 +89,25 @@ def test_perturbations_frequency_damping(K, f_i, Omega_K0, k_iMpc):
         assert np.all(freq_n > 0)
         assert np.isfinite(damp_t).all()
         assert np.isfinite(damp_n).all()
-#
-#
-# @pytest.mark.parametrize('K', [-1, +1])
-# @pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
-# @pytest.mark.parametrize('Omega_K0', [0.09, 0.009])
-# def test_perturbations_discrete_time_efolds(K, f_i, Omega_K0):
-#     if -K * f_i * Omega_K0 >= 1:
-#         with pytest.raises(Exception):
-#             setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-#     else:
-#         bist, bisn = setup_background(K=K, f_i=f_i, Omega_K0=Omega_K0)
-#         rtol = 1e-3
-#         atol = 1e-5
-#         ks_disc = np.arange(1, 50, 1)  # FIXME: make this work up to 100 at least?
-#         pps_disc_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5) * 1e9
-#         pps_disc_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5) * 1e9
-#         assert np.isfinite(pps_disc_t).all()
-#         assert np.isfinite(pps_disc_n).all()
-#         assert_allclose(pps_disc_t, pps_disc_n, rtol=rtol, atol=atol)
+
+
+@pytest.mark.parametrize('K', [-1, +1])
+@pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
+@pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
+def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
+    if -K * f_i * abs_Omega_K0 >= 1:
+        with pytest.raises(Exception):
+            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+    else:
+        bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+        rtol = 1e-3
+        atol = 1e-5
+        ks_disc = np.arange(1, 50, 1)  # FIXME: make this work up to 100 at least?
+        pps_disc_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5) * 1e9
+        pps_disc_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5) * 1e9
+        assert np.isfinite(pps_disc_t).all()
+        assert np.isfinite(pps_disc_n).all()
+        assert_allclose(pps_disc_t, pps_disc_n, rtol=rtol, atol=atol)
 #
 #
 # @pytest.mark.parametrize('K', [-1, +1])
