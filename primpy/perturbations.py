@@ -9,24 +9,31 @@ from primpy.equations import Equations
 class CurvaturePerturbation(Equations):
     """Curvature perturbation for wavenumber `k`."""
 
-    def __init__(self, background, k):
+    def __init__(self, background, k, mode):
         super(CurvaturePerturbation, self).__init__()
         self.background = background
         self.k = k
-        self.add_variable('Rk', 'dRk', 'steptype_s')
-        # self.add_variable('Rk', 'dRk', 'steptype_s', 'hk', 'dhk', 'steptype_t')
-        self.one = solve_ivp(lambda x, y: y, (0, 0), y0=np.zeros(6))
-        self.two = solve_ivp(lambda x, y: y, (0, 0), y0=np.zeros(6))
-        self.ms_frequency, self.ms_damping = self.mukhanov_sasaki_frequency_damping(background, k)
+        self.mode = mode
+        if mode == 'scalar':
+            self.var = 'Rk'
+            self.tag = 's'
+            self.add_variable('Rk', 'dRk', 'steptype')
+        elif mode == 'tensor':
+            self.var = 'hk'
+            self.tag = 't'
+            self.add_variable('hk', 'dhk', 'steptype')
+        else:
+            raise ValueError("Only scalar or tensor modes allowed, "
+                             "but mode=%s was requested." % mode)
+        f, d = getattr(self, '%s_mukhanov_sasaki_frequency_damping' % self.mode)(background, k)
+        self.ms_frequency = f
+        self.ms_damping = d
+        self.one = solve_ivp(lambda x, y: y, (0, 0), y0=np.zeros(3))
+        self.two = solve_ivp(lambda x, y: y, (0, 0), y0=np.zeros(3))
 
     def __call__(self, x, y):
         """Vector of derivatives."""
         raise NotImplementedError("Equations class must define __call__.")
-
-    @staticmethod
-    def mukhanov_sasaki_frequency_damping(background, k):
-        """Frequency and damping term of the Mukhanov-Sasaki equations."""
-        raise NotImplementedError("Needs to be implemented for specific independent variable.")
 
     def sol(self, sol, **kwargs):
         """Post-processing for `pyoscode.solve` solution."""
@@ -40,30 +47,26 @@ class CurvaturePerturbation(Equations):
         self.one = super(CurvaturePerturbation, self).sol(sol.one, **kwargs)
         self.two = super(CurvaturePerturbation, self).sol(sol.two, **kwargs)
 
-        norm = self.k ** 3 / (2 * pi ** 2)
-        # for mode, vac in itertools.product(['scalar', 'tensor'], ['RST']):
+        y1 = self.one.y[self.idx['%s' % self.var]]
+        y2 = self.two.y[self.idx['%s' % self.var]]
+        dy1 = self.one.y[self.idx['d%s' % self.var]]
+        dy2 = self.two.y[self.idx['d%s' % self.var]]
+        norm = self.k**3 / (2 * pi**2) * (2 if self.mode == 'tensor' else 1)
         for vac in ['RST']:
-            # scalars:
-            Rk_i, dRk_i = getattr(self, 'get_scalar_vacuum_ic_%s' % vac)()
-            a, b = self._get_coefficients_a_b(Rk_i=Rk_i, dRk_i=dRk_i,
-                                              y1_i=self.one.Rk[0], dy1_i=self.one.dRk[0],
-                                              y2_i=self.two.Rk[0], dy2_i=self.two.dRk[0])
-            setattr(sol, 'Rk_%s_end' % vac, a * self.one.Rk[-1] + b * self.two.Rk[-1])
-            setattr(sol, 'dRk_%s_end' % vac, a * self.one.dRk[-1] + b * self.two.dRk[-1])
-            setattr(sol, 'P_s_%s' % vac, np.abs(getattr(sol, 'Rk_%s_end' % vac))**2 * norm)
-            # # tensors:
-            # hk_i, dhk_i = getattr(self, 'get_tensor_vacuum_ic_%s' % vac)()
-            # a, b = self._get_coefficients_a_b(Rk_i=hk_i, dRk_i=dhk_i,
-            #                                   y1_i=self.one.hk[0], dy1_i=self.one.dhk[0],
-            #                                   y2_i=self.two.hk[0], dy2_i=self.two.dhk[0])
-            # setattr(sol, 'hk_%s_end' % vac, a * self.one.hk[-1] + b * self.two.hk[-1])
-            # setattr(sol, 'dhk_%s_end' % vac, a * self.one.dhk[-1] + b * self.two.dhk[-1])
-            # setattr(sol, 'P_t_%s' % vac, np.abs(getattr(sol, 'hk_%s_end' % vac))**2 * norm)
+            uk_i, duk_i = getattr(self, 'get_%s_vacuum_ic_%s' % (self.mode, vac))()
+            a, b = self._get_coefficients_a_b(uk_i=uk_i, duk_i=duk_i,
+                                              y1_i=y1[0], dy1_i=dy1[0],
+                                              y2_i=y2[0], dy2_i=dy2[0])
+            uk_end = a * y1[-1] + b * y2[-1]
+            duk_end = a * dy1[-1] + b * dy2[-1]
+            setattr(sol, '%s_%s_end' % (self.var, vac), uk_end)
+            setattr(sol, 'd%s_%s_end' % (self.var, vac), duk_end)
+            setattr(sol, 'P_%s_%s' % (self.tag, vac), np.abs(uk_end)**2 * norm)
         return sol
 
     @staticmethod
-    def _get_coefficients_a_b(Rk_i, dRk_i, y1_i, dy1_i, y2_i, dy2_i):
+    def _get_coefficients_a_b(uk_i, duk_i, y1_i, dy1_i, y2_i, dy2_i):
         """Coefficients to a linear combination of 2 solutions."""
-        a = (Rk_i * dy2_i - dRk_i * y2_i) / (y1_i * dy2_i - dy1_i * y2_i)
-        b = (Rk_i * dy1_i - dRk_i * y1_i) / (y2_i * dy1_i - dy2_i * y1_i)
+        a = (uk_i * dy2_i - duk_i * y2_i) / (y1_i * dy2_i - dy1_i * y2_i)
+        b = (uk_i * dy1_i - duk_i * y1_i) / (y2_i * dy1_i - dy2_i * y1_i)
         return a, b

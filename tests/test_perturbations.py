@@ -2,6 +2,7 @@
 """Tests for `primpy.perturbation` module."""
 import pytest
 from pytest import approx
+import itertools
 import numpy as np
 from numpy.testing import assert_allclose
 from primpy.potentials import QuadraticPotential
@@ -73,34 +74,38 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
     else:
         bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
         k = k_iMpc * bist.a0_Mpc
-        pert_t = CurvaturePerturbationT(background=bist, k=k)
-        pert_n = CurvaturePerturbationN(background=bisn, k=k)
+        pert_t = CurvaturePerturbationT(background=bist, k=k, mode='scalar')
+        pert_n = CurvaturePerturbationN(background=bisn, k=k, mode='scalar')
+        assert pert_t.idx['Rk'] == 0
+        assert pert_n.idx['Rk'] == 0
+        assert pert_t.idx['dRk'] == 1
+        assert pert_n.idx['dRk'] == 1
+        assert pert_t.idx['steptype'] == 2
+        assert pert_n.idx['steptype'] == 2
         with pytest.raises(NotImplementedError):
             pert_t(bist.x[0], bist.y[0])
         with pytest.raises(NotImplementedError):
             pert_n(bisn.x[0], bisn.y[0])
-        freq_t, damp_t = pert_t.mukhanov_sasaki_frequency_damping(background=bist, k=k)
-        freq_n, damp_n = pert_n.mukhanov_sasaki_frequency_damping(background=bisn, k=k)
+        freq_t, damp_t = pert_t.scalar_mukhanov_sasaki_frequency_damping(background=bist, k=k)
+        freq_n, damp_n = pert_n.scalar_mukhanov_sasaki_frequency_damping(background=bisn, k=k)
         assert np.all(freq_t > 0)
         assert np.all(freq_n > 0)
         assert np.isfinite(damp_t).all()
         assert np.isfinite(damp_n).all()
 
-        pert_t = solve_oscode(bist, k, rtol=1e-5)
-        pert_n = solve_oscode(bisn, k, rtol=1e-5)
-        assert np.all(np.isfinite(pert_t.one.t))
-        assert np.all(np.isfinite(pert_t.two.t))
-        assert np.all(np.isfinite(pert_n.one.N))
-        assert np.all(np.isfinite(pert_n.two.N))
-        assert np.all(np.isfinite(pert_t.one.Rk))
-        assert np.all(np.isfinite(pert_t.two.Rk))
-        assert np.all(np.isfinite(pert_n.one.Rk))
-        assert np.all(np.isfinite(pert_n.two.Rk))
-        assert np.all(np.isfinite(pert_t.one.dRk))
-        assert np.all(np.isfinite(pert_t.two.dRk))
-        assert np.all(np.isfinite(pert_n.one.dRk))
-        assert np.all(np.isfinite(pert_n.two.dRk))
-        assert pert_n.P_s_RST == approx(pert_t.P_s_RST)
+        scalar_t, tensor_t = solve_oscode(bist, k, rtol=1e-5)
+        scalar_n, tensor_n = solve_oscode(bisn, k, rtol=1e-5)
+        for sol in ['one', 'two']:
+            assert np.all(np.isfinite(getattr(getattr(scalar_t, sol), 't')))
+            assert np.all(np.isfinite(getattr(getattr(scalar_n, sol), 'N')))
+            assert np.all(np.isfinite(getattr(getattr(tensor_t, sol), 't')))
+            assert np.all(np.isfinite(getattr(getattr(tensor_n, sol), 'N')))
+            for var, a in itertools.product([scalar_t, scalar_n], ['Rk', 'dRk', 'steptype']):
+                assert np.all(np.isfinite(getattr(getattr(var, sol), a)))
+            for var, a in itertools.product([tensor_t, tensor_n], ['hk', 'dhk', 'steptype']):
+                assert np.all(np.isfinite(getattr(getattr(var, sol), a)))
+        assert scalar_n.P_s_RST == approx(scalar_t.P_s_RST)
+        assert tensor_n.P_t_RST == approx(tensor_t.P_t_RST)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
@@ -115,11 +120,11 @@ def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
         rtol = 1e-3
         atol = 1e-5
         ks_disc = np.arange(1, 50, 1)  # FIXME: make this work up to 100 at least?
-        pps_disc_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5) * 1e9
-        pps_disc_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5) * 1e9
-        assert np.isfinite(pps_disc_t).all()
-        assert np.isfinite(pps_disc_n).all()
-        assert_allclose(pps_disc_t, pps_disc_n, rtol=rtol, atol=atol)
+        P_s_disc_t, P_t_disc_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5)
+        P_s_disc_n, P_t_disc_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5)
+        assert np.isfinite(P_s_disc_t).all()
+        assert np.isfinite(P_s_disc_n).all()
+        assert_allclose(P_s_disc_t, P_s_disc_n, rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
@@ -135,12 +140,12 @@ def test_perturbations_continuous_time_vs_efolds(K, f_i, abs_Omega_K0):
         atol = 1e-5
         ks_iMpc = np.logspace(-4, -1, 3 * 10 + 1)  # FIXME: make this work for smaller k?
         ks_cont = ks_iMpc * bist.a0_Mpc
-        pps_cont_t = solve_oscode(background=bist, k=ks_cont, rtol=1e-5) * 1e9
-        pps_cont_n = solve_oscode(background=bisn, k=ks_cont, rtol=1e-5) * 1e9
-        mask = np.isfinite(pps_cont_t) & np.isfinite(pps_cont_n)  # FIXME: manage without masking
-        # assert np.isfinite(pps_cont_t).all()
-        # assert np.isfinite(pps_cont_n).all()
-        assert_allclose(pps_cont_t[mask], pps_cont_n[mask], rtol=rtol, atol=atol)
+        P_s_cont_t, P_t_cont_t = solve_oscode(background=bist, k=ks_cont, rtol=1e-5)
+        P_s_cont_n, P_t_cont_n = solve_oscode(background=bisn, k=ks_cont, rtol=1e-5)
+        mask = np.isfinite(P_s_cont_t) & np.isfinite(P_s_cont_n)  # FIXME: manage without masking
+        # assert np.isfinite(P_s_cont_t).all()
+        # assert np.isfinite(P_s_cont_n).all()
+        assert_allclose(P_s_cont_t[mask], P_s_cont_n[mask], rtol=rtol, atol=atol)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
@@ -156,13 +161,13 @@ def test_perturbations_large_scales_pyoscode_vs_background(K, f_i, abs_Omega_K0)
         atol = 1e-5
         ks_iMpc = np.logspace(-2, 1, 50)  # FIXME: more samples without breaking github actions?
         ks_cont = ks_iMpc * bist.a0_Mpc
-        pps_cont_t = solve_oscode(background=bist, k=ks_cont) * 1e9
-        pps_cont_n = solve_oscode(background=bisn, k=ks_cont) * 1e9
-        mask_t = np.isfinite(pps_cont_t)  # FIXME: manage without masking
-        mask_n = np.isfinite(pps_cont_n)  # FIXME: manage without masking
-        # assert np.isfinite(pps_cont_t).all()
-        # assert np.isfinite(pps_cont_n).all()
-        assert_allclose(pps_cont_t[mask_t], bist.P_s_approx(ks_iMpc[mask_t]) * 1e9,
+        P_s_cont_t, P_t_cont_t = solve_oscode(background=bist, k=ks_cont)
+        P_s_cont_n, P_t_cont_n = solve_oscode(background=bisn, k=ks_cont)
+        mask_t = np.isfinite(P_s_cont_t)  # FIXME: manage without masking
+        mask_n = np.isfinite(P_s_cont_n)  # FIXME: manage without masking
+        # assert np.isfinite(P_s_cont_t).all()
+        # assert np.isfinite(P_s_cont_n).all()
+        assert_allclose(P_s_cont_t[mask_t], bist.P_s_approx(ks_iMpc[mask_t]),
                         rtol=rtol, atol=atol)
-        assert_allclose(pps_cont_n[mask_n], bisn.P_s_approx(ks_iMpc[mask_n]) * 1e9,
+        assert_allclose(P_s_cont_n[mask_n], bisn.P_s_approx(ks_iMpc[mask_n]),
                         rtol=rtol, atol=atol)

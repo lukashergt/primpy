@@ -18,8 +18,8 @@ class CurvaturePerturbationN(CurvaturePerturbation):
             wavenumber
     """
 
-    def __init__(self, background, k):
-        super(CurvaturePerturbationN, self).__init__(background=background, k=k)
+    def __init__(self, background, k, mode):
+        super(CurvaturePerturbationN, self).__init__(background=background, k=k, mode=mode)
         self._set_independent_variable('N')
 
     def __call__(self, x, y):
@@ -27,8 +27,8 @@ class CurvaturePerturbationN(CurvaturePerturbation):
         raise NotImplementedError("Equations class must define __call__.")
 
     @staticmethod
-    def mukhanov_sasaki_frequency_damping(background, k):
-        """Frequency and damping term of the Mukhanov-Sasaki equations.
+    def scalar_mukhanov_sasaki_frequency_damping(background, k):
+        """Frequency and damping term of the Mukhanov-Sasaki equations for scalar modes.
 
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         comoving curvature perturbations `R` w.r.t. e-folds `N`, where the e.o.m. is
@@ -53,6 +53,22 @@ class CurvaturePerturbationN(CurvaturePerturbation):
         else:
             return np.sqrt(frequency2 + 0j), damping2 / 2
 
+    @staticmethod
+    def tensor_mukhanov_sasaki_frequency_damping(background, k):
+        """Frequency and damping term of the Mukhanov-Sasaki equations for tensor modes.
+
+        Frequency and damping term of the Mukhanov-Sasaki equations for the
+        tensor perturbations `h` w.r.t. e-folds `N`, where the e.o.m. is
+        written as `ddh + 2 * damping * dh + frequency**2 h = 0`.
+        """
+        K = background.K
+        frequency2 = (k**2 + k * K * (K + 1) + 2 * K) / background.aH**2
+        damping2 = 3 - background.dphidN**2 / 2 + K / background.aH**2
+        if np.all(frequency2 > 0):
+            return np.sqrt(frequency2), damping2 / 2
+        else:
+            return np.sqrt(frequency2 + 0j), damping2 / 2
+
     def sol(self, sol, **kwargs):
         """Post-processing for `pyoscode.solve` solution."""
         sol = super(CurvaturePerturbationN, self).sol(sol, **kwargs)
@@ -70,3 +86,11 @@ class CurvaturePerturbationN(CurvaturePerturbation):
         Rk_i = self.get_Rk_i()
         dRk_i = -1j * self.k / (a_i * H_i) * Rk_i
         return Rk_i, dRk_i
+
+    def get_tensor_vacuum_ic_RST(self):
+        """Initial conditions for scalar modes for RST vacuum w.r.t. e-folds `N`."""
+        a_i = self.background.a[0]
+        H_i = self.background.H[0]
+        hk_i = 2 / np.sqrt(2 * self.k) / a_i
+        dhk_i = -1j * self.k / (a_i * H_i) * hk_i
+        return hk_i, dhk_i

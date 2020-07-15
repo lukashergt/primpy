@@ -17,8 +17,8 @@ class CurvaturePerturbationT(CurvaturePerturbation):
             wavenumber
     """
 
-    def __init__(self, background, k):
-        super(CurvaturePerturbationT, self).__init__(background=background, k=k)
+    def __init__(self, background, k, mode):
+        super(CurvaturePerturbationT, self).__init__(background=background, k=k, mode=mode)
         self._set_independent_variable('t')
 
     def __call__(self, x, y):
@@ -26,8 +26,8 @@ class CurvaturePerturbationT(CurvaturePerturbation):
         raise NotImplementedError("Equations class must define __call__.")
 
     @staticmethod
-    def mukhanov_sasaki_frequency_damping(background, k):
-        """Frequency and damping term of the Mukhanov-Sasaki equations.
+    def scalar_mukhanov_sasaki_frequency_damping(background, k):
+        """Frequency and damping term of the Mukhanov-Sasaki equations for scalar modes.
 
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         comoving curvature perturbations `R` w.r.t. time `t`, where the e.o.m. is
@@ -49,6 +49,22 @@ class CurvaturePerturbationT(CurvaturePerturbation):
             return np.sqrt(frequency2), damping
         else:
             return np.sqrt(frequency2 + 0j), damping
+
+    @staticmethod
+    def tensor_mukhanov_sasaki_frequency_damping(background, k):
+        """Frequency and damping term of the Mukhanov-Sasaki equations for tensor modes.
+
+        Frequency and damping term of the Mukhanov-Sasaki equations for the
+        tensor perturbations `h` w.r.t. time `t`, where the e.o.m. is
+        written as `ddh + 2 * damping * dh + frequency**2 h = 0`.
+        """
+        K = background.K
+        frequency2 = (k**2 + k * K * (K + 1) + 2 * K) / background.a**2
+        damping2 = 3 * background.H
+        if np.all(frequency2 > 0):
+            return np.sqrt(frequency2), damping2 / 2
+        else:
+            return np.sqrt(frequency2 + 0j), damping2 / 2
 
     def sol(self, sol, **kwargs):
         """Post-processing for `pyoscode.solve` solution."""
@@ -73,6 +89,6 @@ class CurvaturePerturbationT(CurvaturePerturbation):
     def get_tensor_vacuum_ic_RST(self):
         """Initial conditions for tensor modes for RST vacuum w.r.t. cosmic time `t`."""
         a_i = self.background.a[0]
-        hk_i = 1 / np.sqrt(2 * self.k) / a_i
+        hk_i = 2 / np.sqrt(2 * self.k) / a_i
         dhk_i = -1j * self.k / a_i * hk_i
         return hk_i, dhk_i

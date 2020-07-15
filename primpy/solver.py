@@ -68,20 +68,23 @@ def solve_oscode(background, k, **kwargs):
         return_pps = False
     else:
         return_pps = True
-    pps = np.zeros_like(k, dtype=float)
+    P_s = np.zeros_like(k, dtype=float)
+    P_t = np.zeros_like(k, dtype=float)
     # stop integration sufficiently after mode has crossed the horizon (lazy for loop):
     j = 0
     for i, ki in enumerate(k):
         for j in range(j, background.x.size):
             if background.aH[j] / ki > fac:
                 if background.independent_variable == 't':
-                    pert = CurvaturePerturbationT(background=background, k=ki)
+                    scalar = CurvaturePerturbationT(background=background, k=ki, mode='scalar')
+                    tensor = CurvaturePerturbationT(background=background, k=ki, mode='tensor')
                 elif background.independent_variable == 'N':
-                    pert = CurvaturePerturbationN(background=background, k=ki)
+                    scalar = CurvaturePerturbationN(background=background, k=ki, mode='scalar')
+                    tensor = CurvaturePerturbationN(background=background, k=ki, mode='tensor')
                 else:
                     raise NotImplementedError()
-                logf = np.log(pert.ms_frequency)
-                damp = pert.ms_damping
+                logf = np.log(scalar.ms_frequency)
+                damp = scalar.ms_damping
                 scalar1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
                                          ws=logf, logw=True,
                                          gs=damp, logg=False,
@@ -90,19 +93,22 @@ def solve_oscode(background, k, **kwargs):
                                          ws=logf, logw=True,
                                          gs=damp, logg=False,
                                          x0=x0_2, dx0=dx0_2, rtol=rtol)
-                # tensor1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                #                          ws=logf, logw=True,
-                #                          gs=damp, logg=False,
-                #                          x0=x0_1, dx0=dx0_1, rtol=rtol)
-                # tensor2 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                #                          ws=logf, logw=True,
-                #                          gs=damp, logg=False,
-                #                          x0=x0_2, dx0=dx0_2, rtol=rtol)
-                pert = pert.sol(sol=pert, sol1=scalar1, sol2=scalar2)
-                pps[i] = pert.P_s_RST
+                logf = np.log(tensor.ms_frequency)
+                damp = tensor.ms_damping
+                tensor1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
+                                         ws=logf, logw=True,
+                                         gs=damp, logg=False,
+                                         x0=x0_1, dx0=dx0_1, rtol=rtol)
+                tensor2 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
+                                         ws=logf, logw=True,
+                                         gs=damp, logg=False,
+                                         x0=x0_2, dx0=dx0_2, rtol=rtol)
+                scalar = scalar.sol(sol=scalar, sol1=scalar1, sol2=scalar2, mode='scalar')
+                tensor = tensor.sol(sol=tensor, sol1=tensor1, sol2=tensor2, mode='tensor')
+                P_s[i] = scalar.P_s_RST
+                P_t[i] = tensor.P_t_RST
                 break
     if return_pps:
-        return pps
-        # return ks, pps_scalar, pps_tensor
+        return P_s, P_t
     else:
-        return pert
+        return scalar, tensor
