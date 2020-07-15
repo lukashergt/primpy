@@ -80,7 +80,7 @@ class CurvaturePerturbationN(CurvaturePerturbation):
         return 1 / np.sqrt(2 * self.k) / z_i
 
     def get_scalar_vacuum_ic_RST(self):
-        """Initial conditions for scalar modes for RST vacuum w.r.t. e-folds `N`."""
+        """Get initial conditions for scalar modes for RST vacuum w.r.t. e-folds `N`."""
         a_i = self.background.a[0]
         H_i = self.background.H[0]
         Rk_i = self.get_Rk_i()
@@ -88,7 +88,7 @@ class CurvaturePerturbationN(CurvaturePerturbation):
         return Rk_i, dRk_i
 
     def get_tensor_vacuum_ic_RST(self):
-        """Initial conditions for scalar modes for RST vacuum w.r.t. e-folds `N`."""
+        """Get initial conditions for scalar modes for RST vacuum w.r.t. e-folds `N`."""
         a_i = self.background.a[0]
         H_i = self.background.H[0]
         hk_i = 2 / np.sqrt(2 * self.k) / a_i

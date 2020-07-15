@@ -80,14 +80,14 @@ class CurvaturePerturbationT(CurvaturePerturbation):
         return 1 / np.sqrt(2 * self.k) / z_i
 
     def get_scalar_vacuum_ic_RST(self):
-        """Initial conditions for scalar modes for RST vacuum w.r.t. cosmic time `t`."""
+        """Get initial conditions for scalar modes for RST vacuum w.r.t. cosmic time `t`."""
         a_i = self.background.a[0]
         Rk_i = self.get_Rk_i()
         dRk_i = -1j * self.k / a_i * Rk_i
         return Rk_i, dRk_i
 
     def get_tensor_vacuum_ic_RST(self):
-        """Initial conditions for tensor modes for RST vacuum w.r.t. cosmic time `t`."""
+        """Get initial conditions for tensor modes for RST vacuum w.r.t. cosmic time `t`."""
         a_i = self.background.a[0]
         hk_i = 2 / np.sqrt(2 * self.k) / a_i
         dhk_i = -1j * self.k / a_i * hk_i
