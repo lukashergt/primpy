@@ -100,7 +100,7 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         assert np.all(np.isfinite(pert_t.two.dRk))
         assert np.all(np.isfinite(pert_n.one.dRk))
         assert np.all(np.isfinite(pert_n.two.dRk))
-        assert pert_n.PPS_RST == approx(pert_t.PPS_RST)
+        assert pert_n.P_s_RST == approx(pert_t.P_s_RST)
 
 
 @pytest.mark.parametrize('K', [-1, +1])

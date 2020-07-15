@@ -82,18 +82,27 @@ def solve_oscode(background, k, **kwargs):
                     raise NotImplementedError()
                 logf = np.log(pert.ms_frequency)
                 damp = pert.ms_damping
-                sol1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                                      ws=logf, logw=True,
-                                      gs=damp, logg=False,
-                                      x0=x0_1, dx0=dx0_1, rtol=rtol)
-                sol2 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                                      ws=logf, logw=True,
-                                      gs=damp, logg=False,
-                                      x0=x0_2, dx0=dx0_2, rtol=rtol)
-                pert = pert.sol(sol=pert, sol1=sol1, sol2=sol2)
-                pps[i] = pert.PPS_RST
+                scalar1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
+                                         ws=logf, logw=True,
+                                         gs=damp, logg=False,
+                                         x0=x0_1, dx0=dx0_1, rtol=rtol)
+                scalar2 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
+                                         ws=logf, logw=True,
+                                         gs=damp, logg=False,
+                                         x0=x0_2, dx0=dx0_2, rtol=rtol)
+                # tensor1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
+                #                          ws=logf, logw=True,
+                #                          gs=damp, logg=False,
+                #                          x0=x0_1, dx0=dx0_1, rtol=rtol)
+                # tensor2 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
+                #                          ws=logf, logw=True,
+                #                          gs=damp, logg=False,
+                #                          x0=x0_2, dx0=dx0_2, rtol=rtol)
+                pert = pert.sol(sol=pert, sol1=scalar1, sol2=scalar2)
+                pps[i] = pert.P_s_RST
                 break
     if return_pps:
         return pps
+        # return ks, pps_scalar, pps_tensor
     else:
         return pert

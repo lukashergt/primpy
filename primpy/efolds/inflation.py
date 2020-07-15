@@ -67,5 +67,4 @@ class InflationEquationsN(InflationEquations):
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
         sol = super(InflationEquationsN, self).sol(sol, **kwargs)
-        sol.dphidt = sol.H * sol.dphidN
         return sol
