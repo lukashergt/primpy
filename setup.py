@@ -17,6 +17,7 @@ setup(
     install_requires=[
         'numpy',
         'scipy',
+        'pyoscode',
     ],
     tests_require=['pytest'],
     include_package_data=True,
