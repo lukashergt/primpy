@@ -40,8 +40,8 @@ class CurvaturePerturbation(Equations):
         one = kwargs.pop('sol1')
         two = kwargs.pop('sol2')
         # translate oscode output to solve_ivp output:
-        sol.one.t = one['t']
-        sol.two.t = two['t']
+        sol.one.t = np.array(one['t'])
+        sol.two.t = np.array(two['t'])
         sol.one.y = np.vstack((one['sol'], one['dsol'], one['types']))
         sol.two.y = np.vstack((two['sol'], two['dsol'], two['types']))
         self.one = super(CurvaturePerturbation, self).sol(sol.one, **kwargs)
