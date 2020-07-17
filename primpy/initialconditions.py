@@ -41,6 +41,9 @@ class InflationStartIC(object):
                                         "The other will be inferred."
             self.Omega_Ki = kwargs.pop('Omega_Ki')
             self.ic_input_param = {'Omega_Ki': self.Omega_Ki}
+            if self.Omega_Ki >= 1:
+                raise Exception("Primordial curvature for open universes has to be Omega_Ki < 1, "
+                                "but Omega_Ki = %g was requested." % self.Omega_Ki)
             self.N_i = np.log(2 * equations.K / self.V_i * (1 - 1 / self.Omega_Ki)) / 2
             self.aH_i = np.sqrt(-equations.K / self.Omega_Ki)
         else:

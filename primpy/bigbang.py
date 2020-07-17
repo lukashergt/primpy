@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """:mod:`primpy.bigbang`: general setup for equations for standard Big Bang cosmology."""
+import warnings
 import numpy as np
 from scipy import integrate
 from primpy.units import pi, G, tp_s, lp_m, Mpc_m
@@ -83,7 +84,7 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
     if Omega_L0 > no_Big_Bang_line(Omega_m0=Omega_m0):
         raise Exception("no Big Bang for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
     elif Omega_L0 < expand_recollapse_line(Omega_m0=Omega_m0):
-        raise Exception("Universe recollapses for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
+        warnings.warn("Universe recollapses for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
     a0 = get_a0(h=h, Omega_K0=Omega_K0, units='planck')
     H = H0 * np.sqrt(Omega_r0 * (a0 / a)**4 +
                      Omega_m0 * (a0 / a)**3 +
