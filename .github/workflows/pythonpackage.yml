@@ -31,7 +31,9 @@ jobs:
         git clone https://github.com/eigenteam/eigen-git-mirror
         git clone https://github.com/fruzsinaagocs/oscode.git
         cd oscode
+        pip install --no-cache-dir -r requirements.txt
         CPLUS_INCLUDE_PATH=/home/runner/work/primpy2/primpy2/eigen-git-mirror pip install .
+        cd ..
         pip install --no-cache-dir -r requirements.txt
     - name: Install testing packages
       run: |
