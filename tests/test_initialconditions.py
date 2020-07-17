@@ -60,6 +60,8 @@ def test_InflationStartIC(pot, K, t_i, Eq):
         y0 = np.zeros(len(ic.equations.idx))
         ic(y0)
         basic_ic_asserts(y0, ic, K, pot, ic.N_i, Omega_Ki, phi_i, t_i)
+        with pytest.raises(Exception, match="Primordial curvature for open universes"):
+            InflationStartIC(equations=eq, Omega_Ki=1, phi_i=phi_i, t_i=t_i)
 
 
 # noinspection DuplicatedCode
