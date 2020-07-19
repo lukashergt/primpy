@@ -2,9 +2,6 @@
 """:mod:`primpy.solver`: general setup for running `solve_ivp`."""
 import numpy as np
 from scipy import integrate
-import pyoscode
-from primpy.time.perturbations import CurvaturePerturbationT
-from primpy.efolds.perturbations import CurvaturePerturbationN
 
 
 def solve(ic, *args, **kwargs):
@@ -30,85 +27,11 @@ def solve(ic, *args, **kwargs):
     """
     events = kwargs.pop('events', [])
     y0 = np.zeros(len(ic.equations.idx))
-    rtol = kwargs.pop('rtol', 1e-6)
-    atol = kwargs.pop('atol', 1e-10)
+    method = kwargs.pop('method', 'DOP853')
+    rtol = kwargs.pop('rtol', 1e-12)
+    atol = kwargs.pop('atol', 1e-12)
     ic(y0=y0, rtol=rtol, atol=atol, **kwargs)
     sol = integrate.solve_ivp(ic.equations, (ic.x_ini, ic.x_end), y0, events=events,
-                              rtol=rtol, atol=atol, *args, **kwargs)
+                              method=method, rtol=rtol, atol=atol, *args, **kwargs)
     sol.event_keys = [e.name for e in events]
     return ic.equations.sol(sol)
-
-
-def solve_oscode(background, k, **kwargs):
-    """Run `pyoscode.solve` and store information for post-processing.
-
-    This is a wrapper around ``pyoscode.solve`` to calculate the solution to
-    the Mukhanov-Sasaki equation.
-
-    Parameters
-    ----------
-    background : Bunch object as returned by `primpy.solver.solve`
-        Solution to the inflationary background equations used to calculate
-        the frequency and damping term passed to oscode.
-    k : int, float
-        Comoving wavenumber used to evolve the Mukhanov-Sasaki equation.
-
-    Returns
-    -------
-    sol : Bunch object similar to that returned by `scipy.integrate.solve_ivp`
-        Monkey-patched version of the Bunch type returned by `solve_ivp`,
-        containing the primordial power spectrum value corresponding to the
-        wavenumber `k`.
-    """
-    rtol = kwargs.pop('rtol', 5e-5)
-    fac = kwargs.pop('fac', 100)
-    x0_1, dx0_1, x0_2, dx0_2 = kwargs.pop('ic', [1, 0, 0, 1])
-    if isinstance(k, int) or isinstance(k, float):
-        k = np.atleast_1d(k)
-        return_pps = False
-    else:
-        return_pps = True
-    P_s = np.zeros_like(k, dtype=float)
-    P_t = np.zeros_like(k, dtype=float)
-    # stop integration sufficiently after mode has crossed the horizon (lazy for loop):
-    j = 0
-    for i, ki in enumerate(k):
-        for j in range(j, background.x.size):
-            if background.aH[j] / ki > fac:
-                if background.independent_variable == 't':
-                    scalar = CurvaturePerturbationT(background=background, k=ki, mode='scalar')
-                    tensor = CurvaturePerturbationT(background=background, k=ki, mode='tensor')
-                elif background.independent_variable == 'N':
-                    scalar = CurvaturePerturbationN(background=background, k=ki, mode='scalar')
-                    tensor = CurvaturePerturbationN(background=background, k=ki, mode='tensor')
-                else:
-                    raise NotImplementedError()
-                logf = np.log(scalar.ms_frequency)
-                damp = scalar.ms_damping
-                scalar1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                                         ws=logf, logw=True,
-                                         gs=damp, logg=False,
-                                         x0=x0_1, dx0=dx0_1, rtol=rtol)
-                scalar2 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                                         ws=logf, logw=True,
-                                         gs=damp, logg=False,
-                                         x0=x0_2, dx0=dx0_2, rtol=rtol)
-                logf = np.log(tensor.ms_frequency)
-                damp = tensor.ms_damping
-                tensor1 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                                         ws=logf, logw=True,
-                                         gs=damp, logg=False,
-                                         x0=x0_1, dx0=dx0_1, rtol=rtol)
-                tensor2 = pyoscode.solve(ts=background.x, ti=background.x[0], tf=background.x[j],
-                                         ws=logf, logw=True,
-                                         gs=damp, logg=False,
-                                         x0=x0_2, dx0=dx0_2, rtol=rtol)
-                scalar = scalar.sol(sol=scalar, sol1=scalar1, sol2=scalar2, mode='scalar')
-                tensor = tensor.sol(sol=tensor, sol1=tensor1, sol2=tensor2, mode='tensor')
-                P_s[i] = scalar.P_s_RST
-                P_t[i] = tensor.P_t_RST
-                break
-    if return_pps:
-        return P_s, P_t
-    else:
-        return scalar, tensor
