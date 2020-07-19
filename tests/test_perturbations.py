@@ -80,12 +80,22 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         assert pert_n.scalar.idx['Rk'] == 0
         assert pert_t.scalar.idx['dRk'] == 1
         assert pert_n.scalar.idx['dRk'] == 1
-        # with pytest.raises(NotImplementedError):
-        #     pert_t(bist.x[0], bist.y[0])
+        assert pert_t.tensor.idx['hk'] == 0
+        assert pert_n.tensor.idx['hk'] == 0
+        assert pert_t.tensor.idx['dhk'] == 1
+        assert pert_n.tensor.idx['dhk'] == 1
+        with pytest.raises(NotImplementedError):
+            pert_t(bist.x[0], bist.y[0])
         with pytest.raises(NotImplementedError):
             pert_n(bisn.x[0], bisn.y[0])
         freq_t, damp_t = pert_t.scalar.mukhanov_sasaki_frequency_damping()
         freq_n, damp_n = pert_n.scalar.mukhanov_sasaki_frequency_damping()
+        assert np.all(freq_t > 0)
+        assert np.all(freq_n > 0)
+        assert np.isfinite(damp_t).all()
+        assert np.isfinite(damp_n).all()
+        freq_t, damp_t = pert_t.tensor.mukhanov_sasaki_frequency_damping()
+        freq_n, damp_n = pert_n.tensor.mukhanov_sasaki_frequency_damping()
         assert np.all(freq_t > 0)
         assert np.all(freq_n > 0)
         assert np.isfinite(damp_t).all()
@@ -138,7 +148,7 @@ def test_perturbations_continuous_time_vs_efolds(K, f_i, abs_Omega_K0):
             setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
         bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
-        ks_iMpc = np.logspace(-5, -1, 4 * 10 + 1)
+        ks_iMpc = np.logspace(-4, -1, 3 * 10 + 1)
         ks_cont = ks_iMpc * bist.a0_Mpc
         pps_t = solve_oscode(background=bist, k=ks_cont, tol=1e-5)
         pps_n = solve_oscode(background=bisn, k=ks_cont, tol=1e-5)
