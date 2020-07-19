@@ -20,7 +20,7 @@ class PrimordialPowerSpectrum(object):
             setattr(self, 'P_t_%s' % vac, np.full_like(k, np.nan, dtype=float))
 
 
-class Perturbation(Equations, ABC):
+class Perturbation(ABC):
     """Perturbation for wavenumber `k`."""
 
     def __init__(self, background, k):
@@ -29,11 +29,6 @@ class Perturbation(Equations, ABC):
         self.k = k
         self.scalar = None
         self.tensor = None
-
-    def sol(self, sol, **kwargs):
-        """Post-processing of `solve_ivp` solution."""
-        sol = super(Perturbation, self).sol(sol, **kwargs)
-        return sol
 
     def oscode_postprocessing(self, oscode_sol, **kwargs):
         """Post-processing for `pyoscode.solve` solution.
@@ -56,7 +51,6 @@ class Perturbation(Equations, ABC):
                 mode.sol(sol)
         self._combine_solutions(**kwargs)
 
-    # noinspection PyUnresolvedReferences
     def _combine_solutions(self, **kwargs):
         vacuum = kwargs.pop('vacuum', ['RST'])
         for mode in [self.scalar, self.tensor]:

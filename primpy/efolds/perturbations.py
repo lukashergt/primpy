@@ -20,18 +20,8 @@ class PerturbationN(Perturbation):
 
     def __init__(self, background, k, **kwargs):
         super(PerturbationN, self).__init__(background=background, k=k)
-        self._set_independent_variable('N')
         self.scalar = ScalarModeN(background=background, k=k, **kwargs)
         self.tensor = TensorModeN(background=background, k=k, **kwargs)
-
-    def __call__(self, x, y):
-        """Vector of derivatives."""
-        raise NotImplementedError("Equations class must define __call__.")
-
-    def sol(self, sol, **kwargs):
-        """Post-processing for `pyoscode.solve` solution."""
-        sol = super(PerturbationN, self).sol(sol, **kwargs)
-        return sol
 
 
 class ScalarModeN(ScalarMode):

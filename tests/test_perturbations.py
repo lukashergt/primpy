@@ -85,9 +85,13 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         assert pert_t.tensor.idx['dhk'] == 1
         assert pert_n.tensor.idx['dhk'] == 1
         with pytest.raises(NotImplementedError):
-            pert_t(bist.x[0], bist.y[0])
+            pert_t.scalar(bist.x[0], bist.y[0])
         with pytest.raises(NotImplementedError):
-            pert_n(bisn.x[0], bisn.y[0])
+            pert_t.tensor(bist.x[0], bist.y[0])
+        with pytest.raises(NotImplementedError):
+            pert_n.scalar(bisn.x[0], bisn.y[0])
+        with pytest.raises(NotImplementedError):
+            pert_n.tensor(bisn.x[0], bisn.y[0])
         freq_t, damp_t = pert_t.scalar.mukhanov_sasaki_frequency_damping()
         freq_n, damp_n = pert_n.scalar.mukhanov_sasaki_frequency_damping()
         assert np.all(freq_t > 0)
