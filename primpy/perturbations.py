@@ -43,7 +43,8 @@ class Perturbation(Equations, ABC):
 
         Translate `oscode` dictionary output to `solve_ivp` output with attributes `t` and `y`.
 
-        Parameters:
+        Parameters
+        ----------
             oscode_sol : list
                 List [scalar_1, scalar_2, tensor_1, tensor_2] of two independent solutions each
                 for both scalar and tensor modes, where each element is a dictionary returned by
@@ -55,14 +56,6 @@ class Perturbation(Equations, ABC):
                 sol.steptype = oscode_sol[idx]['types']
                 sol.t = np.array(oscode_sol[idx]['t'])
                 sol.y = np.vstack((oscode_sol[idx]['sol'], oscode_sol[idx]['dsol']))
-                mode.sol(sol)
-        self._combine_solutions(**kwargs)
-
-    def solve_ivp_postprocessing(self, solve_ivp_sol, **kwargs):
-        for m, mode in enumerate([self.scalar, self.tensor]):
-            for i, sol in enumerate([mode.one, mode.two]):
-                sol.t = solve_ivp_sol[i].t
-                sol.y = solve_ivp_sol[i].y[2*m:2*m+2]
                 mode.sol(sol)
         self._combine_solutions(**kwargs)
 
