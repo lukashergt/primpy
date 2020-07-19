@@ -30,9 +30,6 @@ class Perturbation(Equations, ABC):
         self.scalar = None
         self.tensor = None
 
-    def __call__(self, x, y):
-        """Vector of derivatives."""
-
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
         sol = super(Perturbation, self).sol(sol, **kwargs)

@@ -41,8 +41,9 @@ class ScalarModeN(ScalarMode):
         super(ScalarModeN, self).__init__(background=background, k=k, **kwargs)
         self._set_independent_variable('N')
 
-    def __call__(self, x, y, **kwargs):
+    def __call__(self, x, y):
         """Vector of derivatives."""
+        raise NotImplementedError("Equations class must define __call__.")
 
     def mukhanov_sasaki_frequency_damping(self):
         """Frequency and damping term of the Mukhanov-Sasaki equations for scalar modes.
@@ -87,8 +88,9 @@ class TensorModeN(TensorMode):
         super(TensorModeN, self).__init__(background=background, k=k, **kwargs)
         self._set_independent_variable('N')
 
-    def __call__(self, x, y, **kwargs):
+    def __call__(self, x, y):
         """Vector of derivatives."""
+        raise NotImplementedError("Equations class must define __call__.")
 
     def mukhanov_sasaki_frequency_damping(self):
         """Frequency and damping term of the Mukhanov-Sasaki equations for tensor modes.
