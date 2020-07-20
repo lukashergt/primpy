@@ -3,6 +3,7 @@
 import warnings
 import numpy as np
 from scipy import integrate
+from primpy.exceptionhandling import BigBangWarning, BigBangError
 from primpy.units import pi, G, tp_s, lp_m, Mpc_m
 from primpy.parameters import rho_r0_kg_im3
 
@@ -16,7 +17,7 @@ def get_H0(h, units='planck'):
     elif units == 'SI':
         return h * 100e3 / Mpc_m  # in SI units, i.e. s^-1
     else:
-        raise NotImplementedError("%s not implemented for units, please choose "
+        raise NotImplementedError("%s not implemented for H0 units, please choose "
                                   "one of {'planck', 'H0', 'SI'}." % units)
 
 
@@ -34,7 +35,7 @@ def get_a0(h, Omega_K0, units='planck'):
     elif units == 'SI':
         return a0 * lp_m  # in SI units, i.e. m
     else:
-        raise NotImplementedError("%s not implemented for units, please choose "
+        raise NotImplementedError("%s not implemented for a0 units, please choose "
                                   "one of {'planck', 'Mpc', 'SI'}." % units)
 
 
@@ -82,9 +83,10 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
     Omega_r0 = get_Omega_r0(h=h)
     Omega_L0 = 1 - Omega_r0 - Omega_m0 - Omega_K0
     if Omega_L0 > no_Big_Bang_line(Omega_m0=Omega_m0):
-        raise Exception("no Big Bang for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
+        raise BigBangError("no Big Bang for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
     elif Omega_L0 < expand_recollapse_line(Omega_m0=Omega_m0):
-        warnings.warn("Universe recollapses for Omega_m0=%g, Omega_L0=%g" % (Omega_m0, Omega_L0))
+        warnings.warn(BigBangWarning("Universe recollapses for Omega_m0=%g, Omega_L0=%g"
+                                     % (Omega_m0, Omega_L0)))
     a0 = get_a0(h=h, Omega_K0=Omega_K0, units='planck')
     H = H0 * np.sqrt(Omega_r0 * (a0 / a)**4 +
                      Omega_m0 * (a0 / a)**3 +
@@ -216,5 +218,5 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
         eta = integrate.quad(func=integrand, a=N_start, b=N)
         return eta
     else:
-        raise Exception("`N` needs to be either float or np.ndarray of floats, "
+        raise TypeError("`N` needs to be either float or np.ndarray of floats, "
                         "but is type(N)=%s" % type(N))

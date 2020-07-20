@@ -3,6 +3,7 @@
 import warnings
 import numpy as np
 from scipy.optimize import root_scalar
+from primpy.exceptionhandling import InflationWarning, StepSizeError, PrimpyError
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.solver import solve
@@ -47,7 +48,7 @@ class InflationStartIC(object):
             self.N_i = np.log(2 * equations.K / self.V_i * (1 - 1 / self.Omega_Ki)) / 2
             self.aH_i = np.sqrt(-equations.K / self.Omega_Ki)
         else:
-            raise IOError("Need to specify either N_i or Omega_Ki.")
+            raise TypeError("Need to specify either N_i or Omega_Ki.")
         self.H_i = np.sqrt(self.V_i / 2 - equations.K * np.exp(-2 * self.N_i))
 
     def __call__(self, y0, **ivp_kwargs):
@@ -92,7 +93,9 @@ class ISIC_Nt(InflationStartIC):
                                       **kwargs)
         self.N_tot = N_tot
         self.phi_i_bracket = phi_i_bracket
-        self.verbose = verbose
+        self.warn_action = 'always' if verbose else 'ignore'
+        self.vprint = print if verbose else lambda *a, **k: None
+        self.equations.vwarn = warnings.warn if verbose else lambda *a, **k: None
 
     def __call__(self, y0, **ivp_kwargs):
         """Set background equations of inflation optimizing for `N_tot`."""
@@ -110,41 +113,30 @@ class ISIC_Nt(InflationStartIC):
                       UntilNEvent(self.equations, ic.N_i + self.N_tot + 10),
                       CollapseEvent(self.equations)]
             with warnings.catch_warnings():
-                warnings.filterwarnings(action='ignore',
-                                        message="Inflation",
-                                        category=UserWarning)
+                warnings.filterwarnings(action=self.warn_action, category=InflationWarning)
                 sol = solve(ic, events=events, **kwargs)
             if np.isfinite(sol.N_tot):
-                if self.verbose:
-                    print("N_tot = %.15g for phi_i = %.15g" % (sol.N_tot, phi_i))
+                self.vprint("N_tot = %.15g for phi_i = %.15g" % (sol.N_tot, phi_i))
                 return sol.N_tot - self.N_tot
             elif np.size(sol.N_events['UntilN']) > 0 or sol.N[-1] - ic.N_i >= self.N_tot:
-                if self.verbose:
-                    print("N_tot > %g for phi_i = %.15g" % (self.N_tot, phi_i))
+                self.vprint("N_tot > %g for phi_i = %.15g" % (self.N_tot, phi_i))
                 return sol.N[-1] - ic.N_i
             elif (np.size(sol.N_events['Collapse']) > 0 or
-                  sol.N_events['Inflation_dir-1_term1'] == sol.N[0]):
-                if self.verbose:
-                    print("N_tot = %g for phi_i = %.15g"
-                          % (sol.N_tot, phi_i))
-                    if np.size(sol.N_events['Collapse']) > 0:
-                        warnings.warn("Universe has collapsed: N_event=%s, phi_event=%s"
-                                      % (sol.N_events['Collapse'], sol.phi_events['Collapse']))
-                    else:
-                        warnings.warn("Universe has ended early: N[0]=%g, N_events=%s"
-                                      % (sol.N[0], sol.N_events))
+                  sol.N_events['Inflation_dir-1_term1'][0] == sol.N[0]):
+                self.vprint("N_tot = %g for phi_i = %.15g" % (sol.N_tot, phi_i))
                 return 0 - self.N_tot
+            elif 'step size' in sol.message:
+                raise StepSizeError(sol.message)
             else:
-                print("sol = %s" % sol)
-                raise Exception("solve_ivp failed with message: %s" % sol.message)
+                self.vprint("sol = %s" % sol)
+                raise PrimpyError("`solve_ivp` failed with message: %s" % sol.message)
 
         if isinstance(self.equations, InflationEquationsN):
             output = root_scalar(phii2Ntot, args=(ivp_kwargs,), bracket=self.phi_i_bracket,
                                  rtol=1e-6, xtol=1e-6)
         else:
             output = root_scalar(phii2Ntot, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
-        if self.verbose:
-            print(output)
+        self.vprint(output)
         phi_i_new = output.root
         super(ISIC_Nt, self).__init__(equations=self.equations,
                                       phi_i=phi_i_new,
@@ -173,7 +165,10 @@ class ISIC_NsOk(InflationStartIC):
         self.Omega_K0 = Omega_K0
         self.h = h
         self.phi_i_bracket = phi_i_bracket
-        self.verbose = verbose
+        self.warn_action = 'always' if verbose else 'ignore'
+        self.vprint = print if verbose else lambda *a, **k: None
+        self.vwarn = warnings.warn if verbose else lambda *a, **k: None
+        self.equations.vwarn = self.vwarn
         self.a0 = bb.get_a0(h=h, Omega_K0=Omega_K0, units='planck')
         self.N0 = np.log(self.a0)
 
@@ -193,45 +188,39 @@ class ISIC_NsOk(InflationStartIC):
                       UntilNEvent(self.equations, self.N0),
                       CollapseEvent(self.equations)]
             with warnings.catch_warnings():
-                warnings.filterwarnings(action='ignore',
-                                        message="Inflation",
-                                        category=UserWarning)
+                warnings.filterwarnings(action=self.warn_action, category=InflationWarning)
                 sol = solve(ic, events=events, **kwargs)
             if np.isfinite(sol.N_tot) and sol.N_tot > self.N_star:
                 # Fixme: kind=linear
                 sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h, kind='linear')
-                if self.verbose:
-                    print("N_tot = %.15g, N_star = %.15g for phi_i = %.15g"
-                          % (sol.N_tot, sol.N_star, phi_i))
+                self.vprint("N_tot = %.15g, N_star = %.15g for phi_i = %.15g"
+                            % (sol.N_tot, sol.N_star, phi_i))
                 return sol.N_star - self.N_star
             elif np.size(sol.N_events['UntilN']) > 0 or sol.N[-1] >= self.N0:
-                if self.verbose:
-                    print("N_tot > %g for phi_i = %.15g" % (self.N0, phi_i))
+                self.vprint("N_tot > %g for phi_i = %.15g" % (self.N0, phi_i))
                 return sol.N[-1]
             elif (np.size(sol.N_events['Collapse']) > 0 or sol.N_tot <= self.N_star or
                   sol.N_events['Inflation_dir-1_term1'] == sol.N[0]):
-                if self.verbose:
-                    print("N_tot = %g for phi_i = %.15g"
-                          % (sol.N_tot, phi_i))
-                    if np.size(sol.N_events['Collapse']) > 0:
-                        warnings.warn("Universe has collapsed: N_event=%s, phi_event=%s"
-                                      % (sol.N_events['Collapse'], sol.phi_events['Collapse']))
-                    elif sol.N_tot <= self.N_star:
-                        warnings.warn("Insufficient inflation: N_tot = %g < %g = N_star"
-                                      % (sol.N_tot, self.N_star))
-                    else:
-                        warnings.warn("Universe has ended early: N[0]=%g, N_events=%s"
-                                      % (sol.N[0], sol.N_events))
+                self.vprint("N_tot = %g for phi_i = %.15g" % (sol.N_tot, phi_i))
+                if sol.N_tot <= self.N_star:
+                    self.vwarn(InflationWarning("Insufficient inflation: N_tot = %g < %g = N_star"
+                                                % (sol.N_tot, self.N_star)))
+                elif sol.N_events['Inflation_dir-1_term1'][0] == sol.N[0]:
+                    self.vwarn(InflationWarning("Universe has ended early: N[0]=%g, N_events=%s"
+                                                % (sol.N[0], sol.N_events)))
                 return 0 - self.N_star
+            elif 'step size' in sol.message:
+                raise StepSizeError(sol.message)
             else:
-                print("sol = %s" % sol)
-                raise Exception("solve_ivp failed with message: %s" % sol.message)
+                self.vprint("sol = %s" % sol)
+                raise PrimpyError("`solve_ivp` failed with message: %s" % sol.message)
 
         if isinstance(self.equations, InflationEquationsN):
             output = root_scalar(phii2Nstar, args=(ivp_kwargs,), bracket=self.phi_i_bracket,
                                  rtol=1e-6, xtol=1e-6)
         else:
             output = root_scalar(phii2Nstar, args=(ivp_kwargs,), bracket=self.phi_i_bracket)
+        self.vprint(output)
         phi_i_new = output.root
         super(ISIC_NsOk, self).__init__(equations=self.equations,
                                         phi_i=phi_i_new,
