@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent
+from primpy.inflation import InflationEquations
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.initialconditions import InflationStartIC, ISIC_Nt, ISIC_NsOk
@@ -45,7 +46,14 @@ def test_InflationStartIC(pot, K, t_i, Eq):
 
     # for N_i:
     N_i = 10
+    with pytest.raises(NotImplementedError):
+        eq = InflationEquations(K=K, potential=pot)
+        ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+        y0 = np.zeros(len(ic.equations.idx))
+        ic(y0)
     eq = Eq(K=K, potential=pot)
+    with pytest.raises(TypeError, match="Need to specify either N_i or Omega_Ki."):
+        InflationStartIC(equations=eq, phi_i=phi_i, t_i=t_i)
     ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
     y0 = np.zeros(len(ic.equations.idx))
     ic(y0)
