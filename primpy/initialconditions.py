@@ -125,7 +125,14 @@ class ISIC_Nt(InflationStartIC):
             elif (np.size(sol.N_events['Collapse']) > 0 or
                   sol.N_events['Inflation_dir-1_term1'] == sol.N[0]):
                 if self.verbose:
-                    warnings.warn("Universe has collapsed or otherwise ended early.")
+                    print("N_tot = %g for phi_i = %.15g"
+                          % (sol.N_tot, phi_i))
+                    if np.size(sol.N_events['Collapse']) > 0:
+                        warnings.warn("Universe has collapsed: N_event=%s, phi_event=%s"
+                                      % (sol.N_events['Collapse'], sol.phi_events['Collapse']))
+                    else:
+                        warnings.warn("Universe has ended early: N[0]=%g, N_events=%s"
+                                      % (sol.N[0], sol.N_events))
                 return 0 - self.N_tot
             else:
                 print("sol = %s" % sol)
@@ -204,8 +211,17 @@ class ISIC_NsOk(InflationStartIC):
             elif (np.size(sol.N_events['Collapse']) > 0 or sol.N_tot <= self.N_star or
                   sol.N_events['Inflation_dir-1_term1'] == sol.N[0]):
                 if self.verbose:
-                    warnings.warn("Universe has collapsed or otherwise ended early "
-                                  "or N_tot < N_star.")
+                    print("N_tot = %g for phi_i = %.15g"
+                          % (sol.N_tot, phi_i))
+                    if np.size(sol.N_events['Collapse']) > 0:
+                        warnings.warn("Universe has collapsed: N_event=%s, phi_event=%s"
+                                      % (sol.N_events['Collapse'], sol.phi_events['Collapse']))
+                    elif sol.N_tot <= self.N_star:
+                        warnings.warn("Insufficient inflation: N_tot = %g < %g = N_star"
+                                      % (sol.N_tot, self.N_star))
+                    else:
+                        warnings.warn("Universe has ended early: N[0]=%g, N_events=%s"
+                                      % (sol.N[0], sol.N_events))
                 return 0 - self.N_star
             else:
                 print("sol = %s" % sol)
