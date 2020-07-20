@@ -3,6 +3,7 @@
 import pytest
 from tests.test_tools import effequal
 import numpy as np
+from primpy.exceptionhandling import BigBangWarning, BigBangError
 from primpy.units import Mpc_m, tp_s, lp_m
 import primpy.bigbang as bb
 
@@ -72,9 +73,9 @@ def test_expand_recollapse_line():
 
 def test_Hubble_parameter_exceptions():
     N = np.linspace(0, 200, 201)
-    with pytest.raises(Exception, match="no Big Bang"):
+    with pytest.raises(BigBangError, match="no Big Bang"):
         bb.Hubble_parameter(N=N, Omega_m0=0, Omega_K0=-0.01, h=0.7)
-    with pytest.warns(UserWarning, match="Universe recollapses"):
+    with pytest.warns(BigBangWarning, match="Universe recollapses"):
         bb.Hubble_parameter(N=N, Omega_m0=1, Omega_K0=0.01, h=0.7)
 
 
@@ -89,9 +90,9 @@ def test_comoving_Hubble_horizon(h, Omega_K0, units):
 @pytest.mark.parametrize('units', ['planck', 'Mpc', 'SI'])
 def test_comoving_Hubble_horizon_exceptions(units):
     N = np.linspace(0, 200, 201)
-    with pytest.raises(Exception, match="no Big Bang"):
+    with pytest.raises(BigBangError, match="no Big Bang"):
         bb.comoving_Hubble_horizon(N=N, Omega_m0=0, Omega_K0=-0.01, h=0.7, units=units)
-    with pytest.warns(UserWarning, match="Universe recollapses"):
+    with pytest.warns(BigBangWarning, match="Universe recollapses"):
         bb.comoving_Hubble_horizon(N=N, Omega_m0=1, Omega_K0=0.01, h=0.7, units=units)
 
 
@@ -109,9 +110,9 @@ def test_conformal_time(h, Omega_K0, N_BB):
 
 
 def test_conformal_time_exceptions():
-    with pytest.raises(Exception, match="no Big Bang"):
+    with pytest.raises(BigBangError, match="no Big Bang"):
         bb.conformal_time(N_start=100, N=200, Omega_m0=0, Omega_K0=-0.01, h=0.7)
-    with pytest.warns(UserWarning, match="Universe recollapses"):
+    with pytest.warns(BigBangWarning, match="Universe recollapses"):
         bb.conformal_time(N_start=100, N=200, Omega_m0=1, Omega_K0=0.01, h=0.7)
-    with pytest.raises(Exception, match="`N` needs to be either float or np.ndarray"):
+    with pytest.raises(TypeError, match="`N` needs to be either float or np.ndarray"):
         bb.conformal_time(N_start=100, N=[150, 200], Omega_m0=1, Omega_K0=0.01, h=0.7)
