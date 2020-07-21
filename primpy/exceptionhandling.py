@@ -20,6 +20,20 @@ class StepSizeError(PrimpyError):
         super(StepSizeError, self).__init__(message, *args)
 
 
+class BigBangError(PrimpyError):
+    """Exceptions for the standard Big Bang evolution.
+
+    Attributes
+    ----------
+        message : str
+            Explanation of the error.
+    """
+
+    def __init__(self, message, *args):
+        self.message = message
+        super(BigBangError, self).__init__(self.message, *args)
+
+
 class PrimpyWarning(UserWarning):
     """Base class for warnings in primpy."""
 
@@ -116,20 +130,6 @@ class InflationEndWarning(InflationWarning):
         else:
             self.message = "%s. %s" % (self.header, message)
         super(InflationEndWarning, self).__init__(self.message, *args)
-
-
-class BigBangError(PrimpyError):
-    """Exceptions for the standard Big Bang evolution.
-
-    Attributes
-    ----------
-        message : str
-            Explanation of the error.
-    """
-
-    def __init__(self, message, *args):
-        self.message = message
-        super(BigBangError, self).__init__(self.message, *args)
 
 
 class BigBangWarning(PrimpyWarning):
