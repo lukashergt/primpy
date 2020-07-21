@@ -6,6 +6,22 @@ class PrimpyError(Exception):
     """Base class for exceptions in primpy."""
 
 
+class InflationStartError(PrimpyError):
+    """Exception when the inflation start condition for closed universes is violated.
+
+    Attributes
+    ----------
+        message : str
+            Explanation of the error.
+    """
+
+    def __init__(self, message, *args, **kwargs):
+        self.geometry = kwargs.pop('geometry', "all types of")
+        self.header = "Inflation start condition for %s universes is violated." % self.geometry
+        self.message = "%s %s" % (self.header, message)
+        super(InflationStartError, self).__init__(self.message, *args)
+
+
 class StepSizeError(PrimpyError):
     """Warning when the scipy integrator failed because of a too small step size.
 
