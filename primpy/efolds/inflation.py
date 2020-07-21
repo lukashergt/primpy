@@ -22,8 +22,8 @@ class InflationEquationsN(InflationEquations):
 
     """
 
-    def __init__(self, K, potential, track_time=False, track_eta=False):
-        super(InflationEquationsN, self).__init__(K=K, potential=potential)
+    def __init__(self, K, potential, track_time=False, track_eta=False, verbose=False):
+        super(InflationEquationsN, self).__init__(K=K, potential=potential, verbose=verbose)
         self._set_independent_variable('N')
         self.add_variable('phi', 'dphidN')
         self.track_time = track_time

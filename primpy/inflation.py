@@ -5,6 +5,7 @@ from abc import ABC
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.misc import derivative
+from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
 from primpy.units import pi, c, a_B, mp_kg, lp_m, Mpc_m
 from primpy.parameters import T_CMB, K_STAR
 from primpy.equations import Equations
@@ -13,9 +14,9 @@ from primpy.equations import Equations
 class InflationEquations(Equations, ABC):
     """Base class for inflation equations."""
 
-    def __init__(self, K, potential, verbose_warnings=True):
+    def __init__(self, K, potential, verbose=False):
         super(InflationEquations, self).__init__()
-        self.verbose_warnings = verbose_warnings
+        self.vwarn = warn if verbose else lambda *a, **k: None
         self.K = K
         self.potential = potential
 
@@ -53,26 +54,19 @@ class InflationEquations(Equations, ABC):
 
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""
-        # TODO: clean up and mirror end?
         sol.N_beg = np.nan
         # Case 0: Universe has collapsed
         if 'Collapse' in sol.N_events and sol.N_events['Collapse'].size > 0:
-            if self.verbose_warnings:
-                warn("The universe has collapsed.")
-        elif 'Inflation_dir1_term0' in sol.N_events:
-            # Case 1: inflating from the start
-            if self.inflating(sol.x[0], sol.y[:, 0]) >= 0 or self.w(sol.x[0], sol.y[:, 0]) <= -1/3:
-                sol.N_beg = sol.N[0]
-            # Case 2: there is a transition from non-inflating to inflating
-            elif np.size(sol.N_events['Inflation_dir1_term0']) > 0:
-                sol.N_beg = sol.N_events['Inflation_dir1_term0'][0]
-            else:
-                warn("Inflation start not determined.")
+            self.vwarn(CollapseWarning(""))
+        # Case 1: inflating from the start
+        elif self.inflating(sol.x[0], sol.y[:, 0]) >= 0 or sol.w[0] <= -1/3:
+            sol.N_beg = sol.N[0]
+        # Case 2: there is a transition from non-inflating to inflating
+        elif ('Inflation_dir1_term0' in sol.N_events and
+              np.size(sol.N_events['Inflation_dir1_term0']) > 0):
+            sol.N_beg = sol.N_events['Inflation_dir1_term0'][0]
         else:
-            if self.verbose_warnings:
-                warn("Inflation start not determined. In order to calculate "
-                     "quantities such as `N_tot`, make sure to track the event "
-                     "InflationEvent(ic.equations, direction=+1, terminal=False).")
+            self.vwarn(InflationStartWarning("", events=sol.N_events))
 
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
@@ -88,23 +82,12 @@ class InflationEquations(Equations, ABC):
         if np.isfinite(sol.phi_end):
             sol.V_end = self.potential.V(sol.phi_end)
         else:
-            if ('Inflation_dir-1_term1' not in sol.N_events
-                    and 'Inflation_dir-1_term0' not in sol.N_events):
-                if self.verbose_warnings:
-                    warn("Inflation end not determined. In order to calculate "
-                         "quantities such as `N_tot`, make sure to track the event "
-                         "`InflationEvent(ic.equations, direction=-1)`.")
-            # Case: inflation did not end
-            elif self.inflating(sol.x[-1], sol.y[:, -1]) > 0:
-                warn("Inflation has not ended. Increase `t_end`/`N_end` or decrease initial `phi`?"
-                     " End stage: N[-1]=%g, phi[-1]=%g, w[-1]=%g"
-                     % (sol.N[-1], sol.phi[-1], self.w(sol.x[-1], sol.y[:, -1])))
-            else:
-                warn("Inflation end not determined.")
+            self.vwarn(InflationEndWarning("", events=sol.N_events, sol=sol))
 
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
         sol = super(InflationEquations, self).sol(sol, **kwargs)
+        sol.w = self.w(sol.x, sol.y)
         self.postprocessing_inflation_start(sol)
         self.postprocessing_inflation_end(sol)
         sol.K = self.K
@@ -112,7 +95,6 @@ class InflationEquations(Equations, ABC):
         sol.H = self.H(sol.x, sol.y)
         if not hasattr(sol, 'logaH'):
             sol.logaH = sol.N + np.log(sol.H)
-        sol.w = self.w(sol.x, sol.y)
         sol.N_tot = sol.N_end - sol.N_beg
         if np.isfinite(sol.N_beg) and np.isfinite(sol.N_end):
             sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
@@ -225,7 +207,7 @@ class InflationEquations(Equations, ABC):
             logk, indices = np.unique(sol.logk, return_index=True)
 
             bounds_error = interp1d_kwargs.pop('bounds_error', False)
-            fill_value = interp1d_kwargs.pop('fill_value', 0)
+            fill_value = interp1d_kwargs.pop('fill_value', 1e-30)
             kind = interp1d_kwargs.pop('kind', 'cubic')
             sol.logk2P_scalar = interp1d(logk, sol.P_scalar_approx[indices],
                                          bounds_error=bounds_error,
