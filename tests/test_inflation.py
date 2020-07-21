@@ -5,6 +5,7 @@ from pytest import approx
 from scipy.interpolate import interp1d
 import numpy as np
 from numpy.testing import assert_allclose
+from primpy.exceptionhandling import InflationEndWarning
 from primpy.units import Mpc_m, lp_m
 from primpy.parameters import K_STAR
 from primpy.potentials import QuadraticPotential
@@ -142,26 +143,6 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
 
 
-@pytest.mark.filterwarnings("ignore:Inflation start not determined. In order to:UserWarning")
-def test_postprocessing_inflation_start_warnings():
-    t_i = 7e4
-    N_i = 10
-    phi_i = 17
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
-    for K in [-1, 0, +1]:
-        for eq in [InflationEquationsT(K=K, potential=pot),
-                   InflationEquationsN(K=K, potential=pot, track_time=True)]:
-            # TODO: add KD initial conditions and test for collapse
-
-            # no passing of InflationEvent(+1), i.e. inflation start not recorded
-            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
-            ev_no_start = [InflationEvent(ic.equations, -1, terminal=True)]
-            sol = solve(ic=ic, events=ev_no_start)
-            assert not np.isfinite(sol.N_beg)
-            assert not np.isfinite(sol.N_tot)
-            assert not hasattr(sol, 'inflation_mask')
-
-
 def nan_inflation_end(background_sol):
     assert not np.isfinite(background_sol.N_end)
     assert not np.isfinite(background_sol.phi_end)
@@ -170,34 +151,33 @@ def nan_inflation_end(background_sol):
     assert not hasattr(background_sol, 'inflation_mask')
 
 
-def test_postprocessing_inflation_end_warnings():
+@pytest.mark.parametrize('K', [-1, 0, +1])
+@pytest.mark.parametrize('Eq', [InflationEquationsT, InflationEquationsN])
+def test_postprocessing_inflation_end_warnings(K, Eq):
     t_i = 1e4
     N_i = 10
     phi_i = 17
     pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
-    for K in [-1, 0, +1]:
-        for eq in [InflationEquationsT(K=K, potential=pot),
-                   InflationEquationsN(K=K, potential=pot, track_time=True)]:
-            # stop at N=30 to trigger "Inflation has not ended." warning:
-            ic_early_end = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
-            ev = [InflationEvent(ic_early_end.equations, +1, terminal=False),
-                  InflationEvent(ic_early_end.equations, -1, terminal=True),
-                  UntilNEvent(ic_early_end.equations, 30)]
-            with pytest.warns(UserWarning, match="Inflation has not ended."):
-                bist = solve(ic=ic_early_end, events=ev)
-            nan_inflation_end(background_sol=bist)
+    eq = Eq(K=K, potential=pot, verbose=True)
 
-            # no passing of InflationEvent(-1), i.e. inflation end not recorded
-            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
-            ev_no_end = [InflationEvent(ic.equations, +1, terminal=False),
-                         UntilNEvent(ic.equations, N_i + 65)]
-            with pytest.warns(UserWarning, match="Inflation end not determined. In order to"):
-                bist = solve(ic=ic, events=ev_no_end)
-            nan_inflation_end(background_sol=bist)
+    # stop at N=20 to trigger "Inflation has not ended." warning:
+    ic_early_end = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ev = [InflationEvent(ic_early_end.equations, +1, terminal=False),
+          InflationEvent(ic_early_end.equations, -1, terminal=True),
+          UntilNEvent(ic_early_end.equations, 20)]
+    with pytest.warns(InflationEndWarning, match="Still inflating"):
+        bist = solve(ic=ic_early_end, events=ev)
+    nan_inflation_end(background_sol=bist)
+
+    # no passing of InflationEvent(-1), i.e. inflation end not recorded
+    ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ev_no_end = [InflationEvent(ic.equations, +1, terminal=False),
+                 UntilNEvent(ic.equations, N_i + 65)]
+    with pytest.warns(InflationEndWarning, match="Not tracking"):
+        bist = solve(ic=ic, events=ev_no_end)
+    nan_inflation_end(background_sol=bist)
 
 
-@pytest.mark.filterwarnings("ignore:invalid value encountered:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:divide by zero encountered in log:RuntimeWarning")
 def test_Ncross_nan():
     pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     N_i = 18

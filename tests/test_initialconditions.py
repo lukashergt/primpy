@@ -2,8 +2,10 @@
 """Tests for `primpy.initialconditions` module."""
 import pytest
 import numpy as np
+from primpy.exceptionhandling import InflationStartError
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent
+from primpy.inflation import InflationEquations
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.initialconditions import InflationStartIC, ISIC_Nt, ISIC_NsOk
@@ -45,7 +47,14 @@ def test_InflationStartIC(pot, K, t_i, Eq):
 
     # for N_i:
     N_i = 10
+    with pytest.raises(NotImplementedError):
+        eq = InflationEquations(K=K, potential=pot)
+        ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+        y0 = np.zeros(len(ic.equations.idx))
+        ic(y0)
     eq = Eq(K=K, potential=pot)
+    with pytest.raises(TypeError, match="Need to specify either N_i or Omega_Ki."):
+        InflationStartIC(equations=eq, phi_i=phi_i, t_i=t_i)
     ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
     y0 = np.zeros(len(ic.equations.idx))
     ic(y0)
@@ -67,14 +76,12 @@ def test_InflationStartIC(pot, K, t_i, Eq):
 # noinspection DuplicatedCode
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
-def test_ISIC_Nt(K, t_i, Eq):
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
-    N_tot = 60
-
-    # for N_i:
+def test_ISIC_Nt_Ni(K, t_i, Eq):
     N_i = 11
+    N_tot = 60
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     eq = Eq(K=K, potential=pot)
-    ic = ISIC_Nt(equations=eq, N_i=N_i, N_tot=N_tot, t_i=t_i, phi_i_bracket=[15, 30])
+    ic = ISIC_Nt(equations=eq, N_i=N_i, N_tot=N_tot, t_i=t_i, phi_i_bracket=[3, 30])
     y0 = np.zeros(len(ic.equations.idx))
     ic(y0)
     basic_ic_asserts(y0, ic, K, pot, N_i, ic.Omega_Ki, ic.phi_i, t_i)
@@ -88,12 +95,21 @@ def test_ISIC_Nt(K, t_i, Eq):
         bisn = solve(ic=ic, events=ev, rtol=1e-10, atol=1e-10)
         assert pytest.approx(bisn.N_tot, rel=1e-6, abs=1e-6) == N_tot
 
-    # for Omega_Ki:
-    if K != 0:
-        abs_Omega_Ki = 0.9
-        Omega_Ki = -K * abs_Omega_Ki
-        eq = Eq(K=K, potential=pot)
-        ic = ISIC_Nt(equations=eq, Omega_Ki=Omega_Ki, N_tot=N_tot, t_i=t_i, phi_i_bracket=[15, 30])
+
+# noinspection DuplicatedCode
+@pytest.mark.parametrize('K', [-1, +1])
+@pytest.mark.parametrize('abs_Omega_Ki', [0.9, 10])
+@pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
+def test_ISIC_Nt_Oi(K, abs_Omega_Ki, t_i, Eq):
+    Omega_Ki = -K * abs_Omega_Ki
+    N_tot = 60
+    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    eq = Eq(K=K, potential=pot)
+    if Omega_Ki >= 1:
+        with pytest.raises(InflationStartError):
+            ISIC_Nt(eq, Omega_Ki=Omega_Ki, N_tot=N_tot, t_i=t_i, phi_i_bracket=[3, 30])
+    else:
+        ic = ISIC_Nt(eq, Omega_Ki=Omega_Ki, N_tot=N_tot, t_i=t_i, phi_i_bracket=[3, 30])
         y0 = np.zeros(len(ic.equations.idx))
         ic(y0)
         basic_ic_asserts(y0, ic, K, pot, ic.N_i, Omega_Ki, ic.phi_i, t_i)

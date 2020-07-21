@@ -47,7 +47,7 @@ class Event(object):
         root : float
             event occurs when this is zero from a given direction
         """
-        raise NotImplementedError("Event class must define __call__")
+        raise NotImplementedError("Event class must define __call__.")
 
 
 class UntilTEvent(Event):
