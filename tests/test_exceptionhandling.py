@@ -4,15 +4,20 @@ import pytest
 import numpy as np
 from warnings import warn
 from scipy.integrate import solve_ivp
-from primpy.exceptionhandling import PrimpyError, StepSizeError, BigBangError
+from primpy.exceptionhandling import PrimpyError, InflationStartError, StepSizeError, BigBangError
 from primpy.exceptionhandling import PrimpyWarning, BigBangWarning, CollapseWarning
 from primpy.exceptionhandling import InflationWarning, InflationStartWarning, InflationEndWarning
 
 
-@pytest.mark.parametrize('Error', [StepSizeError, BigBangError])
+@pytest.mark.parametrize('Error', [InflationStartError, StepSizeError, BigBangError])
 def test_PrimpyError(Error):
     with pytest.raises(PrimpyError):
         raise Error("primpy error")
+
+
+def test_InflationStartError():
+    with pytest.raises(InflationStartError):
+        raise InflationStartError("inflation start condition violated")
 
 
 def test_StepSizeError():
