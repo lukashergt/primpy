@@ -7,12 +7,19 @@ class PrimpyError(Exception):
 
 
 class InflationStartError(PrimpyError):
-    """Exception when the inflation start condition for closed universes is violated.
+    """Exception when the inflation start condition for open or closed universes is violated.
 
     Attributes
     ----------
         message : str
             Explanation of the error.
+
+    kwargs
+    ------
+        geometry : str
+            Should be either 'open' or 'closed' to relate to the respective
+            condition at inflation start.
+            default : "all types of"
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -90,6 +97,12 @@ class InflationStartWarning(InflationWarning):
     ----------
         message : str
             Explanation of the warning.
+
+    kwargs
+    ------
+        events : dict
+            Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
+            default : None
     """
 
     def __init__(self, message, *args, **kwargs):
