@@ -5,7 +5,7 @@ import numpy as np
 from scipy import integrate
 from primpy.exceptionhandling import BigBangWarning, BigBangError
 from primpy.units import pi, G, tp_s, lp_m, Mpc_m
-from primpy.parameters import rho_r0_kg_im3
+from primpy.parameters import rho_r0_kg_im3, z_BBN
 
 
 def get_H0(h, units='planck'):
@@ -37,6 +37,18 @@ def get_a0(h, Omega_K0, units='planck'):
     else:
         raise NotImplementedError("%s not implemented for a0 units, please choose "
                                   "one of {'planck', 'Mpc', 'SI'}." % units)
+
+
+def get_N_BBN(h, Omega_K0):
+    """Get the epoch of Big Bang nucleosynthesis in terms of e-folds (in Planck units)."""
+    return np.log(get_a0(h=h, Omega_K0=Omega_K0, units='planck') / (1 + z_BBN))
+
+
+def get_w_reh(N1, N2, cHH1, cHH2):
+    """Get the e.o.s. parameter for reheating `w_reh` from e-folds and comoving Hubble horizon."""
+    delta_N = N2 - N1
+    delta_cHH = np.log(cHH2) - np.log(cHH1)
+    return (2 * delta_cHH / delta_N - 1) / 3
 
 
 def get_rho_crit_kg_im3(h):
@@ -220,3 +232,48 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
     else:
         raise TypeError("`N` needs to be either float or np.ndarray of floats, "
                         "but is type(N)=%s" % type(N))
+
+
+def conformal_time_ratio(Omega_m0, Omega_K0, h, b_forward, b_backward=None):
+    """Conformal time ratio before to after the end of inflation (until today).
+
+    Parameters
+    ----------
+        Omega_m0 : float
+            matter density parameter today
+        Omega_K0 : float
+            curvature density parameter today
+        h : float
+            dimensionless Hubble parameter today, "little h"
+        b_forward : Bunch object same as returned by `scipy.integrate.solve_ivp`
+            Solution returned by primpy.solver.solve. Needs to have been run
+            with `track_eta=True`.
+        b_backward : Bunch object same as returned by `scipy.integrate.solve_ivp`
+            Additional solution returned by primpy.solver.solve. This second
+            solution is assumed to be an integration from inflation start
+            backwards in time.
+            optional, default : None
+
+    Returns
+    -------
+        ratio : float
+            Ratio of conformal time before (during and before inflation) to
+            after (from the end of inflation until today). Needs to be >1 in
+            order to solve the horizon problem.
+    """
+    # before (during and before inflation)
+    if b_backward is None:
+        eta_beg = b_forward.eta[0]
+    else:
+        eta_beg = b_backward.eta[-1]
+    eta_end = b_forward.eta[-1]
+    conformal_time_before = eta_end - eta_beg
+
+    # after (from the end of inflation until today)
+    conformal_time_after = conformal_time(N_start=b_forward.N_end,
+                                          N=np.log(b_forward.a0_lp),
+                                          Omega_m0=Omega_m0,
+                                          Omega_K0=Omega_K0,
+                                          h=h)[0]
+
+    return conformal_time_before / conformal_time_after
