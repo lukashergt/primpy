@@ -45,7 +45,7 @@ class Perturbation(ABC):
         for m, mode in enumerate([self.scalar, self.tensor]):
             for i, sol in enumerate([mode.one, mode.two]):
                 idx = 2 * m + i
-                sol.steptype = oscode_sol[idx]['types']
+                sol.steptype = np.array(oscode_sol[idx]['types'])
                 sol.t = np.array(oscode_sol[idx]['t'])
                 sol.y = np.vstack((oscode_sol[idx]['sol'], oscode_sol[idx]['dsol']))
                 mode.sol(sol)
