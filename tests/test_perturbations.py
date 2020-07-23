@@ -28,7 +28,7 @@ def setup_background(K, f_i, abs_Omega_K0):
     t_eval = np.logspace(np.log10(5e4), np.log10(5e6), int(2e4))
     ic_t = InflationStartIC(eq_t, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=t_eval[0])
     ic_n = InflationStartIC(eq_n, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=None)
-    N_eval = np.linspace(ic_n.N_i, 100, int(1e5))
+    N_eval = np.linspace(ic_n.N_i, 80, int(1e5))
     ev_t = [InflationEvent(eq_t, +1, terminal=False),
             InflationEvent(eq_t, -1, terminal=True),
             CollapseEvent(eq_t)]
@@ -36,7 +36,7 @@ def setup_background(K, f_i, abs_Omega_K0):
             InflationEvent(eq_n, -1, terminal=True),
             CollapseEvent(eq_n)]
     bist = solve(ic=ic_t, events=ev_t, t_eval=t_eval)
-    bisn = solve(ic=ic_n, events=ev_n, t_eval=N_eval)
+    bisn = solve(ic=ic_n, events=ev_n, t_eval=N_eval, rtol=1e-12, atol=1e-12)
     assert bist.independent_variable == 't'
     assert bisn.independent_variable == 'N'
     assert bist.N_tot == approx(bisn.N_tot)
@@ -51,7 +51,7 @@ def setup_background(K, f_i, abs_Omega_K0):
 
 
 @pytest.mark.parametrize('K', [-1, +1])
-@pytest.mark.parametrize('f_i', [10])  # FIXME: make 100, 1000 work as well
+@pytest.mark.parametrize('f_i', [10, 100])  # FIXME: make 100, 1000 work as well
 @pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
 def test_background_setup(K, f_i, abs_Omega_K0):
     if -K * f_i * abs_Omega_K0 >= 1:
@@ -137,8 +137,8 @@ def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
         assert np.isfinite(pps_t.P_t_RST).all()
         assert np.isfinite(pps_n.P_s_RST).all()
         assert np.isfinite(pps_n.P_t_RST).all()
-        assert_allclose(pps_t.P_s_RST * 1e9, pps_n.P_s_RST * 1e9, rtol=5e-4, atol=1e-6)
-        assert_allclose(pps_t.P_t_RST * 1e9, pps_n.P_t_RST * 1e9, rtol=5e-4, atol=1e-6)
+        assert_allclose(pps_t.P_s_RST * 1e9, pps_n.P_s_RST * 1e9, rtol=1e-3, atol=1e-6)
+        assert_allclose(pps_t.P_t_RST * 1e9, pps_n.P_t_RST * 1e9, rtol=1e-3, atol=1e-6)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
