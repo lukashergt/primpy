@@ -113,8 +113,8 @@ def test_sol_time_efolds(K):
     N2phi = interp1d(bisn.N, bisn.phi, kind='cubic')
     N2H = interp1d(bisn.N, bisn.H, kind='cubic')
     assert_allclose(bist.t[1:-1], N2t(bist.N[1:-1]), rtol=1e-5)
-    assert_allclose(bist.phi[1:-1], N2phi(bist.N[1:-1]), rtol=1e-5)
-    assert_allclose(bist.H[1:-1], N2H(bist.N[1:-1]), rtol=1e-5)
+    assert_allclose(bist.phi[1:-1], N2phi(bist.N[1:-1]), rtol=1e-4)
+    assert_allclose(bist.H[1:-1], N2H(bist.N[1:-1]), rtol=1e-4)
 
     bist.derive_a0(Omega_K0=Omega_K0, h=h)
     bisn.derive_a0(Omega_K0=Omega_K0, h=h)
