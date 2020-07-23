@@ -52,6 +52,7 @@ class Equations(ABC):
         setattr(sol, x_name, sol.x)
         if not hasattr(sol, 'event_keys'):
             return sol
+        setattr(sol, 'x_events', dict(zip(sol.event_keys, sol.get('t_events'))))
         setattr(sol, x_name + '_events', dict(zip(sol.event_keys, sol.pop('t_events'))))
         sol.y_events = dict(zip(sol.event_keys, sol.pop('y_events')))
         for name, i in self.idx.items():
