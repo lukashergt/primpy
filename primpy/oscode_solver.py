@@ -7,7 +7,7 @@ from primpy.time.perturbations import PerturbationT
 from primpy.efolds.perturbations import PerturbationN
 
 
-def solve_oscode(background, k, y0=(1, 0, 0, 1e-4), tol=5e-5, fac=100,
+def solve_oscode(background, k, y0=(1, 0, 0, 1e-4), rtol=5e-5, fac=100,
                  drop_closed_large_scales=True, **kwargs):
     """Run `pyoscode.solve` and store information for post-processing.
 
@@ -21,7 +21,7 @@ def solve_oscode(background, k, y0=(1, 0, 0, 1e-4), tol=5e-5, fac=100,
         the frequency and damping term passed to oscode.
     k : int, float, np.ndarray
         Comoving wavenumber used to evolve the Mukhanov-Sasaki equation.
-    tol : float
+    rtol : float
         Tolerance passed to pyoscode.
         default : 5e-5
     fac : int, float
@@ -48,6 +48,8 @@ def solve_oscode(background, k, y0=(1, 0, 0, 1e-4), tol=5e-5, fac=100,
         containing the primordial power spectrum value corresponding to the
         wavenumber `k`.
     """
+    assert 'tol' not in kwargs
+    even_grid = kwargs.pop('even_grid', False)
     vacuum = kwargs.get('vacuum', ('RST',))
     b = background
     if isinstance(k, int) or isinstance(k, float):
@@ -75,7 +77,7 @@ def solve_oscode(background, k, y0=(1, 0, 0, 1e-4), tol=5e-5, fac=100,
                                                          gs=mode.ms_damping, logg=False,
                                                          x0=y0[2 * num] * ki,
                                                          dx0=y0[2 * num + 1] * ki**2,
-                                                         rtol=tol))
+                                                         rtol=rtol, even_grid=even_grid))
                 p.oscode_postprocessing(oscode_sol=oscode_sol)
                 if ki < 1 and b.K == +1 and drop_closed_large_scales:
                     p.scalar.P_s_RST = 1e-30
