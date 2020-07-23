@@ -28,7 +28,7 @@ def solve(ic, *args, **kwargs):
     events = kwargs.pop('events', [])
     y0 = np.zeros(len(ic.equations.idx))
     method = kwargs.pop('method', 'RK45')
-    rtol = kwargs.pop('rtol', 1e-12)
+    rtol = kwargs.pop('rtol', 1e-10)
     atol = kwargs.pop('atol', 1e-12)
     ic(y0=y0, rtol=rtol, atol=atol, **kwargs)
     sol = integrate.solve_ivp(ic.equations, (ic.x_ini, ic.x_end), y0, events=events,
