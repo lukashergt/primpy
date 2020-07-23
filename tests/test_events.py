@@ -92,6 +92,7 @@ def test_AfterInflationEndEvent(K, Eq):
             sol.N_events['AfterInflationEnd_dir1_term1'][0])
 
 
+@pytest.mark.filterwarnings("ignore:invalid value encountered in sqrt:RuntimeWarning")
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('Eq', [InflationEquationsT, InflationEquationsN])
 def test_Phi0Event(K, Eq):
