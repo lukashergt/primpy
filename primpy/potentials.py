@@ -30,6 +30,11 @@ class InflationaryPotential(ABC):
     def tex(self):
         """Tex string useful for labelling the inflationary potential."""
 
+    @property
+    @abstractmethod
+    def perturbation_ic(self):
+        """Set of well scaling initial conditions for perturbation module."""
+
     @abstractmethod
     def V(self, phi):
         """Inflationary potential `V(phi)`.
@@ -147,6 +152,7 @@ class MonomialPotential(InflationaryPotential):
     tag = 'mnp'
     name = 'MonomialPotential'
     tex = r'$\phi^p$'
+    perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
         self.p = pot_kwargs.pop('p')
@@ -219,6 +225,7 @@ class LinearPotential(MonomialPotential):
     tag = 'mn1'
     name = 'LinearPotential'
     tex = r'$\phi^1$'
+    perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
         super(LinearPotential, self).__init__(p=1, **pot_kwargs)
@@ -261,6 +268,7 @@ class QuadraticPotential(InflationaryPotential):
     tag = 'mn2'
     name = 'QuadraticPotential'
     tex = r'$\phi^2$'
+    perturbation_ic = (1e-1, 0, 0, 1e-5)
 
     def __init__(self, **pot_kwargs):
         if 'mass' in pot_kwargs:
@@ -336,6 +344,7 @@ class CubicPotential(MonomialPotential):
     tag = 'mn3'
     name = 'CubicPotential'
     tex = r'$\phi^3$'
+    perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
         super(CubicPotential, self).__init__(p=3, **pot_kwargs)
@@ -378,6 +387,7 @@ class QuarticPotential(MonomialPotential):
     tag = 'mn4'
     name = 'QuarticPotential'
     tex = r'$\phi^4$'
+    perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
         super(QuarticPotential, self).__init__(p=4, **pot_kwargs)
@@ -421,6 +431,7 @@ class StarobinskyPotential(InflationaryPotential):
     name = 'StarobinskyPotential'
     tex = r'Starobinsky'
     gamma = np.sqrt(2 / 3)
+    perturbation_ic = (1-2, 0, 0, 1e-8)
 
     def __init__(self, **pot_kwargs):
         super(StarobinskyPotential, self).__init__(**pot_kwargs)
@@ -527,6 +538,7 @@ class NaturalPotential(InflationaryPotential):
     tag = 'nat'
     name = 'NaturalPotential'
     tex = r'Natural'
+    perturbation_ic = (1e-1, 0, 0, 1e-5)
 
     def __init__(self, **pot_kwargs):
         self.phi0 = pot_kwargs.pop('phi0')
@@ -647,6 +659,7 @@ class DoubleWellPotential(InflationaryPotential):
     tag = 'dwp'
     name = 'DoubleWellPotential'
     tex = r'Double-Well (p)'
+    perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
         self.phi0 = pot_kwargs.pop('phi0')
@@ -717,6 +730,7 @@ class DoubleWell2Potential(DoubleWellPotential):
     tag = 'dw2'
     name = 'DoubleWell2Potential'
     tex = r'Double-Well (quadratic)'
+    perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
         super(DoubleWell2Potential, self).__init__(p=2, **pot_kwargs)
@@ -804,6 +818,7 @@ class DoubleWell4Potential(DoubleWellPotential):
     tag = 'dw4'
     name = 'DoubleWell4Potential'
     tex = r'Double-Well (quartic)'
+    perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
         super(DoubleWell4Potential, self).__init__(p=4, **pot_kwargs)
