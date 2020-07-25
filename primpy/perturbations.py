@@ -77,8 +77,9 @@ class Perturbation(ABC):
 class Mode(Equations, ABC):
     """Template for scalar or tensor modes."""
 
-    def __init__(self, background, k):
+    def __init__(self, background, k, **kwargs):
         super(Mode, self).__init__()
+        self.idx_end = kwargs.get('idx_end', background.x.size)
         self.background = background
         self.k = k
         f, d = self.mukhanov_sasaki_frequency_damping()
@@ -100,7 +101,7 @@ class ScalarMode(Mode, ABC):
     """Template for scalar modes."""
 
     def __init__(self, background, k, **kwargs):
-        super(ScalarMode, self).__init__(background=background, k=k)
+        super(ScalarMode, self).__init__(background=background, k=k, **kwargs)
         self.var = 'Rk'
         self.tag = 's'
         self.pps_norm = self.k**3 / (2 * pi**2)
@@ -114,7 +115,7 @@ class TensorMode(Mode, ABC):
     """Template for tensor modes."""
 
     def __init__(self, background, k, **kwargs):
-        super(TensorMode, self).__init__(background=background, k=k)
+        super(TensorMode, self).__init__(background=background, k=k, **kwargs)
         self.var = 'hk'
         self.tag = 't'
         self.pps_norm = self.k**3 / (2 * pi**2) * 2

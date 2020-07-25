@@ -43,12 +43,12 @@ class ScalarModeN(ScalarMode):
         written as `ddR + 2 * damping * dR + frequency**2 R = 0`.
         """
         K = self.background.K
-        a2 = np.exp(2 * self.background.N)
-        H = self.background.H
-        dphidN = self.background.dphidN
+        a2 = np.exp(2 * self.background.N[:self.idx_end])
+        H = self.background.H[:self.idx_end]
+        dphidN = self.background.dphidN[:self.idx_end]
         H2 = H**2
-        dV = self.background.potential.dV(self.background.phi)
-        Omega_K = self.background.Omega_K
+        dV = self.background.potential.dV(self.background.phi[:self.idx_end])
+        Omega_K = self.background.Omega_K[:self.idx_end]
 
         kappa2 = self.k**2 + self.k * K * (K + 1) - 3 * K
         epsilon = dphidN**2 / 2
@@ -63,7 +63,7 @@ class ScalarModeN(ScalarMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for scalar modes for RST vacuum w.r.t. e-folds `N`."""
-        a_i = self.background.a[0]
+        a_i = np.exp(self.background.N[0])
         H_i = self.background.H[0]
         z_i = a_i * self.background.dphidN[0]
         Rk_i = 1 / np.sqrt(2 * self.k) / z_i
@@ -90,8 +90,11 @@ class TensorModeN(TensorMode):
         written as `ddh + 2 * damping * dh + frequency**2 h = 0`.
         """
         K = self.background.K
-        frequency2 = (self.k**2 + self.k * K * (K + 1) + 2 * K) / self.background.aH**2
-        damping2 = 3 - self.background.dphidN**2 / 2 + K / self.background.aH**2
+        N = self.background.N[:self.idx_end]
+        H2 = self.background.H[:self.idx_end]**2
+        dphidN = self.background.dphidN[:self.idx_end]
+        frequency2 = (self.k**2 + self.k * K * (K + 1) + 2 * K) * np.exp(-2 * N) / H2
+        damping2 = 3 - dphidN**2 / 2 + K * np.exp(-2 * N) / H2
         if np.all(frequency2 > 0):
             return np.sqrt(frequency2), damping2 / 2
         else:
@@ -99,7 +102,7 @@ class TensorModeN(TensorMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for tensor modes for RST vacuum w.r.t. e-folds `N`."""
-        a_i = self.background.a[0]
+        a_i = np.exp(self.background.N[0])
         H_i = self.background.H[0]
         hk_i = 2 / np.sqrt(2 * self.k) / a_i
         dhk_i = -1j * self.k / (a_i * H_i) * hk_i

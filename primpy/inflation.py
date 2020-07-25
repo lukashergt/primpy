@@ -20,10 +20,6 @@ class InflationEquations(Equations, ABC):
         self.K = K
         self.potential = potential
 
-    def a(self, x, y):
-        """Scale factor."""
-        return np.exp(self.N(x, y))
-
     def H(self, x, y):
         """Hubble parameter."""
         return np.sqrt(self.H2(x, y))
@@ -94,12 +90,9 @@ class InflationEquations(Equations, ABC):
         self.postprocessing_inflation_end(sol)
         sol.K = self.K
         sol.potential = self.potential
-        sol.a = self.a(sol.x, sol.y)
         sol.H = self.H(sol.x, sol.y)
-        sol.aH = sol.a * sol.H
-        sol.Omega_K = -sol.K / sol.aH**2
-        if not hasattr(sol, 'logaH'):
-            sol.logaH = sol.N + np.log(sol.H)
+        sol.logaH = sol.N + np.log(sol.H)
+        sol.Omega_K = -sol.K * np.exp(-2 * sol.logaH)
         sol.N_tot = sol.N_end - sol.N_beg
         if np.isfinite(sol.N_beg) and np.isfinite(sol.N_end):
             sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
@@ -163,8 +156,8 @@ class InflationEquations(Equations, ABC):
             derive_a0(Omega_K0=Omega_K0, h=h, delta_reh=delta_reh, w_reh=w_reh)
             sol.cHH_Mpc = np.exp(-sol.logaH) * sol.a0_Mpc
             sol.cHH_lp = np.exp(-sol.logaH) * sol.a0_lp
-            sol.cHH_end_Mpc = sol.a0_Mpc / (np.exp(sol.N_end) * sol.H_end)
-            sol.cHH_end_lp = sol.a0_lp / (np.exp(sol.N_end) * sol.H_end)
+            sol.cHH_end_Mpc = sol.a0_Mpc * np.exp(-sol.N_end) / sol.H_end
+            sol.cHH_end_lp = sol.a0_lp * np.exp(-sol.N_end) / sol.H_end
 
         if sol.K == 0:
             sol.derive_comoving_hubble_horizon = derive_comoving_hubble_horizon_flat

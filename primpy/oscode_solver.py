@@ -7,7 +7,7 @@ from primpy.time.perturbations import PerturbationT
 from primpy.efolds.perturbations import PerturbationN
 
 
-def solve_oscode(background, k, y0=(1, 0, 0, 1e-4), rtol=5e-5, fac=100,
+def solve_oscode(background, k, y0=(1e-1, 0, 0, 1e-5), rtol=5e-5, fac=100,
                  drop_closed_large_scales=True, **kwargs):
     """Run `pyoscode.solve` and store information for post-processing.
 
@@ -59,20 +59,20 @@ def solve_oscode(background, k, y0=(1, 0, 0, 1e-4), rtol=5e-5, fac=100,
         return_pps = True
     PPS = PrimordialPowerSpectrum(background=b, k=k, **kwargs)
     # stop integration sufficiently after mode has crossed the horizon (lazy for loop):
-    j = 0
+    j = 2
     for i, ki in enumerate(k):
         for j in range(j, b.x.size):
-            if b.aH[j] / ki > fac:
+            if b.logaH[j] - np.log(ki) > np.log(fac):
                 if b.independent_variable == 't':
-                    p = PerturbationT(background=b, k=ki, **kwargs)
+                    p = PerturbationT(background=b, k=ki, idx_end=j+1, **kwargs)
                 elif b.independent_variable == 'N':
-                    p = PerturbationN(background=b, k=ki, **kwargs)
+                    p = PerturbationN(background=b, k=ki, idx_end=j+1, **kwargs)
                 else:
                     raise NotImplementedError()
                 oscode_sol = []
                 for mode in [p.scalar, p.tensor]:
                     for num in range(2):
-                        oscode_sol.append(pyoscode.solve(ts=b.x, ti=b.x[0], tf=b.x[j],
+                        oscode_sol.append(pyoscode.solve(ts=b.x[:j+1], ti=b.x[0], tf=b.x[j],
                                                          ws=np.log(mode.ms_frequency), logw=True,
                                                          gs=mode.ms_damping, logg=False,
                                                          x0=y0[2 * num] * ki,

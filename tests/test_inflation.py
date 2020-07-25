@@ -76,7 +76,6 @@ def test_basic_methods_time_vs_efolds():
                 assert eq_N.idx['dphidN'] == 1
                 y1_t = np.array([phi, dphidt, N])
                 y1_N = np.array([phi, dphidt / eq_t.H(t, y1_t)])
-                assert eq_t.a(t, y1_t) == approx(eq_N.a(N, y1_N), rel=tol, abs=tol)
                 assert eq_t.H2(t, y1_t) == approx(eq_N.H2(N, y1_N), rel=tol, abs=tol)
                 assert eq_t.H(t, y1_t) == approx(eq_N.H(N, y1_N), rel=tol, abs=tol)
                 assert eq_t.V(t, y1_t) == approx(eq_N.V(N, y1_N), rel=tol, abs=tol)

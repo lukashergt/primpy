@@ -42,16 +42,16 @@ class ScalarModeT(ScalarMode):
         written as `ddR + 2 * damping * dR + frequency**2 R = 0`.
         """
         K = self.background.K
-        a2 = np.exp(2 * self.background.N)
-        dphidt = self.background.dphidt
-        H = self.background.H
-        dV = self.background.potential.dV(self.background.phi)
+        N = self.background.N[:self.idx_end]
+        dphidt = self.background.dphidt[:self.idx_end]
+        H = self.background.H[:self.idx_end]
+        dV = self.background.potential.dV(self.background.phi[:self.idx_end])
 
         kappa2 = self.k**2 + self.k * K * (K + 1) - 3 * K
         shared = 2 * kappa2 / (kappa2 + K * dphidt**2 / (2 * H**2))
-        terms = dphidt**2 / (2 * H**2) - 3 - dV / (H * dphidt) - K / (a2 * H**2)
+        terms = dphidt**2 / (2 * H**2) - 3 - dV / (H * dphidt) - K * np.exp(-2 * N) / H**2
 
-        frequency2 = kappa2 / a2 - K / a2 * (1 + shared * terms)
+        frequency2 = kappa2 * np.exp(-2 * N) - K * np.exp(-2 * N) * (1 + shared * terms)
         damping = (3 * H + shared * terms * H) / 2
         if np.all(frequency2 > 0):
             return np.sqrt(frequency2), damping
@@ -60,7 +60,7 @@ class ScalarModeT(ScalarMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for scalar modes for RST vacuum w.r.t. cosmic time `t`."""
-        a_i = self.background.a[0]
+        a_i = np.exp(self.background.N[0])
         dphidt_i = self.background.dphidt[0]
         H_i = self.background.H[0]
         z_i = a_i * dphidt_i / H_i
@@ -88,8 +88,9 @@ class TensorModeT(TensorMode):
         written as `ddh + 2 * damping * dh + frequency**2 h = 0`.
         """
         K = self.background.K
-        frequency2 = (self.k**2 + self.k * K * (K + 1) + 2 * K) / self.background.a**2
-        damping2 = 3 * self.background.H
+        N = self.background.N[: self.idx_end]
+        frequency2 = (self.k**2 + self.k * K * (K + 1) + 2 * K) * np.exp(-2 * N)
+        damping2 = 3 * self.background.H[: self.idx_end]
         if np.all(frequency2 > 0):
             return np.sqrt(frequency2), damping2 / 2
         else:
@@ -97,7 +98,7 @@ class TensorModeT(TensorMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for tensor modes for RST vacuum w.r.t. cosmic time `t`."""
-        a_i = self.background.a[0]
+        a_i = np.exp(self.background.N[0])
         hk_i = 2 / np.sqrt(2 * self.k) / a_i
         dhk_i = -1j * self.k / a_i * hk_i
         return hk_i, dhk_i

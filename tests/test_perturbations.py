@@ -25,10 +25,10 @@ def setup_background(K, f_i, abs_Omega_K0):
 
     eq_t = InflationEquationsT(K=K, potential=pot)
     eq_n = InflationEquationsN(K=K, potential=pot)
-    t_eval = np.logspace(np.log10(5e4), np.log10(5e6), int(2e4))
+    t_eval = np.logspace(np.log10(5e4), np.log10(4e6), int(5e4))
     ic_t = InflationStartIC(eq_t, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=t_eval[0])
     ic_n = InflationStartIC(eq_n, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=None)
-    N_eval = np.linspace(ic_n.N_i, 80, int(1e5))
+    N_eval = np.linspace(ic_n.N_i, 70, int(1e5))
     ev_t = [InflationEvent(eq_t, +1, terminal=False),
             InflationEvent(eq_t, -1, terminal=True),
             CollapseEvent(eq_t)]
