@@ -111,12 +111,12 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
             assert np.all(np.isfinite(getattr(getattr(pert_n.scalar, sol), 'N')))
             assert np.all(np.isfinite(getattr(getattr(pert_t.tensor, sol), 't')))
             assert np.all(np.isfinite(getattr(getattr(pert_n.tensor, sol), 'N')))
-            for scalar, a in itertools.product([pert_t.scalar, pert_n.scalar],
-                                               ['Rk', 'dRk', 'steptype']):
-                assert np.all(np.isfinite(getattr(getattr(scalar, sol), a)))
-            for tensor, a in itertools.product([pert_t.tensor, pert_n.tensor],
-                                               ['hk', 'dhk', 'steptype']):
-                assert np.all(np.isfinite(getattr(getattr(tensor, sol), a)))
+            # for scalar, a in itertools.product([pert_t.scalar, pert_n.scalar],
+            #                                    ['Rk', 'dRk', 'steptype']):
+            #     assert np.all(np.isfinite(getattr(getattr(scalar, sol), a)))
+            # for tensor, a in itertools.product([pert_t.tensor, pert_n.tensor],
+            #                                    ['hk', 'dhk', 'steptype']):
+            #     assert np.all(np.isfinite(getattr(getattr(tensor, sol), a)))
         assert pert_n.scalar.P_s_RST == approx(pert_t.scalar.P_s_RST, rel=1e-3)
         assert pert_n.tensor.P_t_RST == approx(pert_t.tensor.P_t_RST, rel=1e-3)
 
