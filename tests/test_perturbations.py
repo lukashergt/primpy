@@ -2,7 +2,7 @@
 """Tests for `primpy.perturbation` module."""
 import pytest
 from pytest import approx
-import itertools
+# import itertools
 import numpy as np
 from numpy.testing import assert_allclose
 from primpy.potentials import QuadraticPotential
