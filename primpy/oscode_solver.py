@@ -7,8 +7,7 @@ from primpy.time.perturbations import PerturbationT
 from primpy.efolds.perturbations import PerturbationN
 
 
-def solve_oscode(background, k, y0=(1e-1, 0, 0, 1e-5), rtol=5e-5, fac=100,
-                 drop_closed_large_scales=True, **kwargs):
+def solve_oscode(background, k, **kwargs):
     """Run `pyoscode.solve` and store information for post-processing.
 
     This is a wrapper around ``pyoscode.solve`` to calculate the solution to
@@ -16,41 +15,57 @@ def solve_oscode(background, k, y0=(1e-1, 0, 0, 1e-5), rtol=5e-5, fac=100,
 
     Parameters
     ----------
-    background : Bunch object as returned by `primpy.solver.solve`
-        Solution to the inflationary background equations used to calculate
-        the frequency and damping term passed to oscode.
-    k : int, float, np.ndarray
-        Comoving wavenumber used to evolve the Mukhanov-Sasaki equation.
-    rtol : float
-        Tolerance passed to pyoscode.
-        default : 5e-5
-    fac : int, float
-        Integration of the mode evolution stops when the considered scale k
-        exceeds the comoving Hubble horizon by a factor of `fac`, i.e. when
-        `aH / k > fac`.
-        default : 100
-    y0 : (float, float, float, float)
-        Initial values (y0_1, dy0_1, y0_2, dy0_2) of perturbations and their
-        derivatives for two independent solutions. The perturbations
-        (y0_1, y0_2) are scaled with `k` and their derivatives with `k**2` in
-        order to produce freeze-out values of about order(~1).
-        default : (1, 0, 0, 1e-4)
-    drop_closed_large_scales : bool
-        If true, this will set the PPS for closed universes on comoving scales
-        of `k < 1` to close to zero (1e-30). Strictly speaking, the PPS for
-        closed universes is only defined for rational numbers `k > 2`.
-        default : True
+        background : Bunch object as returned by `primpy.solver.solve`
+            Solution to the inflationary background equations used to calculate
+            the frequency and damping term passed to oscode.
+        k : int, float, np.ndarray
+            Comoving wavenumber used to evolve the Mukhanov-Sasaki equation.
+
+    Keyword args
+    ------------
+        y0 : (float, float, float, float)
+            Initial values (y0_1, dy0_1, y0_2, dy0_2) of perturbations and
+            their derivatives for two independent solutions. The perturbations
+            (y0_1, y0_2) are scaled with `k` and their derivatives with `k**2`
+            in order to produce freeze-out values of about order(~1).
+            default : determined by input inflationary potential
+        rtol : float
+            Tolerance passed to pyoscode.
+            default : 5e-5
+        fac : int, float
+            Integration of the mode evolution stops when the considered scale k
+            exceeds the comoving Hubble horizon by a factor of `fac`, i.e. when
+            `aH / k > fac`.
+            default : 100
+        even_grid : bool
+            Set this to True if the grid of the independent variable is
+            equally spaced.
+            default : False
+        vacuum : tuple
+            Set of vacuum initial conditions to be computed.
+            Choose any of ('RST', ).
+            default : ('RST', )
+        drop_closed_large_scales : bool
+            If true, this will set the PPS for closed universes on comoving
+            scales of `k < 1` to close to zero (1e-30). Strictly speaking, the
+            PPS for closed universes is only defined for rational numbers
+            `k > 2`.
+            default : True
 
     Returns
     -------
-    sol : Bunch object similar to that returned by `scipy.integrate.solve_ivp`
-        Monkey-patched version of the Bunch type returned by `solve_ivp`,
-        containing the primordial power spectrum value corresponding to the
-        wavenumber `k`.
+        sol : Bunch object similar to that returned by `scipy.integrate.solve_ivp`
+            Monkey-patched version of the Bunch type returned by `solve_ivp`,
+            containing the primordial power spectrum value corresponding to the
+            wavenumber `k`.
     """
     assert 'tol' not in kwargs
+    y0 = kwargs.pop('y0', background.potential.perturbation_ic)
+    rtol = kwargs.pop('rtol', 5e-5)
+    fac = kwargs.pop('fac', 100)
     even_grid = kwargs.pop('even_grid', False)
     vacuum = kwargs.get('vacuum', ('RST',))
+    drop_closed_large_scales = kwargs.pop('drop_closed_large_scales', True)
     b = background
     if isinstance(k, int) or isinstance(k, float):
         k = np.atleast_1d(k)

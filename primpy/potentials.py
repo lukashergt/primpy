@@ -614,25 +614,28 @@ class NaturalPotential(InflationaryPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-        phi0 : float
-            Inflaton distance between local maximum and minima.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
+
+        Keyword args
+        ------------
+            phi0 : float
+                Inflaton distance between local maximum and minima.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Natural inflation potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Natural inflation potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         phi0 = pot_kwargs.pop('phi0')
@@ -744,16 +747,16 @@ class DoubleWell2Potential(DoubleWellPotential):
 
         Parameters
         ----------
-        phi_shifted : float or np.ndarray
-            Inflaton field `phi` shifted by phi0 such that left potential
-            minimum is at zero.
-        phi0 : float
-            Inflaton distance between local maximum and minima.
+            phi_shifted : float or np.ndarray
+                Inflaton field `phi` shifted by phi0 such that left potential
+                minimum is at zero.
+            phi0 : float
+                Inflaton distance between local maximum and minima.
 
         Returns
         -------
-        N : float or np.ndarray
-            Number of e-folds `N` until end of inflation.
+            N : float or np.ndarray
+                Number of e-folds `N` until end of inflation.
 
         """
         assert np.all(phi_shifted < phi0)
@@ -771,15 +774,18 @@ class DoubleWell2Potential(DoubleWellPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-        phi0 : float
-            Inflaton distance between local maximum and minima.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
+
+        Keyword args
+        ------------
+            phi0 : float
+                Inflaton distance between local maximum and minima.
 
         Returns
         -------
@@ -879,15 +885,18 @@ class DoubleWell4Potential(DoubleWellPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-        phi0 : float
-            Inflaton distance between local maximum and minima.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
+
+        Keyword args
+        ------------
+            phi0 : float
+                Inflaton distance between local maximum and minima.
 
         Returns
         -------
