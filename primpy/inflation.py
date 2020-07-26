@@ -20,10 +20,6 @@ class InflationEquations(Equations, ABC):
         self.K = K
         self.potential = potential
 
-    def a(self, x, y):
-        """Scale factor."""
-        return np.exp(self.N(x, y))
-
     def H(self, x, y):
         """Hubble parameter."""
         return np.sqrt(self.H2(x, y))
@@ -72,12 +68,14 @@ class InflationEquations(Equations, ABC):
         """Extract end point of inflation from event tracking."""
         sol.N_end = np.nan
         sol.phi_end = np.nan
+        sol.H_end = np.nan
         sol.V_end = np.nan
         # end of inflation is first transition from inflating to non-inflating
         for key in ['Inflation_dir-1_term1', 'Inflation_dir-1_term0']:
             if key in sol.N_events and sol.N_events[key].size > 0:
                 sol.N_end = sol.N_events[key][0]
                 sol.phi_end = sol.phi_events[key][0]
+                sol.H_end = self.H(sol.x_events[key][0], sol.y_events[key][0])
                 break
         if np.isfinite(sol.phi_end):
             sol.V_end = self.potential.V(sol.phi_end)
@@ -93,8 +91,8 @@ class InflationEquations(Equations, ABC):
         sol.K = self.K
         sol.potential = self.potential
         sol.H = self.H(sol.x, sol.y)
-        if not hasattr(sol, 'logaH'):
-            sol.logaH = sol.N + np.log(sol.H)
+        sol.logaH = sol.N + np.log(sol.H)
+        sol.Omega_K = -sol.K * np.exp(-2 * sol.logaH)
         sol.N_tot = sol.N_end - sol.N_beg
         if np.isfinite(sol.N_beg) and np.isfinite(sol.N_end):
             sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
@@ -158,7 +156,8 @@ class InflationEquations(Equations, ABC):
             derive_a0(Omega_K0=Omega_K0, h=h, delta_reh=delta_reh, w_reh=w_reh)
             sol.cHH_Mpc = np.exp(-sol.logaH) * sol.a0_Mpc
             sol.cHH_lp = np.exp(-sol.logaH) * sol.a0_lp
-            sol.Omega_K = -sol.K * np.exp(-2 * sol.logaH)
+            sol.cHH_end_Mpc = sol.a0_Mpc * np.exp(-sol.N_end) / sol.H_end
+            sol.cHH_end_lp = sol.a0_lp * np.exp(-sol.N_end) / sol.H_end
 
         if sol.K == 0:
             sol.derive_comoving_hubble_horizon = derive_comoving_hubble_horizon_flat

@@ -43,16 +43,21 @@ class Equations(ABC):
 
     def sol(self, sol, **kwargs):
         """Post-processing of `solve_ivp` solution."""
+        sol.independent_variable = self.independent_variable
         sol.x = sol.t
         del sol.t
         x_name = self.independent_variable
+        for name, i in self.idx.items():
+            setattr(sol, name, sol.y[i])
+        setattr(sol, x_name, sol.x)
+        if not hasattr(sol, 'event_keys'):
+            return sol
+        setattr(sol, 'x_events', dict(zip(sol.event_keys, sol.get('t_events'))))
         setattr(sol, x_name + '_events', dict(zip(sol.event_keys, sol.pop('t_events'))))
         sol.y_events = dict(zip(sol.event_keys, sol.pop('y_events')))
         for name, i in self.idx.items():
-            setattr(sol, name, sol.y[i])
             setattr(sol, name + '_events', {key: value[:, i] if value.size > 0 else np.array([])
                                             for key, value in sol.y_events.items()})
-        setattr(sol, x_name, sol.x)
         return sol
 
     def _set_independent_variable(self, name):

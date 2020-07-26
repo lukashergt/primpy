@@ -26,6 +26,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install --no-cache-dir --upgrade setuptools
+        echo $PWD
+        git clone https://github.com/eigenteam/eigen-git-mirror
+        git clone --single-branch --branch lukas-devel https://github.com/fruzsinaagocs/oscode.git
+        cd oscode
+        pip install --no-cache-dir -r requirements.txt
+        CPLUS_INCLUDE_PATH=/home/runner/work/primpy2/primpy2/eigen-git-mirror pip install .
+        cd ..
         pip install --no-cache-dir -r requirements.txt
     - name: Install testing packages
       run: |
@@ -38,19 +46,19 @@ jobs:
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 --count --select=E9,F63,F7,F82 --show-source --statistics primpy tests
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --max-line-length=99 --statistics
+        flake8 --count --max-line-length=99 --statistics primpy tests
     
     # Test for documentation style
     - name: pydocstyle with numpy convention
       run: | 
-        pydocstyle . --convention=numpy
+        pydocstyle --convention=numpy primpy
     
     # Run tests
     - name: Test with pytest
       run: |
-        pytest --cov=primpy
+        pytest --cov=primpy tests
     
 #     # Check code coverage
 #     - name: Upload coverage to Codecov  
