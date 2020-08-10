@@ -158,6 +158,8 @@ class InflationEquations(Equations, ABC):
             sol.cHH_lp = np.exp(-sol.logaH) * sol.a0_lp
             sol.cHH_end_Mpc = sol.a0_Mpc * np.exp(-sol.N_end) / sol.H_end
             sol.cHH_end_lp = sol.a0_lp * np.exp(-sol.N_end) / sol.H_end
+            sol.log_cHH_end_Mpc = np.log(sol.a0_Mpc) - sol.N_end - np.log(sol.H_end)
+            sol.log_cHH_end_lp = np.log(sol.a0_lp) - sol.N_end - np.log(sol.H_end)
 
         if sol.K == 0:
             sol.derive_comoving_hubble_horizon = derive_comoving_hubble_horizon_flat
@@ -179,6 +181,11 @@ class InflationEquations(Equations, ABC):
             """Calibrate wavenumber for curved universes, then derive approximate power spectra."""
             derive_a0(Omega_K0=Omega_K0, h=h, delta_reh=delta_reh, w_reh=w_reh)
 
+            if not hasattr(sol, 'inflation_mask'):
+                if np.isfinite(sol.N_beg) and np.isfinite(sol.N_end):
+                    sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
+                elif np.isfinite(sol.N_beg):
+                    sol.inflation_mask = sol.N_beg <= sol.N
             N = sol.N[sol.inflation_mask]
             logaH = sol.logaH[sol.inflation_mask]
             sol.logk = logaH - np.log(sol.a0_Mpc)
