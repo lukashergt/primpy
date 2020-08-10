@@ -181,11 +181,6 @@ class InflationEquations(Equations, ABC):
             """Calibrate wavenumber for curved universes, then derive approximate power spectra."""
             derive_a0(Omega_K0=Omega_K0, h=h, delta_reh=delta_reh, w_reh=w_reh)
 
-            if not hasattr(sol, 'inflation_mask'):
-                if np.isfinite(sol.N_beg) and np.isfinite(sol.N_end):
-                    sol.inflation_mask = (sol.N_beg <= sol.N) & (sol.N <= sol.N_end)
-                elif np.isfinite(sol.N_beg):
-                    sol.inflation_mask = sol.N_beg <= sol.N
             N = sol.N[sol.inflation_mask]
             logaH = sol.logaH[sol.inflation_mask]
             sol.logk = logaH - np.log(sol.a0_Mpc)
