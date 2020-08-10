@@ -152,7 +152,7 @@ class MonomialPotential(InflationaryPotential):
     tag = 'mnp'
     name = 'MonomialPotential'
     tex = r'$\phi^p$'
-    perturbation_ic = (1, 0, 0, 1)
+    perturbation_ic = (1e-1, 0, 0, 1e-6)
 
     def __init__(self, **pot_kwargs):
         self.p = pot_kwargs.pop('p')
