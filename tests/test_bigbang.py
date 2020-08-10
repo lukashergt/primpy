@@ -71,12 +71,12 @@ def test_get_w_reh(N_tot):
     bist = solve(ic=ic, events=ev)
     bist.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
     N_end = bist.N[-1]
-    cHH_end = bist.cHH_lp[-1]
+    log_cHH_end = bist.log_cHH_end_lp
 
     N_BBN = bb.get_N_BBN(h=h, Omega_K0=Omega_K0)
     cHH_BBN = bb.comoving_Hubble_horizon(N=N_BBN, Omega_m0=0.3, Omega_K0=Omega_K0, h=h)
 
-    w_reh = bb.get_w_reh(N1=N_end, N2=N_BBN, cHH1=cHH_end, cHH2=cHH_BBN)
+    w_reh = bb.get_w_reh(N1=N_end, N2=N_BBN, log_cHH1=log_cHH_end, log_cHH2=np.log(cHH_BBN))
     if N_tot < 15:
         assert w_reh < -1 / 3
     elif N_tot < 25:
