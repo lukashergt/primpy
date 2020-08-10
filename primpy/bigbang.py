@@ -44,10 +44,10 @@ def get_N_BBN(h, Omega_K0):
     return np.log(get_a0(h=h, Omega_K0=Omega_K0, units='planck') / (1 + z_BBN))
 
 
-def get_w_reh(N1, N2, cHH1, cHH2):
+def get_w_reh(N1, N2, log_cHH1, log_cHH2):
     """Get the e.o.s. parameter for reheating `w_reh` from e-folds and comoving Hubble horizon."""
     delta_N = N2 - N1
-    delta_cHH = np.log(cHH2) - np.log(cHH1)
+    delta_cHH = log_cHH2 - log_cHH1
     return (2 * delta_cHH / delta_N - 1) / 3
 
 
@@ -90,7 +90,6 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
             Hubble parameter during standard Big Bang evolution of the Universe.
             In reduced Planck units [tp^-1].
     """
-    a = np.exp(N)
     H0 = get_H0(h=h, units='planck')  # in reduced Planck units
     Omega_r0 = get_Omega_r0(h=h)
     Omega_L0 = 1 - Omega_r0 - Omega_m0 - Omega_K0
@@ -100,9 +99,10 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
         warnings.warn(BigBangWarning("Universe recollapses for Omega_m0=%g, Omega_L0=%g"
                                      % (Omega_m0, Omega_L0)))
     a0 = get_a0(h=h, Omega_K0=Omega_K0, units='planck')
-    H = H0 * np.sqrt(Omega_r0 * (a0 / a)**4 +
-                     Omega_m0 * (a0 / a)**3 +
-                     Omega_K0 * (a0 / a)**2 +
+    N0 = np.log(a0)
+    H = H0 * np.sqrt(Omega_r0 * (np.exp(N0 - N))**4 +
+                     Omega_m0 * (np.exp(N0 - N))**3 +
+                     Omega_K0 * (np.exp(N0 - N))**2 +
                      Omega_L0)
     return H
 

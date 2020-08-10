@@ -158,6 +158,8 @@ class InflationEquations(Equations, ABC):
             sol.cHH_lp = np.exp(-sol.logaH) * sol.a0_lp
             sol.cHH_end_Mpc = sol.a0_Mpc * np.exp(-sol.N_end) / sol.H_end
             sol.cHH_end_lp = sol.a0_lp * np.exp(-sol.N_end) / sol.H_end
+            sol.log_cHH_end_Mpc = np.log(sol.a0_Mpc) - sol.N_end - np.log(sol.H_end)
+            sol.log_cHH_end_lp = np.log(sol.a0_lp) - sol.N_end - np.log(sol.H_end)
 
         if sol.K == 0:
             sol.derive_comoving_hubble_horizon = derive_comoving_hubble_horizon_flat
