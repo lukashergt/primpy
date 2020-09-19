@@ -662,7 +662,7 @@ class DoubleWellPotential(InflationaryPotential):
     tag = 'dwp'
     name = 'DoubleWellPotential'
     tex = r'Double-Well (p)'
-    perturbation_ic = (1, 0, 0, 1)
+    perturbation_ic = (1e-1, 0, 0, 1e-5)
 
     def __init__(self, **pot_kwargs):
         self.phi0 = pot_kwargs.pop('phi0')
@@ -675,8 +675,7 @@ class DoubleWellPotential(InflationaryPotential):
 
         Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
         """
-        phi -= self.phi0
-        return self.Lambda**4 * (1 - (phi / self.phi0)**self.p)**2
+        return self.Lambda**4 * (1 - ((phi - self.phi0) / self.phi0)**self.p)**2
 
     def dV(self, phi):
         """`V'(phi) = 2p*Lambda**4 * (-1 + (phi / phi0)**p) * phi**(p - 1) / phi0**p`.
@@ -686,8 +685,7 @@ class DoubleWellPotential(InflationaryPotential):
         p = self.p
         phi0 = self.phi0
         pre = self.prefactor
-        phi -= phi0
-        return pre * (-1 + (phi / phi0)**p) * phi**(p - 1) / phi0**p
+        return pre * (-1 + ((phi - phi0) / phi0)**p) * (phi - phi0)**(p - 1) / phi0**p
 
     def d2V(self, phi):
         """`V''(phi) = 2p*Lambda**4 * (1-p+(2*p-1)*(phi/phi0)**p) * phi**(p-2) / phi0**p`.
@@ -697,8 +695,7 @@ class DoubleWellPotential(InflationaryPotential):
         p = self.p
         phi0 = self.phi0
         pre = self.prefactor
-        phi -= phi0
-        return pre * (1 - p + (2 * p - 1) * (phi / phi0)**p) * phi**(p - 2) / phi0**p
+        return pre * (1 - p + (2 * p - 1) * ((phi-phi0) / phi0)**p) * (phi-phi0)**(p-2) / phi0**p
 
     def d3V(self, phi):
         """`V'''(phi) = 2p(p-1)Lambda**4 * (2-p+(4*p-2)*(phi/phi0)**p) * phi**(p-3) / phi0**p`.
@@ -708,8 +705,7 @@ class DoubleWellPotential(InflationaryPotential):
         p = self.p
         phi0 = self.phi0
         pre = self.prefactor
-        phi -= phi0
-        return pre * (p - 1) * (2 - p + (4 * p - 2) * (phi / phi0)**p) * phi**(p - 3) / phi0**p
+        return pre * (p-1) * (2 - p + (4*p-2) * ((phi-phi0)/phi0)**p) * (phi-phi0)**(p-3) / phi0**p
 
     def inv_V(self, V):
         """`phi(V) = phi0 * (1 - sqrt(V) / Lambda**2)**(1/p)`."""
@@ -733,7 +729,7 @@ class DoubleWell2Potential(DoubleWellPotential):
     tag = 'dw2'
     name = 'DoubleWell2Potential'
     tex = r'Double-Well (quadratic)'
-    perturbation_ic = (1, 0, 0, 1)
+    perturbation_ic = (1e-1, 0, 0, 1e-5)
 
     def __init__(self, **pot_kwargs):
         super(DoubleWell2Potential, self).__init__(p=2, **pot_kwargs)
@@ -824,7 +820,7 @@ class DoubleWell4Potential(DoubleWellPotential):
     tag = 'dw4'
     name = 'DoubleWell4Potential'
     tex = r'Double-Well (quartic)'
-    perturbation_ic = (1, 0, 0, 1)
+    perturbation_ic = (1e-1, 0, 0, 1e-5)
 
     def __init__(self, **pot_kwargs):
         super(DoubleWell4Potential, self).__init__(p=4, **pot_kwargs)

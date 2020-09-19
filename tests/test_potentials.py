@@ -3,6 +3,7 @@
 import pytest
 from tests.test_tools import effequal
 import numpy as np
+from numpy.testing import assert_array_equal, assert_allclose
 import primpy.potentials as pp
 
 
@@ -79,6 +80,42 @@ def test_starobinsky_inflation_V(Lambda, phi):
     assert pot.d2V(phi=phi) == Lambda**4 * 2 * gamma**2 * np.exp(-2 * g_p) * (2 - np.exp(g_p))
     assert pot.d3V(phi=phi) == Lambda**4 * 2 * gamma**3 * np.exp(-2 * g_p) * (np.exp(g_p) - 4)
     assert pot.inv_V(V=Lambda**4/2) == -np.log(1 - np.sqrt(1/2)) / gamma
+
+
+@pytest.mark.parametrize('Pot', [pp.DoubleWell2Potential,
+                                 pp.DoubleWell4Potential])
+@pytest.mark.parametrize('phi0', np.logspace(1, 3, 10))
+def test_doublewell_inflation_V(Pot, phi0):
+    """Tests for `StarobinskyPotential`."""
+    phi = np.linspace(5, 9, 5)
+    Lambda = 1e-3
+    pot = Pot(Lambda=Lambda, phi0=phi0)
+
+    pot.V(phi=phi)
+    pot.dV(phi=phi)
+    pot.d2V(phi=phi)
+    pot.d3V(phi=phi)
+    assert_array_equal(phi, np.linspace(5, 9, 5))
+
+    assert_allclose(
+        pot.V(phi=phi),
+        Lambda**4 * (-1 + (-1 + phi / phi0)**pot.p)**2,
+        rtol=1e-12, atol=1e-12)
+    assert_allclose(
+        pot.dV(phi=phi),
+        (2 * pot.p * Lambda**4 * (-1 + phi / phi0)**pot.p *
+         (-1 + (-1 + phi / phi0)**pot.p)) / (phi0 - phi),
+        rtol=1e-12, atol=1e-12)
+    assert_allclose(
+        pot.d2V(phi=phi),
+        (2 * pot.p * Lambda**4 * (-1 + phi / phi0)**pot.p *
+         (1 - pot.p + (-1 + 2 * pot.p) * (-1 + phi / phi0)**pot.p)) / (phi0 - phi)**2,
+        rtol=1e-12, atol=1e-12)
+    assert_allclose(
+        pot.d3V(phi=phi),
+        (2 * (-1 + pot.p) * pot.p * Lambda**4 * (-1 + phi / phi0)**pot.p *
+         (2 - pot.p + 2 * (-1 + 2 * pot.p) * (-1 + phi / phi0)**pot.p)) / (phi0 - phi)**3,
+        rtol=1e-12, atol=1e-12)
 
 
 def test_starobinsky_inflation_power_to_potential():
