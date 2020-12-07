@@ -1000,9 +1000,6 @@ class HilltopPotential(InflationaryPotential):
     def phi_end(cls, **pot_kwargs):
         """Get inflaton at end of inflation using slow-roll.
 
-        Parameters
-        ----------
-
         Keyword args
         ------------
             p : float
