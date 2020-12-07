@@ -136,9 +136,10 @@ class InflationEquations(Equations, ABC):
             sol.N_cross = sol.N_end - sol.N_star  # horizon crossing of pivot scale
             derive_a0(Omega_K0=0, h=None)
 
-            # Calibrate aH=k using N_star at pivot scale K_STAR:
-            N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
-            sol.logaH_star = N2logaH(sol.N_cross)
+            if not hasattr(sol, 'logaH_star'):
+                # Calibrate aH=k using N_star at pivot scale K_STAR:
+                N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
+                sol.logaH_star = N2logaH(sol.N_cross)
 
             sol.N_calib = sol.N + np.log(sol.a0) - sol.logaH_star + np.log(K_STAR / Mpc_m * lp_m)
             sol.a_calib = np.exp(sol.N_calib)

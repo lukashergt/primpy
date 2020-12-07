@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from scipy.interpolate import interp1d
+from scipy.optimize import root_scalar
 from primpy.units import pi
 
 
@@ -115,6 +116,14 @@ class InflationaryPotential(ABC):
 
         """
 
+    def sr_epsilon(self, phi, **pot_kwargs):
+        """First potential slow-roll parameter."""
+        return (self.dV(phi) / self.V(phi))**2 / 2
+
+    def sr_eta(self, phi):
+        """Second potential slow-roll parameter."""
+        return self.d2V(phi) / self.V(phi)
+
     # TODO:
     # @abstractmethod
     # def sr_phi_end(self):
@@ -129,16 +138,6 @@ class InflationaryPotential(ABC):
     # @abstractmethod
     # def sr_n_s(self):
     #     """Slow-roll approximation for the tensor-to-scalar ratio."""
-
-    # TODO:
-    # @abstractmethod
-    # def sr_epsilon(self):
-    #     """Slow-roll potential parameter `epsilon`."""
-
-    # TODO:
-    # @abstractmethod
-    # def sr_eta(self):
-    #     """Slow-roll potential parameter `eta`."""
 
     @classmethod
     @abstractmethod
@@ -921,64 +920,202 @@ class DoubleWell4Potential(DoubleWellPotential):
         return Lambda, phi_star, N_star
 
 
-# TODO:
-# class HilltopPotential(InflationaryPotential):
-#     """Double-Well potential: `V(phi) = Lambda**4 * (1 - (phi/phi0)**p)**2`.
-#
-#     Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-#     """
-#
-#     tag = 'htp'
-#     name = 'HilltopPotential'
-#     tex = r'Hilltop (p)'
-#
-#     def __init__(self, **pot_kwargs):
-#         self.phi0 = pot_kwargs.pop('phi0')
-#         self.p = pot_kwargs.pop('p')
-#         super(HilltopPotential, self).__init__(**pot_kwargs)
-#         self.prefactor = 2 * self.p * self.Lambda**4
-#
-#     def V(self, phi):
-#         """`V(phi) = Lambda**4 * (1 - (phi/phi0)**p)**2`.
-#
-#         Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-#         """
-#         phi -= self.phi0
-#         return self.Lambda**4 * (1 - (phi / self.phi0)**self.p)**2
-#
-#     def dV(self, phi):
-#         """`V'(phi) = 2p*Lambda**4 * (-1 + (phi / phi0)**p) * phi**(p - 1) / phi0**p`.
-#
-#         Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-#         """
-#         p = self.p
-#         phi0 = self.phi0
-#         pre = self.prefactor
-#         phi -= phi0
-#         return pre * (-1 + (phi / phi0)**p) * phi**(p - 1) / phi0**p
-#
-#     def d2V(self, phi):
-#         """`V''(phi) = 2p*Lambda**4 * (1-p+(2*p-1)*(phi/phi0)**p) * phi**(p-2) / phi0**p`.
-#
-#         Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-#         """
-#         p = self.p
-#         phi0 = self.phi0
-#         pre = self.prefactor
-#         phi -= phi0
-#         return pre * (1 - p + (2 * p - 1) * (phi / phi0)**p) * phi**(p - 2) / phi0**p
-#
-#     def d3V(self, phi):
-#         """`V'''(phi) = 2p(p-1)Lambda**4 * (2-p+(4*p-2)*(phi/phi0)**p) * phi**(p-3) / phi0**p`.
-#
-#         Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-#         """
-#         p = self.p
-#         phi0 = self.phi0
-#         pre = self.prefactor
-#         phi -= phi0
-#         return pre * (p - 1) * (2 - p + (4 * p - 2) * (phi / phi0)**p) * phi**(p - 3) / phi0**p
-#
-#     def inv_V(self, V):
-#         """`phi(V) = phi0 * (1 - sqrt(V) / Lambda**2)**(1/p)`."""
-#         return self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
+class HilltopPotential(InflationaryPotential):
+    """Hilltop potential: `V(phi) = Lambda**4 * (1 - (phi/phi0)**p + ...)`.
+
+    Hilltop shifted such that potential is zero at origin: phi -> phi-phi0
+    """
+
+    tag = 'htp'
+    name = 'HilltopPotential'
+    tex = r'Hilltop (p)'
+    perturbation_ic = (1e-1, 0, 0, 1e-5)
+
+    def __init__(self, **pot_kwargs):
+        self.phi0 = pot_kwargs.pop('phi0')
+        self.p = pot_kwargs.pop('p')
+        super(HilltopPotential, self).__init__(**pot_kwargs)
+
+    def V(self, phi):
+        """`V(phi) = Lambda**4 * (1 - (phi/phi0)**p + ...)`.
+
+        Hilltop shifted such that potential is zero at origin: phi -> phi-phi0
+        """
+        return self.Lambda**4 * (1 - ((phi-self.phi0) / self.phi0)**self.p)
+
+    def dV(self, phi):
+        """`V'(phi) = -p * Lambda**4 * (phi-phi0)**(p-1) / phi0**p`.
+
+        Hilltop shifted such that potential is zero at origin: phi -> phi-phi0
+        """
+        p = self.p
+        phi0 = self.phi0
+        return -self.Lambda**4 * (phi-phi0)**(p-1) / phi0**p * p
+
+    def d2V(self, phi):
+        """`V''(phi) = p * (p-1) * Lambda**4 * (phi-phi0)**(p-2) / phi0**p`.
+
+        Hilltop shifted such that potential is zero at origin: phi -> phi-phi0
+        """
+        p = self.p
+        phi0 = self.phi0
+        return self.Lambda**4 * (phi-phi0)**(p-2) / phi0**p * p * (p-1)
+
+    def d3V(self, phi):
+        """`V'''(phi) = p * (p-1) * (p-2) * Lambda**4 * (phi-phi0)**(p-3) / phi0**p`.
+
+        Hilltop shifted such that potential is zero at origin: phi -> phi-phi0
+        """
+        p = self.p
+        phi0 = self.phi0
+        return self.Lambda**4 * (phi-phi0)**(p-3) / phi0**p * p * (p-1) * (p-2)
+
+    def inv_V(self, V):
+        """`phi(V) = phi0 * (1 - sqrt(V) / Lambda**2)**(1/p)`."""
+        return (1 + (1 - V / self.Lambda**4)**(1/self.p)) * self.phi0
+
+    @staticmethod
+    def sr_epsilon(phi, **pot_kwargs):
+        """First potential slow-roll parameter.
+
+        Parameters
+        ----------
+        phi : float or np.ndarray
+            Inflaton field `phi` shifted by phi0 such that potential is zero at origin:
+            phi -> phi-phi0.
+
+        Keyword args
+        ------------
+            p : float
+                Hilltop exponent governing the hill flatness.
+            phi0 : float
+                Inflaton distance between local maximum and origin.
+
+        """
+        p = pot_kwargs.get('p')
+        phi0 = pot_kwargs.get('phi0')
+        return p**2 * (phi-phi0)**(2*p-2) / (2 * phi0**(2*p) * (1 - ((phi-phi0) / phi0)**p)**2)
+
+    @classmethod
+    def phi_end(cls, **pot_kwargs):
+        """Get inflaton at end of inflation using slow-roll.
+
+        Keyword args
+        ------------
+            p : float
+                Hilltop exponent governing the hill flatness.
+            phi0 : float
+                Inflaton distance between local maximum and origin.
+
+        Returns
+        -------
+        phi_end2 : float
+            Inflaton phi at end of inflation. (shifted!)
+        """
+        p = pot_kwargs.get('p')
+        phi0 = pot_kwargs.get('phi0')
+        output = root_scalar(lambda x: cls.sr_epsilon(x, p=p, phi0=phi0)-1, bracket=(0.1, phi0))
+        return output.root
+
+    @classmethod
+    def phi2efolds(cls, phi, **pot_kwargs):
+        """Get e-folds `N` from inflaton `phi`.
+
+        Find the number of e-folds `N` till end of inflation from inflaton `phi`
+        using the slow-roll approximation.
+
+        Parameters
+        ----------
+        phi : float or np.ndarray
+            Inflaton field `phi` (shifted, i.e. local potential maximum at phi0).
+            Should be smaller than `phi0`.
+
+        Keyword args
+        ------------
+            p : float
+                Hilltop exponent governing the hill flatness.
+            phi0 : float
+                Inflaton distance between local maximum and origin.
+
+        Returns
+        -------
+        N : float or np.ndarray
+            Number of e-folds `N` until end of inflation.
+
+        """
+        p = pot_kwargs.get('p')
+        phi0 = pot_kwargs.get('phi0')
+        phi_end = cls.phi_end(p=p, phi0=phi0)
+
+        def integral(x):
+            return (x-phi0)/p * (x / 2 * (x-2*phi0) / (x-phi0) + (x-phi0) / (x/phi0-1)**p / (p-2))
+
+        return integral(phi) - integral(phi_end)
+
+    @classmethod
+    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
+        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
+
+        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
+        that produces the desired amplitude `A_s` of the primordial power
+        spectrum using the slow-roll approximation.
+
+        Parameters
+        ----------
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
+
+        Keyword args
+        ------------
+            p : float
+                Hilltop exponent governing the hill flatness.
+            phi0 : float
+                Inflaton distance between local maximum and origin.
+
+        Returns
+        -------
+        Lambda : float or np.ndarray
+            Amplitude parameter `Lambda` for the Hilltop potential.
+        phi_star : float
+            Inflaton value at horizon crossing of the pivot scale.
+        N_star : float
+            Number of observable e-folds of inflation `N_star`
+            from horizon crossing till the end of inflation.
+
+        """
+        p = pot_kwargs.pop('p')
+        phi0 = pot_kwargs.pop('phi0')
+        if N_star is None:
+            N_star = cls.phi2efolds(phi=phi_star, p=p, phi0=phi0)
+        elif phi_star is None:
+            phi_end = cls.phi_end(p=p, phi0=phi0)
+            phi_sample = np.linspace(phi_end, phi0, 100000)[1:-1]
+            N_sample = cls.phi2efolds(phi=phi_sample, p=p, phi0=phi0)
+            logN2phi = interp1d(np.log(N_sample), phi_sample)
+            phi_star = np.float(logN2phi(np.log(N_star)))
+        else:
+            raise Exception("Need to specify either N_star or phi_star. "
+                            "The respective other should be None.")
+        Lambda2 = (-np.sqrt(3*A_s) * 2*pi*p/phi0 * (phi_star/phi0-1)**(p-1) /
+                   (1-(phi_star/phi0-1)**p)**(3/2))
+        return np.sqrt(Lambda2), phi_star, N_star
+
+
+class Hilltop4Potential(HilltopPotential):
+    """Quartic hilltop potential: `V(phi) = Lambda**4 * (1 - (phi/phi0)**4 + ...)`.
+
+    Hilltop shifted such that potential is zero at origin: phi -> phi-phi0
+    """
+
+    tag = 'ht4'
+    name = 'Hilltop4Potential'
+    tex = r'Hilltop (quartic)'
+    perturbation_ic = (1e-1, 0, 0, 1e-5)
+
+    def __init__(self, **pot_kwargs):
+        super(Hilltop4Potential, self).__init__(p=4, **pot_kwargs)
