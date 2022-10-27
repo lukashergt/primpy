@@ -803,7 +803,7 @@ class DoubleWell2Potential(DoubleWellPotential):
             phi_sample = np.linspace(phi_end_shifted, phi0, 100000)[1:-1]
             N_sample = cls.phi2efolds(phi_shifted=phi_sample, phi0=phi0)
             logN2phi = interp1d(np.log(N_sample), phi_sample)
-            phi_star = np.float(logN2phi(np.log(N_star)))
+            phi_star = float(logN2phi(np.log(N_star)))
         else:
             raise Exception("Need to specify either N_star or phi_star. "
                             "The respective other should be None.")
@@ -913,7 +913,7 @@ class DoubleWell4Potential(DoubleWellPotential):
             phi_sample = np.linspace(phi_end_shifted, phi0, 100000)[1:-1]
             N_sample = cls.phi2efolds(phi_shifted=phi_sample, phi0=phi0)
             logN2phi = interp1d(np.log(N_sample), phi_sample)
-            phi_star = np.float(logN2phi(np.log(N_star)))
+            phi_star = float(logN2phi(np.log(N_star)))
         else:
             raise Exception("Need to specify either N_star or phi_star. "
                             "The respective other should be None.")
