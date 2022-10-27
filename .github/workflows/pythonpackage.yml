@@ -34,6 +34,7 @@ jobs:
         pip install pydocstyle
         pip install pytest
         pip install pytest-cov pytest-xdist codecov  
+        pip install matplotlib
     
     # Test for pep-compliance
     - name: Lint with flake8
