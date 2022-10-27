@@ -115,7 +115,7 @@ class Equations(ABC):
         -------
             %s : float
                 value of  %s
-        
+
         """ % (name, name, name)
 
         setattr(self, name, MethodType(method, self))
