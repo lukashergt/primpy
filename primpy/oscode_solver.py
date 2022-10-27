@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""":mod:`primpy.oscode_solver`: setup for running `pyoscode.solve`."""
+""":mod:`primpy.oscode_solver`: setup for running :func:`pyoscode.solve`."""
 import numpy as np
 import pyoscode
 from primpy.perturbations import PrimordialPowerSpectrum
@@ -8,14 +8,14 @@ from primpy.efolds.perturbations import PerturbationN
 
 
 def solve_oscode(background, k, **kwargs):
-    """Run `pyoscode.solve` and store information for post-processing.
+    """Run :func:`pyoscode.solve` and store information for post-processing.
 
-    This is a wrapper around ``pyoscode.solve`` to calculate the solution to
+    This is a wrapper around :func:`pyoscode.solve` to calculate the solution to
     the Mukhanov-Sasaki equation.
 
     Parameters
     ----------
-        background : Bunch object as returned by `primpy.solver.solve`
+        background : Bunch object as returned by :func:`primpy.solver.solve`
             Solution to the inflationary background equations used to calculate
             the frequency and damping term passed to oscode.
         k : int, float, np.ndarray
@@ -54,10 +54,12 @@ def solve_oscode(background, k, **kwargs):
 
     Returns
     -------
-        sol : Bunch object similar to that returned by `scipy.integrate.solve_ivp`
-            Monkey-patched version of the Bunch type returned by `solve_ivp`,
-            containing the primordial power spectrum value corresponding to the
-            wavenumber `k`.
+        sol : Bunch object
+            Solution to the inverse value problem, containing the primordial
+            power spectrum value corresponding to the wavenumber `k`.
+            Monkey-patched version of the Bunch type usually returned by
+            :func:`scipy.integrate.solve_ivp`.
+
     """
     assert 'tol' not in kwargs
     y0 = kwargs.pop('y0', background.potential.perturbation_ic)
