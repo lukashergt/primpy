@@ -83,7 +83,7 @@ class InflationEquations(Equations, ABC):
             self.vwarn(InflationEndWarning("", events=sol.N_events, sol=sol))
 
     def sol(self, sol, **kwargs):
-        """Post-processing of `solve_ivp` solution."""
+        """Post-processing of :func:`scipy.integrate.solve_ivp` solution."""
         sol = super(InflationEquations, self).sol(sol, **kwargs)
         sol.w = self.w(sol.x, sol.y)
         self.postprocessing_inflation_start(sol)
@@ -128,20 +128,23 @@ class InflationEquations(Equations, ABC):
 
         sol.derive_a0 = derive_a0
 
-        def calibrate_a_flat_universe(N_star):
+        def calibrate_a_flat_universe(N_star, logaH_star=None):
             """Calibrate the scale factor `a` for a flat universe using a given `N_star`."""
             # TODO: double check this function
             assert sol.K == 0
-            sol.N_star = N_star  # number e-folds of inflation after horizon crossing
-            sol.N_cross = sol.N_end - sol.N_star  # horizon crossing of pivot scale
             derive_a0(Omega_K0=0, h=None)
-
-            # Calibrate aH=k using N_star at pivot scale K_STAR:
-            N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
-            sol.logaH_star = N2logaH(sol.N_cross)
+            if logaH_star is None:
+                sol.N_star = N_star  # number e-folds of inflation after horizon crossing
+                sol.N_cross = sol.N_end - sol.N_star  # horizon crossing of pivot scale
+                # Calibrate aH=k using N_star at pivot scale K_STAR:
+                N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
+                sol.logaH_star = N2logaH(sol.N_cross)
+            else:  # allows manual override, e.g. when integrating backwards without any N_cross
+                sol.logaH_star = logaH_star
 
             sol.N_calib = sol.N + np.log(sol.a0) - sol.logaH_star + np.log(K_STAR / Mpc_m * lp_m)
             sol.a_calib = np.exp(sol.N_calib)
+            sol.a0_Mpc = np.exp(sol.logaH_star) / K_STAR
 
         def derive_comoving_hubble_horizon_flat(N_star):
             """Derive the comoving Hubble horizon `cHH`."""
@@ -173,6 +176,8 @@ class InflationEquations(Equations, ABC):
             sol.N_dagg = sol.N_tot - sol.N_star
             logaH = sol.logaH[sol.inflation_mask]
             sol.logk = np.log(K_STAR) + logaH - sol.logaH_star
+            sol.k_iMpc = np.exp(sol.logk)
+            sol.k_comoving = sol.k_iMpc * sol.a0_Mpc
 
             derive_approx_power(**interp1d_kwargs)
 
