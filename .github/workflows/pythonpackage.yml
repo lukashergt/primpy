@@ -58,3 +58,10 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         token: edcdc6bc-b2e1-4980-a60f-aa219e735cd9
+
+    # Check sphinx documentation
+    - name: build sphinx docs
+      uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "docs/"
+        build-command: "make html"
