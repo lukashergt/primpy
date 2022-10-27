@@ -16,7 +16,7 @@ class InflationEquationsN(InflationEquations):
 
     Dependent variables:
         phi: inflaton field
-        dphidN: d(phi) / dN
+        dphidN: `d(phi)/dN`
         t: time (optional)
         eta: conformal time (optional)
 
@@ -65,6 +65,6 @@ class InflationEquationsN(InflationEquations):
         return self.V(x, y) - self.H2(x, y) * self.dphidN(x, y)**2
 
     def sol(self, sol, **kwargs):
-        """Post-processing of `solve_ivp` solution."""
+        """Post-processing of :func:`scipy.integrate.solve_ivp` solution."""
         sol = super(InflationEquationsN, self).sol(sol, **kwargs)
         return sol
