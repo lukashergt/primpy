@@ -53,17 +53,7 @@ jobs:
       run: |
         python -m pytest --cov=primpy --cov-report=xml tests
     
-#     # Check code coverage
-#     - name: Upload coverage to Codecov  
-#       uses: codecov/codecov-action@v1
-#       with:
-#         # User defined upload name. Visible in Codecov UI
-#         name: codecov-umbrella # optional
-#         # Repository upload token - get it from codecov.io. Required only for private repositories
-#         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-#         # Path to coverage file to upload
-#         file: ./coverage.xml # optional 
-       
+    # Check code coverage
     - name: Upload coverage reports to Codecov with GitHub Action
       run: | 
         codecov --token=edcdc6bc-b2e1-4980-a60f-aa219e735cd9
