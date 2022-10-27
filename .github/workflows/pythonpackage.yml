@@ -34,7 +34,6 @@ jobs:
         pip install pydocstyle
         pip install pytest
         pip install pytest-cov pytest-xdist codecov  
-        pip install matplotlib
     
     # Test for pep-compliance
     - name: Lint with flake8
@@ -65,4 +64,5 @@ jobs:
       uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs/"
+        pre-build-command: "pip install sphinx matplotlib"
         build-command: "make html"
