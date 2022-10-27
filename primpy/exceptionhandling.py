@@ -134,7 +134,7 @@ class InflationEndWarning(InflationWarning):
         events : dict
             Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
             default : None
-        sol : Bunch object returned by primpy.solve
+        sol : Bunch object returned by :func:`primpy.solver.solve`
             default : None
     """
 
