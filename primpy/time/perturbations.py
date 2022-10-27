@@ -1,20 +1,24 @@
 #!/usr/bin/env python
-""":mod:`primpy.time.perturbations`: comoving curvature perturbations w.r.t. time `t`."""
+""":mod:`primpy.time.perturbations`: curvature perturbations with respect to time `t`."""
 import numpy as np
 from primpy.perturbations import Perturbation, ScalarMode, TensorMode
 
 
 class PerturbationT(Perturbation):
-    """Curvature perturbation for wavenumber `k` w.r.t. time `t`.
+    """Curvature perturbation for wavenumber `k` with respect to time `t`.
 
     Solves the Mukhanov--Sasaki equations w.r.t. cosmic time for curved universes.
 
     Input Parameters
     ----------------
-        background : Bunch object as returned by `primpy.time.inflation.InflationEquationsT.sol`
-            Monkey-patched version of the Bunch type usually returned by `solve_ivp`.
+        background : Bunch object
+            Background solution as returned by
+            :func:`primpy.time.inflation.InflationEquationsN.sol`.
+            Monkey-patched version of the Bunch type usually returned by
+            :func:`scipy.integrate.solve_ivp`.
         k : float
             wavenumber
+
     """
 
     def __init__(self, background, k, **kwargs):
@@ -40,6 +44,7 @@ class ScalarModeT(ScalarMode):
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         comoving curvature perturbations `R` w.r.t. time `t`, where the e.o.m. is
         written as `ddR + 2 * damping * dR + frequency**2 R = 0`.
+
         """
         K = self.background.K
         N = self.background.N[:self.idx_end]
@@ -86,6 +91,7 @@ class TensorModeT(TensorMode):
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         tensor perturbations `h` w.r.t. time `t`, where the e.o.m. is
         written as `ddh + 2 * damping * dh + frequency**2 h = 0`.
+
         """
         K = self.background.K
         N = self.background.N[: self.idx_end]
