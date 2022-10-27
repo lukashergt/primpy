@@ -13,11 +13,11 @@ class Equations(ABC):
 
     Attributes
     ----------
-    idx : dict
-        dictionary mapping variable names to indices in the solution vector y
+        idx : dict
+            dictionary mapping variable names to indices in the solution vector `y`
+        independent_variable : string
+            name of independent variable
 
-    independent_variable : string
-        name of independent variable
     """
 
     def __init__(self):
@@ -28,21 +28,22 @@ class Equations(ABC):
 
         Parameters
         ----------
-        x : float
-            independent variable
+            x : float
+                independent variable
 
-        y : np.ndarray
-            dependent variables
+            y : np.ndarray
+                dependent variables
 
         Returns
         -------
-        dy : np.ndarray
-            Vector of derivatives
+            dy : np.ndarray
+                Vector of derivatives
+
         """
         raise NotImplementedError("Equations class must define __call__.")
 
     def sol(self, sol, **kwargs):
-        """Post-processing of `solve_ivp` solution."""
+        """Post-processing of :func:`scipy.integrate.solve_ivp` solution."""
         sol.independent_variable = self.independent_variable
         sol.x = sol.t
         del sol.t
@@ -65,8 +66,8 @@ class Equations(ABC):
 
         Parameters
         ----------
-        name : str
-            Name of the independent variable.
+            name : str
+                Name of the independent variable.
 
         """
         def method(self, x, y):
@@ -80,15 +81,15 @@ class Equations(ABC):
     def add_variable(self, *args):
         """Add dependent variables to the equations.
 
-        * creates an index for the location of variable in y
+        * creates an index for the location of variable in `y`
         * creates a class method of the same name with signature
-          name(self, x, y) that should be used to extract the variable value in
+          `name(self, x, y)` that should be used to extract the variable value in
           an index-independent manner.
 
         Parameters
         ----------
-        *args : str
-            Name of the dependent variables
+            *args : str
+                Name of the dependent variables
 
         """
         for name in args:
@@ -104,16 +105,17 @@ class Equations(ABC):
 
         Arguments
         ---------
-        x : float
-            independent variable
+            x : float
+                independent variable
 
-        y : np.array
-            dependent variables
+            y : np.array
+                dependent variables
 
         Returns
         -------
-        %s : float
-            value of  %s
+            %s : float
+                value of  %s
+        
         """ % (name, name, name)
 
         setattr(self, name, MethodType(method, self))
