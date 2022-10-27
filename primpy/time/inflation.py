@@ -16,7 +16,7 @@ class InflationEquationsT(InflationEquations):
     Dependent variables:
         N: number of e-folds
         phi: inflaton field
-        dphidt: d(phi) / dt
+        dphidt: `d(phi)/dt`
 
     """
 
