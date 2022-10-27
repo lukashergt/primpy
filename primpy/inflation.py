@@ -146,10 +146,10 @@ class InflationEquations(Equations, ABC):
             sol.a_calib = np.exp(sol.N_calib)
             sol.a0_Mpc = np.exp(sol.logaH_star) / K_STAR
 
-        def derive_comoving_hubble_horizon_flat(N_star):
+        def derive_comoving_hubble_horizon_flat(N_star, logaH_star=None):
             """Derive the comoving Hubble horizon `cHH`."""
             # for flat universes we first need to calibrate the scale factor:
-            calibrate_a_flat_universe(N_star)
+            calibrate_a_flat_universe(N_star, logaH_star)
             sol.cHH_lp = sol.a0 / (sol.a_calib * sol.H)
             sol.cHH_Mpc = sol.cHH_lp * lp_m / Mpc_m
 
@@ -169,9 +169,9 @@ class InflationEquations(Equations, ABC):
         else:
             sol.derive_comoving_hubble_horizon = derive_comoving_hubble_horizon_curved
 
-        def calibrate_wavenumber_flat(N_star, **interp1d_kwargs):
+        def calibrate_wavenumber_flat(N_star, logaH_star=None, **interp1d_kwargs):
             """Calibrate wavenumber for flat universes, then derive approximate power spectra."""
-            calibrate_a_flat_universe(N_star=N_star)
+            calibrate_a_flat_universe(N_star, logaH_star)
 
             sol.N_dagg = sol.N_tot - sol.N_star
             logaH = sol.logaH[sol.inflation_mask]

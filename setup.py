@@ -3,13 +3,14 @@
 from setuptools import setup, find_packages
 
 version_dict = {}
-exec(open('primpy/__version__.py').read(), version_dict)
+with open("primpy/__version__.py") as versionfile:
+    exec(versionfile.read(), version_dict)
 
 setup(
     name='primpy',
     version=version_dict['__version__'],
     description="primpy: Calculations for the primordial Universe.",
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     keywords="PPS, cosmic inflation, initial conditions for inflation, kinetic dominance",
     author="Lukas Hergt",
     author_email="lh561@mrao.cam.ac.uk",
