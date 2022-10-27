@@ -59,10 +59,3 @@ jobs:
       with:
         token: edcdc6bc-b2e1-4980-a60f-aa219e735cd9
 
-    # Check sphinx documentation
-    - name: build sphinx docs
-      uses: ammaraskar/sphinx-action@master
-      with:
-        docs-folder: "docs/"
-        pre-build-command: "pip install sphinx sphinx_rtd_theme matplotlib && pip install ."
-        build-command: "make html"
