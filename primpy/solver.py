@@ -1,29 +1,32 @@
 #!/usr/bin/env python
-""":mod:`primpy.solver`: general setup for running `solve_ivp`."""
+""":mod:`primpy.solver`: general setup for running :func:`scipy.integrate.solve_ivp`."""
 import numpy as np
 from scipy import integrate
 
 
 def solve(ic, *args, **kwargs):
-    """Run `solve_ivp` and store information in `sol` for post-processing.
+    """Run :func:`scipy.integrate.solve_ivp` and store information in `sol` for post-processing.
 
-    This is a wrapper around ``scipy.integrate.solve_ivp``, with easier
+    This is a wrapper around :func:`scipy.integrate.solve_ivp`, with easier
     reusable objects for the equations and initial conditions.
 
     Parameters
     ----------
-    ic : primordial.initialconditions.InitialConditions
-        Initial conditions specifying relevant equations, variables, and
-        initial numerical values.
+        ic : primordial.initialconditions.InitialConditions
+            Initial conditions specifying relevant equations, variables, and
+            initial numerical values.
 
-    All other arguments are identical to ``scipy.integrate.solve_ivp``
+    All other arguments are identical to :func:`scipy.integrate.solve_ivp`.
 
     Returns
     -------
-    sol : Bunch object same as returned by `scipy.integrate.solve_ivp`
-        Monkey-patched version of the Bunch type usually returned by `solve_ivp`.
+        sol : Bunch object
+            Solution to the inverse value problem.
+            Monkey-patched version of the Bunch type usually returned by
+            :func:`scipy.integrate.solve_ivp`.
 
-    (c) modified from "primordial" by Will Handley.
+    `(c)` modified from "primordial" by Will Handley.
+
     """
     events = kwargs.pop('events', [])
     y0 = np.zeros(len(ic.equations.idx))

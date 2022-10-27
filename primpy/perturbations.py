@@ -31,7 +31,7 @@ class Perturbation(ABC):
         self.tensor = None
 
     def oscode_postprocessing(self, oscode_sol, **kwargs):
-        """Post-processing for `pyoscode.solve` solution.
+        """Post-processing for :func:`pyoscode.solve` solution.
 
         Translate `oscode` dictionary output to `solve_ivp` output with attributes `t` and `y`.
 
@@ -40,7 +40,8 @@ class Perturbation(ABC):
             oscode_sol : list
                 List [scalar_1, scalar_2, tensor_1, tensor_2] of two independent solutions each
                 for both scalar and tensor modes, where each element is a dictionary returned by
-                `pyoscode.solve`.
+                :func:`pyoscode.solve`.
+
         """
         for m, mode in enumerate([self.scalar, self.tensor]):
             for i, sol in enumerate([mode.one, mode.two]):

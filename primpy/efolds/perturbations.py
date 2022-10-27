@@ -1,21 +1,25 @@
 #!/usr/bin/env python
-""":mod:`primpy.time.perturbations`: comoving curvature perturbations w.r.t. time `t`."""
+""":mod:`primpy.efolds.perturbations`: curvature perturbations with respect to e-folds `N`."""
 import numpy as np
 from primpy.perturbations import Perturbation, ScalarMode, TensorMode
 
 
 class PerturbationN(Perturbation):
-    """Curvature perturbation for wavenumber `k` w.r.t. e-folds `N=ln(a)`.
+    """Curvature perturbation for wavenumber `k` with respect to e-folds `N=ln(a)`.
 
     Solves the Mukhanov--Sasaki equations w.r.t. number of e-folds `N` of the
     scale factor `a` for curved universes.
 
     Input Parameters
     ----------------
-        background : Bunch object as returned by `primpy.efolds.inflation.InflationEquationsN.sol`
-            Monkey-patched version of the Bunch type usually returned by `solve_ivp`.
+        background : Bunch object
+            Background solution as returned by
+            :func:`primpy.efolds.inflation.InflationEquationsN.sol`.
+            Monkey-patched version of the Bunch type usually returned by
+            :func:`scipy.integrate.solve_ivp`.
         k : float
             wavenumber
+
     """
 
     def __init__(self, background, k, **kwargs):
@@ -41,6 +45,7 @@ class ScalarModeN(ScalarMode):
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         comoving curvature perturbations `R` w.r.t. e-folds `N`, where the e.o.m. is
         written as `ddR + 2 * damping * dR + frequency**2 R = 0`.
+
         """
         K = self.background.K
         a2 = np.exp(2 * self.background.N[:self.idx_end])
@@ -88,6 +93,7 @@ class TensorModeN(TensorMode):
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         tensor perturbations `h` w.r.t. e-folds `N`, where the e.o.m. is
         written as `ddh + 2 * damping * dh + frequency**2 h = 0`.
+
         """
         K = self.background.K
         N = self.background.N[:self.idx_end]

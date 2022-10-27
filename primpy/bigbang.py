@@ -66,7 +66,7 @@ def get_Omega_r0(h):
 
 
 def Hubble_parameter(N, Omega_m0, Omega_K0, h):
-    """Hubble parameter (in reduced Planck units) at N=ln(a) during standard Big Bang.
+    """Hubble parameter (in reduced Planck units) at `N=ln(a)` during standard Big Bang.
 
     Parameters
     ----------
@@ -81,14 +81,15 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
         h : float
             dimensionless Hubble parameter today, "little h"
 
-    Omega_r0 is derived from the Hubble parameter using Planck's law.
-    Omega_L0 is derived from the other density parameters to sum to one.
+    `Omega_r0` is derived from the Hubble parameter using Planck's law.
+    `Omega_L0` is derived from the other density parameters to sum to one.
 
     Returns
     -------
         H : float
             Hubble parameter during standard Big Bang evolution of the Universe.
             In reduced Planck units [tp^-1].
+
     """
     H0 = get_H0(h=h, units='planck')  # in reduced Planck units
     Omega_r0 = get_Omega_r0(h=h)
@@ -119,8 +120,9 @@ def no_Big_Bang_line(Omega_m0):
     -------
         Omega_L0 : float
             Density parameter of cosmological constant `Lambda` along the
-            dividing line between a Big Bang evolution (for smaller Omega_L0)
-            and universes without a Big Bang (for larger Omega_L0).
+            dividing line between a Big Bang evolution (for smaller `Omega_L0`)
+            and universes without a Big Bang (for larger `Omega_L0`).
+
     """
     if Omega_m0 == 0:
         return 1
@@ -144,8 +146,9 @@ def expand_recollapse_line(Omega_m0):
     -------
         Omega_L0 : float
             Density parameter of cosmological constant `Lambda` along the
-            dividing line between expanding (for larger Omega_L0) and
-            recollapsing (for smaller Omega_L0) universes.
+            dividing line between expanding (for larger `Omega_L0`) and
+            recollapsing (for smaller `Omega_L0`) universes.
+
     """
     if 0 <= Omega_m0 < 1:
         return 0
@@ -156,12 +159,12 @@ def expand_recollapse_line(Omega_m0):
 
 
 def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
-    """Comoving Hubble horizon at N=ln(a) during standard Big Bang.
+    """Comoving Hubble horizon at `N=ln(a)` during standard Big Bang.
 
     Parameters
     ----------
         N : float, np.ndarray
-            e-folds of the scale factor N=ln(a) during standard Big Bang
+            e-folds of the scale factor `N=ln(a)` during standard Big Bang
             evolution, where the scale factor would be given in reduced Planck
             units (same as output from primpy).
         Omega_m0 : float
@@ -174,8 +177,8 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
             Output units, can be any of {'planck', 'Mpc', 'SI'} returning
             units of `lp`, `Mpc` or `m` respectively.
 
-    Omega_r0 is derived from the Hubble parameter using Planck's law.
-    Omega_L0 is derived from the other density parameters to sum to one.
+    `Omega_r0` is derived from the Hubble parameter using Planck's law.
+    `Omega_L0` is derived from the other density parameters to sum to one.
 
     Returns
     -------
@@ -190,17 +193,17 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
 
 
 def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
-    """Conformal time during standard Big Bang evolution from N_start to N.
+    """Conformal time during standard Big Bang evolution from `N_start` to `N`.
 
     Parameters
     ----------
         N_start : float
-            e-folds of the scale factor N=ln(a) during standard Big Bang
+            e-folds of the scale factor `N=ln(a)` during standard Big Bang
             evolution at lower integration limit (e.g. at end of inflation),
             where the scale factor would be given in reduced Planck units
             (same as output from primpy).
         N : float, np.ndarray
-            e-folds of the scale factor N=ln(a) during standard Big Bang
+            e-folds of the scale factor `N=ln(a)` during standard Big Bang
             evolution at upper integration limit (e.g. at end of inflation),
             where the scale factor would be given in reduced Planck units
             (same as output from primpy).
@@ -211,8 +214,8 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
         h : float
             dimensionless Hubble parameter today, "little h"
 
-    Omega_r0 is derived from the Hubble parameter using Planck's law and from N_eff.
-    Omega_L0 is derived from the other density parameters to sum to one.
+    `Omega_r0` is derived from the Hubble parameter using Planck's law.
+    `Omega_L0` is derived from the other density parameters to sum to one.
 
     Returns
     -------
@@ -220,6 +223,7 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
             conformal time passing between `a_start` and `a`
             during standard Big Bang evolution of the Universe.
             Same shape as `N`.
+
     """
     if isinstance(N, np.ndarray):
         return np.array([conformal_time(N_start=N_start, N=n, Omega_m0=Omega_m0,
@@ -245,11 +249,11 @@ def conformal_time_ratio(Omega_m0, Omega_K0, h, b_forward, b_backward=None):
             curvature density parameter today
         h : float
             dimensionless Hubble parameter today, "little h"
-        b_forward : Bunch object same as returned by `scipy.integrate.solve_ivp`
-            Solution returned by primpy.solver.solve. Needs to have been run
+        b_forward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+            Solution returned by :func:`primpy.solver.solve`. Needs to have been run
             with `track_eta=True`.
-        b_backward : Bunch object same as returned by `scipy.integrate.solve_ivp`
-            Additional solution returned by primpy.solver.solve. This second
+        b_backward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+            Additional solution returned by :func:`primpy.solver.solve`. This second
             solution is assumed to be an integration from inflation start
             backwards in time.
             optional, default : None
@@ -260,6 +264,7 @@ def conformal_time_ratio(Omega_m0, Omega_K0, h, b_forward, b_backward=None):
             Ratio of conformal time before (during and before inflation) to
             after (from the end of inflation until today). Needs to be >1 in
             order to solve the horizon problem.
+
     """
     # before (during and before inflation)
     if b_backward is None:

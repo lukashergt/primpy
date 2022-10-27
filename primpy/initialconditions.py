@@ -14,7 +14,7 @@ import primpy.bigbang as bb
 
 # noinspection PyPep8Naming
 class InflationStartIC(object):
-    """Inflation start initial conditions given phi_i and either of N_i or Omega_Ki.
+    """Inflation start initial conditions given `phi_i` and either of `N_i` or `Omega_Ki`.
 
     Class for setting up initial conditions at the start of inflation, when
     the curvature density parameter was maximal after kinetic dominance.
@@ -84,7 +84,7 @@ class InflationStartIC(object):
 
 # noinspection PyPep8Naming
 class ISIC_Nt(InflationStartIC):
-    """Inflation start initial conditions given N_tot and either of N_i or Omega_Ki."""
+    """Inflation start initial conditions given `N_tot` and either of `N_i` or `Omega_Ki`."""
 
     def __init__(self, equations, N_tot, phi_i_bracket, t_i=None, eta_i=None,
                  x_end=1e300, verbose=False, **kwargs):
@@ -156,7 +156,11 @@ class ISIC_Nt(InflationStartIC):
 
 # noinspection PyPep8Naming
 class ISIC_NsOk(InflationStartIC):
-    """Inflation start initial conditions given N_star, Omega_K0, h and either N_i or Omega_Ki."""
+    """Inflation start initial conditions given `N_star`, `Omega_K0`, `h`.
+
+    Additionally either `N_i` or `Omega_Ki` need to be specified.
+
+    """
 
     def __init__(self, equations, N_star, Omega_K0, h, phi_i_bracket, t_i=None, eta_i=None,
                  x_end=1e300, verbose=False, **kwargs):
@@ -235,4 +239,5 @@ class ISIC_NsOk(InflationStartIC):
                                         x_end=self.x_end,
                                         **self.ic_input_param)
         super(ISIC_NsOk, self).__call__(y0=y0, **ivp_kwargs)
+        self.vprint("finished ic with phi_i_new=%f" % phi_i_new)
         return phi_i_new, output

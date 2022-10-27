@@ -53,7 +53,7 @@ class InflationaryPotential(ABC):
 
     @abstractmethod
     def dV(self, phi):
-        """First derivative `V'(phi)` w.r.t. inflaton `phi`.
+        """First derivative `V'(phi)` with respect to inflaton `phi`.
 
         Parameters
         ----------
@@ -69,7 +69,7 @@ class InflationaryPotential(ABC):
 
     @abstractmethod
     def d2V(self, phi):
-        """Second derivative `V''(phi)` w.r.t. inflaton `phi`.
+        """Second derivative `V''(phi)` with respect to inflaton `phi`.
 
         Parameters
         ----------
@@ -85,7 +85,7 @@ class InflationaryPotential(ABC):
 
     @abstractmethod
     def d3V(self, phi):
-        """Third derivative `V'''(phi)` w.r.t. inflaton `phi`.
+        """Third derivative `V'''(phi)` with respect to inflaton `phi`.
 
         Parameters
         ----------
@@ -101,7 +101,7 @@ class InflationaryPotential(ABC):
 
     @abstractmethod
     def inv_V(self, V):
-        """Inverse function `phi(V)` w.r.t. potential `V`.
+        """Inverse function `phi(V)` with respect to potential `V`.
 
         Parameters
         ----------
@@ -188,23 +188,23 @@ class MonomialPotential(InflationaryPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Monomial potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Monomial potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star: float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         p = pot_kwargs.pop('p')
@@ -240,23 +240,23 @@ class LinearPotential(MonomialPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Linear potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Linear potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star: float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         return super(LinearPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=1)
@@ -308,23 +308,23 @@ class QuadraticPotential(InflationaryPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Quadratic potential (Lambda**2 = mass).
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Quadratic potential (Lambda**2 = mass).
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star: float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         if N_star is None:
@@ -359,23 +359,23 @@ class CubicPotential(MonomialPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Linear potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Linear potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star: float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         return super(CubicPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=3)
@@ -402,23 +402,23 @@ class QuarticPotential(MonomialPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Linear potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Linear potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star: float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         return super(QuarticPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=4)
@@ -468,13 +468,13 @@ class StarobinskyPotential(InflationaryPotential):
 
         Parameters
         ----------
-        phi : float or np.ndarray
-            Inflaton field `phi`.
+            phi : float or np.ndarray
+                Inflaton field `phi`.
 
         Returns
         -------
-        N : float or np.ndarray
-            Number of e-folds `N` until end of inflation.
+            N : float or np.ndarray
+                Number of e-folds `N` until end of inflation.
 
         """
         gamma = StarobinskyPotential.gamma
@@ -492,23 +492,23 @@ class StarobinskyPotential(InflationaryPotential):
 
         Parameters
         ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            A_s : float or np.ndarray
+                Amplitude `A_s` of the primordial power spectrum.
+            phi_star : float or None
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float or None
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Starobinsky potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Starobinsky potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         if N_star is None:
@@ -589,15 +589,15 @@ class NaturalPotential(InflationaryPotential):
 
         Parameters
         ----------
-        phi : float or np.ndarray
-            Inflaton field `phi`.
-        phi0 : float
-            Inflaton distance between local maximum and minima.
+            phi : float or np.ndarray
+                Inflaton field `phi`.
+            phi0 : float
+                Inflaton distance between local maximum and minima.
 
         Returns
         -------
-        N : float or np.ndarray
-            Number of e-folds `N` until end of inflation.
+            N : float or np.ndarray
+                Number of e-folds `N` until end of inflation.
 
         """
         assert np.all(phi < phi0)
@@ -622,8 +622,8 @@ class NaturalPotential(InflationaryPotential):
                 Number of observable e-folds of inflation `N_star`
                 from horizon crossing till the end of inflation.
 
-        Keyword args
-        ------------
+        Keyword Arguments
+        -----------------
             phi0 : float
                 Inflaton distance between local maximum and minima.
 
@@ -778,20 +778,20 @@ class DoubleWell2Potential(DoubleWellPotential):
                 Number of observable e-folds of inflation `N_star`
                 from horizon crossing till the end of inflation.
 
-        Keyword args
-        ------------
+        Keyword Arguments
+        -----------------
             phi0 : float
                 Inflaton distance between local maximum and minima.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Double-Well potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Double-Well potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         phi0 = pot_kwargs.pop('phi0')
@@ -803,7 +803,7 @@ class DoubleWell2Potential(DoubleWellPotential):
             phi_sample = np.linspace(phi_end_shifted, phi0, 100000)[1:-1]
             N_sample = cls.phi2efolds(phi_shifted=phi_sample, phi0=phi0)
             logN2phi = interp1d(np.log(N_sample), phi_sample)
-            phi_star = np.float(logN2phi(np.log(N_star)))
+            phi_star = float(logN2phi(np.log(N_star)))
         else:
             raise Exception("Need to specify either N_star or phi_star. "
                             "The respective other should be None.")
@@ -831,13 +831,13 @@ class DoubleWell4Potential(DoubleWellPotential):
 
         Parameters
         ----------
-        phi0 : float
-            Inflaton distance between local maximum and minima.
+            phi0 : float
+                Inflaton distance between local maximum and minima.
 
         Returns
         -------
-        phi_end2 : float
-            Inflaton phi squared at end of inflation. (unshifted!)
+            phi_end2 : float
+                Inflaton phi squared at end of inflation. (unshifted!)
         """
         a = (216 * phi0**8 + phi0**12 - 12 * np.sqrt(3. * phi0**16 * (108 + phi0**4)))**(1/3)
         b = 192 + phi0**4 + phi0**8 / a + a
@@ -854,16 +854,16 @@ class DoubleWell4Potential(DoubleWellPotential):
 
         Parameters
         ----------
-        phi_shifted : float or np.ndarray
-            Inflaton field `phi` shifted by phi0 such that left potential
-            minimum is at zero.
-        phi0 : float
-            Inflaton distance between local maximum and minima.
+            phi_shifted : float or np.ndarray
+                Inflaton field `phi` shifted by phi0 such that left potential
+                minimum is at zero.
+            phi0 : float
+                Inflaton distance between local maximum and minima.
 
         Returns
         -------
-        N : float or np.ndarray
-            Number of e-folds `N` until end of inflation.
+            N : float or np.ndarray
+                Number of e-folds `N` until end of inflation.
 
         """
         assert np.all(phi_shifted < phi0)
@@ -889,20 +889,20 @@ class DoubleWell4Potential(DoubleWellPotential):
                 Number of observable e-folds of inflation `N_star`
                 from horizon crossing till the end of inflation.
 
-        Keyword args
-        ------------
+        Keyword Arguments
+        -----------------
             phi0 : float
                 Inflaton distance between local maximum and minima.
 
         Returns
         -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Double-Well potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
+            Lambda : float or np.ndarray
+                Amplitude parameter `Lambda` for the Double-Well potential.
+            phi_star : float
+                Inflaton value at horizon crossing of the pivot scale.
+            N_star : float
+                Number of observable e-folds of inflation `N_star`
+                from horizon crossing till the end of inflation.
 
         """
         phi0 = pot_kwargs.pop('phi0')
@@ -913,7 +913,7 @@ class DoubleWell4Potential(DoubleWellPotential):
             phi_sample = np.linspace(phi_end_shifted, phi0, 100000)[1:-1]
             N_sample = cls.phi2efolds(phi_shifted=phi_sample, phi0=phi0)
             logN2phi = interp1d(np.log(N_sample), phi_sample)
-            phi_star = np.float(logN2phi(np.log(N_star)))
+            phi_star = float(logN2phi(np.log(N_star)))
         else:
             raise Exception("Need to specify either N_star or phi_star. "
                             "The respective other should be None.")
