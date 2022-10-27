@@ -51,9 +51,10 @@ jobs:
     # Run tests
     - name: Test with pytest
       run: |
-        python -m pytest --cov=primpy --cov-report=xml tests
+        python -m pytest --cov=primpy --cov-report=xml
     
     # Check code coverage
     - name: Upload coverage reports to Codecov with GitHub Action
-      run: | 
-        codecov --token=edcdc6bc-b2e1-4980-a60f-aa219e735cd9
+      uses: codecov/codecov-action@v3
+      with:
+        token: edcdc6bc-b2e1-4980-a60f-aa219e735cd9
