@@ -28,12 +28,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install --no-cache-dir --upgrade setuptools
         echo $PWD
-        #git clone https://github.com/eigenteam/eigen-git-mirror
-        #git clone --single-branch --branch lukas-devel https://github.com/fruzsinaagocs/oscode.git
-        #cd oscode
-        #pip install --no-cache-dir -r requirements.txt
-        #CPLUS_INCLUDE_PATH=/home/runner/work/primpy2/primpy2/eigen-git-mirror pip install .
-        #cd ..
         pip install --no-cache-dir -r requirements.txt
     - name: Install testing packages
       run: |
@@ -60,17 +54,7 @@ jobs:
       run: |
         pytest --cov=primpy tests
     
-#     # Check code coverage
-#     - name: Upload coverage to Codecov  
-#       uses: codecov/codecov-action@v1
-#       with:
-#         # User defined upload name. Visible in Codecov UI
-#         name: codecov-umbrella # optional
-#         # Repository upload token - get it from codecov.io. Required only for private repositories
-#         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-#         # Path to coverage file to upload
-#         file: ./coverage.xml # optional 
-       
+    # Check code coverage
     - name: Codecov
       run: | 
         codecov --token=edcdc6bc-b2e1-4980-a60f-aa219e735cd9
