@@ -3,7 +3,7 @@ primpy: calculations for the primordial Universe
 ================================================
 :primpy: calculations for the primordial Universe
 :Author: Lukas Hergt
-:Version: 2.3.6
+:Version: 2.3.7
 :Homepage: https://github.com/lukashergt/primpy
 
 
