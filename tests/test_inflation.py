@@ -199,7 +199,8 @@ def test_Ncross_nan():
             assert np.isnan(b_sol.N_dagg)
 
 
-def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
+@pytest.mark.parametrize('N_star', [30, 90])
+def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
     K = +1
     pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
     t_i = 1e4
@@ -207,34 +208,32 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll():
     Omega_K0 = -K * 0.01
     h = 0.7
 
-    Nstar_range = np.linspace(30, 90, 7)
     rtols = np.array([1e-12, 2.4e-14])
-    As_range = np.zeros((rtols.size, Nstar_range.size))
-    ns_range = np.zeros((rtols.size, Nstar_range.size))
-    nrun_range = np.zeros((rtols.size, Nstar_range.size))
-    r_range = np.zeros((rtols.size, Nstar_range.size))
+    As_range = np.zeros(rtols.size)
+    ns_range = np.zeros(rtols.size)
+    nrun_range = np.zeros(rtols.size)
+    r_range = np.zeros(rtols.size)
 
-    ns_slow_roll = 1 - 2 / Nstar_range
-    r_slow_roll = 8 / Nstar_range
+    ns_slow_roll = 1 - 2 / N_star
+    r_slow_roll = 8 / N_star
 
     for i, rtol in enumerate(rtols):
-        for j, Nstar in enumerate(Nstar_range):
-            eq = InflationEquationsT(K=K, potential=pot)
-            ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=Nstar, Omega_K0=Omega_K0, h=h, t_i=t_i,
-                           phi_i_bracket=[15.21, 30])
-            ev = [InflationEvent(ic.equations, +1, terminal=False),
-                  InflationEvent(ic.equations, -1, terminal=True)]
-            bist = solve(ic=ic, events=ev, rtol=rtol)
-            bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
-            n_s = bist.n_s
-            r = bist.r
-            assert np.isclose(bist.N_star, Nstar)
-            assert np.isclose(n_s, ns_slow_roll[j], rtol=0.005)
-            assert np.isclose(r, r_slow_roll[j], rtol=0.005)
-            As_range[i, j] = bist.A_s
-            ns_range[i, j] = bist.n_s
-            nrun_range[i, j] = bist.n_run
-            r_range[i, j] = bist.r
+        eq = InflationEquationsT(K=K, potential=pot)
+        ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=N_star, Omega_K0=Omega_K0, h=h, t_i=t_i,
+                       phi_i_bracket=[15.21, 30])
+        ev = [InflationEvent(ic.equations, +1, terminal=False),
+              InflationEvent(ic.equations, -1, terminal=True)]
+        bist = solve(ic=ic, events=ev, rtol=rtol)
+        bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
+        n_s = bist.n_s
+        r = bist.r
+        assert np.isclose(bist.N_star, N_star)
+        assert np.isclose(n_s, ns_slow_roll, rtol=0.005)
+        assert np.isclose(r, r_slow_roll, rtol=0.005)
+        As_range[i] = bist.A_s
+        ns_range[i] = bist.n_s
+        nrun_range[i] = bist.n_run
+        r_range[i] = bist.r
 
     assert_allclose(ns_range[0], ns_slow_roll, rtol=0.005)
     assert_allclose(ns_range[1], ns_slow_roll, rtol=0.005)

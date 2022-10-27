@@ -65,7 +65,7 @@ def test_equations_sol_events(K):
     N_i = 10
     phi_i = 17
     pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
-    N_end = 80
+    N_end = 70
     for eq in [InflationEquationsT(K=K, potential=pot),
                InflationEquationsN(K=K, potential=pot, track_time=True)]:
         ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)

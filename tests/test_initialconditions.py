@@ -137,7 +137,7 @@ def test_ISIC_NsOk(K, t_i, Eq):
     Omega_K0 = -K * 0.01
     eq = Eq(K=K, potential=pot)
     ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=N_star, Omega_K0=Omega_K0, h=h, t_i=t_i,
-                   phi_i_bracket=[15, 30])
+                   phi_i_bracket=[15, 30], verbose=True)
     y0 = np.zeros(len(ic.equations.idx))
     ic(y0)
     basic_ic_asserts(y0, ic, K, pot, N_i, ic.Omega_Ki, ic.phi_i, t_i)
@@ -146,16 +146,10 @@ def test_ISIC_NsOk(K, t_i, Eq):
     assert ic.h == h
     ev = [InflationEvent(ic.equations, +1, terminal=False),
           InflationEvent(ic.equations, -1, terminal=True)]
-    if isinstance(eq, InflationEquationsT):
-        bist = solve(ic=ic, events=ev)
-        assert bist.N_tot > N_star
-        bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
-        assert pytest.approx(bist.N_star) == N_star
-    elif isinstance(eq, InflationEquationsN):
-        bisn = solve(ic=ic, events=ev, rtol=1e-10, atol=1e-10)
-        assert bisn.N_tot > N_star
-        bisn.derive_approx_power(Omega_K0=Omega_K0, h=h)
-        assert pytest.approx(bisn.N_star, rel=1e-6, abs=1e-6) == N_star
+    b = solve(ic=ic, events=ev)
+    b.derive_approx_power(Omega_K0=Omega_K0, h=h)
+    assert b.N_tot > N_star
+    assert pytest.approx(b.N_star) == N_star
 
     # for Omega_Ki:
     abs_Omega_Ki = 0.9
@@ -172,13 +166,7 @@ def test_ISIC_NsOk(K, t_i, Eq):
     assert ic.h == h
     ev = [InflationEvent(ic.equations, +1, terminal=False),
           InflationEvent(ic.equations, -1, terminal=True)]
-    if isinstance(eq, InflationEquationsT):
-        bist = solve(ic=ic, events=ev)
-        assert bist.N_tot > N_star
-        bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
-        assert pytest.approx(bist.N_star) == N_star
-    elif isinstance(eq, InflationEquationsN):
-        bisn = solve(ic=ic, events=ev, rtol=1e-10, atol=1e-10)
-        assert bisn.N_tot > N_star
-        bisn.derive_approx_power(Omega_K0=Omega_K0, h=h)
-        assert pytest.approx(bisn.N_star, rel=1e-6, abs=1e-6) == N_star
+    b = solve(ic=ic, events=ev)
+    b.derive_approx_power(Omega_K0=Omega_K0, h=h)
+    assert b.N_tot > N_star
+    assert pytest.approx(b.N_star) == N_star
