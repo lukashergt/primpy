@@ -64,5 +64,5 @@ jobs:
       uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs/"
-        pre-build-command: "pip install sphinx matplotlib"
+        pre-build-command: "pip install sphinx sphinx_rtd_theme matplotlib"
         build-command: "make html"
