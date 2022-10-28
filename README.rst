@@ -7,18 +7,18 @@ primpy: calculations for the primordial Universe
 :Homepage: https://github.com/lukashergt/primpy
 :Documentation: https://primpy.readthedocs.io
 
-.. image:: https://github.com/lukashergt/primpy/workflows/pythonpackage/badge.svg?branch=master
-   :target: https://github.com/lukashergt/primpy/actions?query=workflow%3ACI+branch%3Amaster
-   :alt: Build Status
-.. image:: https://codecov.io/gh/lukashergt/primpy/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/lukashergt/primpy
-   :alt: Test Coverage Status
+.. image:: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml/badge.svg?branch=master
+    :target: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml
+    :alt: Build Status
+.. image:: https://codecov.io/gh/lukashergt/primpy/branch/master/graph/badge.svg?token=USS4K53PY0
+    :target: https://codecov.io/gh/lukashergt/primpy
+    :alt: Test Coverage
 .. image:: https://readthedocs.org/projects/primpy/badge/?version=latest
-   :target: https://primpy.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+    :target: https://primpy.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 .. image:: https://badge.fury.io/py/primpy.svg
-   :target: https://badge.fury.io/py/primpy
-   :alt: PyPi location
+    :target: https://badge.fury.io/py/primpy
+    :alt: PyPi version
 
 
 Installation
