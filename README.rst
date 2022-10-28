@@ -3,16 +3,20 @@ primpy: calculations for the primordial Universe
 ================================================
 :primpy: calculations for the primordial Universe
 :Author: Lukas Hergt
-:Version: 2.3.7
+:Version: 2.3.8
 :Homepage: https://github.com/lukashergt/primpy
 
 
 Installation
 ------------
 
+``primpy`` can be installed via pip
+
 .. code:: bash
 
     pip install primpy
+
+or via the setup.py
 
 .. code:: bash
 
@@ -25,7 +29,7 @@ You can check that things are working by running the test suite:
 .. code:: bash
 
     python -m pytest
-    flake8 primpy tests
+    flake8 --max-line-length=99 primpy tests
     pydocstyle --convention=numpy primpy
 
 
