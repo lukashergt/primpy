@@ -14,7 +14,6 @@ Introduction
     Examples <examples>
     primpy API <primpy>
 
-.. include:: ../../README.rst
 
 Indices and tables
 ==================
