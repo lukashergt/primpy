@@ -56,4 +56,3 @@ jobs:
     # Check code coverage
     - name: Upload coverage reports to Codecov with GitHub Action
       uses: codecov/codecov-action@v3
-
