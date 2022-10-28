@@ -3,8 +3,22 @@ primpy: calculations for the primordial Universe
 ================================================
 :primpy: calculations for the primordial Universe
 :Author: Lukas Hergt
-:Version: 2.3.8
+:Version: 2.3.9
 :Homepage: https://github.com/lukashergt/primpy
+:Documentation: https://primpy.readthedocs.io
+
+.. image:: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml/badge.svg?branch=master
+    :target: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml
+    :alt: Build Status
+.. image:: https://codecov.io/gh/lukashergt/primpy/branch/master/graph/badge.svg?token=USS4K53PY0
+    :target: https://codecov.io/gh/lukashergt/primpy
+    :alt: Test Coverage
+.. image:: https://readthedocs.org/projects/primpy/badge/?version=latest
+    :target: https://primpy.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+.. image:: https://badge.fury.io/py/primpy.svg
+    :target: https://badge.fury.io/py/primpy
+    :alt: PyPi version
 
 
 Installation
@@ -38,7 +52,7 @@ Dependencies
 
 Basic requirements:
 
-- Python 3.6+
+- Python 3.7+
 - `numpy <https://pypi.org/project/numpy/>`__
 - `scipy <https://pypi.org/project/scipy/>`__
 - `pyoscode <https://pypi.org/project/pyoscode/>`__
@@ -46,7 +60,9 @@ Basic requirements:
 Documentation:
 
 - `sphinx <https://pypi.org/project/Sphinx/>`__
+- `sphinx_rtd_theme <https://pypi.org/project/sphinx-rtd-theme/>`__
 - `numpydoc <https://pypi.org/project/numpydoc/>`__
+- `matplotlib <https://pypi.org/project/matplotlib/>`__
 
 Tests:
 
