@@ -7,7 +7,7 @@
     :maxdepth: 2
     :caption: Contents:
 
-    README <intro>
+    README <readme>
     Examples <examples>
     primpy API <primpy>
 

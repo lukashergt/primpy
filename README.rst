@@ -52,7 +52,7 @@ Dependencies
 
 Basic requirements:
 
-- Python 3.6+
+- Python 3.7+
 - `numpy <https://pypi.org/project/numpy/>`__
 - `scipy <https://pypi.org/project/scipy/>`__
 - `pyoscode <https://pypi.org/project/pyoscode/>`__
@@ -60,7 +60,9 @@ Basic requirements:
 Documentation:
 
 - `sphinx <https://pypi.org/project/Sphinx/>`__
+- `sphinx_rtd_theme <https://pypi.org/project/sphinx-rtd-theme/>`__
 - `numpydoc <https://pypi.org/project/numpydoc/>`__
+- `matplotlib <https://pypi.org/project/matplotlib/>`__
 
 Tests:
 
