@@ -6,8 +6,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.misc import derivative
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
-from primpy.units import pi, c, a_B, mp_kg, lp_m, Mpc_m
-from primpy.parameters import T_CMB, K_STAR
+from primpy.units import pi, c, lp_m, Mpc_m
+from primpy.parameters import K_STAR, rho_r0_mp_ilp3
 from primpy.equations import Equations
 
 
@@ -101,10 +101,8 @@ class InflationEquations(Equations, ABC):
             """Derive the scale factor today `a_0` either from reheating or from `Omega_K0`."""
             # derive a0 and Omega_K0 from reheating:
             if Omega_K0 is None:
-                rho_r0_SI = a_B * T_CMB**4 / c**2  # TODO: fix rho_r0 = rho_photon0 + rho_nu0 ?
-                rho_r0 = rho_r0_SI / mp_kg * lp_m**3
                 # just from instant reheating:
-                N0 = sol.N_end + np.log(3 / 2) / 4 + np.log(sol.V_end / rho_r0) / 4
+                N0 = sol.N_end + np.log(3 / 2) / 4 + np.log(sol.V_end / rho_r0_mp_ilp3) / 4
                 # additional term from general reheating:
                 if delta_reh is not None and w_reh is not None:
                     N0 += (1 - 3 * w_reh) * delta_reh / 4
