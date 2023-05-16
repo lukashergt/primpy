@@ -1,7 +1,8 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# This workflow will install Python dependencies, run tests and lint with a
+# variety of Python versions. For more information see:
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: primpy
+name: primpy CI
 
 on:
   push:
@@ -10,6 +11,18 @@ on:
     branches: [ master ]
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - name: pip setup
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade packaging
+      - name: Check version number
+        run: python ./.github/workflows/check_version.py
+
   build:
 
     runs-on: ubuntu-latest
