@@ -11,7 +11,7 @@ on:
     branches: [ master ]
 
 jobs:
-  version:
+  version-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,7 +23,7 @@ jobs:
       - name: Check version number
         run: python ./.github/workflows/check_version.py
 
-  build:
+  primpy-tests:
 
     runs-on: ubuntu-latest
     strategy:
