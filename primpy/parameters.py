@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """:mod:`primpy.parameters`: constants and parameters for primpy."""
-from primpy.units import c, a_B, Mpc_m, lp_m, Tp_K
+from primpy.units import c, a_B, Mpc_m, mp_kg, lp_m, Tp_K
 
 # wavenumber at pivot scale in units of [Mpc-1]
 K_STAR = 0.05
@@ -17,6 +17,7 @@ z_BBN = 1e9  # rough estimate of redshift of Big Bang Nucleosynthesis
 
 # derived parameters
 g0 = 2 + 7/8 * 2 * N_eff * T_nu_TCMB**3
-rho_gamma0_kg_im3 = a_B * T_CMB_K**4 / c**2  # in SI units
-rho_nu0_kg_im3 = 7/8 * N_eff * T_nu_TCMB**4 * rho_gamma0_kg_im3
-rho_r0_kg_im3 = rho_gamma0_kg_im3 + rho_nu0_kg_im3
+rho_gamma0_kg_im3 = a_B * T_CMB_K**4 / c**2                      # in SI units
+rho_nu0_kg_im3 = 7/8 * N_eff * T_nu_TCMB**4 * rho_gamma0_kg_im3  # in SI units
+rho_r0_kg_im3 = rho_gamma0_kg_im3 + rho_nu0_kg_im3               # in SI units
+rho_r0_mp_ilp3 = rho_r0_kg_im3 / mp_kg * lp_m**3                 # in reduced Planck units
