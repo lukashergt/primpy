@@ -16,7 +16,6 @@ def basic_ic_asserts(y0, ic, K, pot, N_i, Omega_Ki, phi_i, t_i):
     assert ic.N_i == N_i
     assert ic.Omega_Ki == Omega_Ki
     assert ic.phi_i == phi_i
-    assert ic.eta_i is None
     assert y0[0] == ic.phi_i
     if isinstance(ic.equations, InflationEquationsT):
         assert y0.size == 3
@@ -62,6 +61,45 @@ def test_SlowRollIC(pot, K, t_i, Eq):
         y0 = np.zeros(len(ic.equations.idx))
         ic(y0)
         basic_ic_asserts(y0, ic, K, pot, ic.N_i, Omega_Ki, phi_i, t_i)
+
+
+def test_SlowRollIC_track():
+    t_i = 1e4
+    eta_i = 0
+    phi_i = 17
+    N_i = 12
+    K = 0
+    pot = StarobinskyPotential(Lambda=5e-2)
+    eq = InflationEquationsN(K=K, potential=pot, track_time=True, track_eta=True)
+    ic = SlowRollIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
+    y0 = np.zeros(len(ic.equations.idx))
+    ic(y0)
+    assert ic.N_i == N_i
+    assert ic.phi_i == phi_i
+    assert ic.t_i == t_i
+    assert ic.eta_i == eta_i
+    assert ic.x_ini == N_i
+    assert ic.equations.K == K
+    assert y0.size == 4
+    assert y0[0] == ic.phi_i
+    assert y0[1] == ic.dphidN_i
+    assert y0[2] == ic.t_i
+    assert y0[3] == ic.eta_i
+
+
+def test_SlowRollIC_failures():
+    with pytest.raises(InflationStartError, match="V_i / 3"):
+        pot = StarobinskyPotential(Lambda=5e-2)
+        eq = InflationEquationsT(K=1, potential=pot)
+        ic = SlowRollIC(equations=eq, N_i=0, phi_i=17)
+        y0 = np.zeros(len(ic.equations.idx))
+        ic(y0)
+    with pytest.raises(NotImplementedError, match="`equations`"):
+        pot = StarobinskyPotential(Lambda=5e-2)
+        eq = InflationEquations(K=0, potential=pot)
+        ic = SlowRollIC(equations=eq, N_i=0, phi_i=17)
+        y0 = np.zeros(len(ic.equations.idx))
+        ic(y0)
 
 
 @pytest.mark.parametrize('pot', [QuadraticPotential(Lambda=np.sqrt(6e-6)),
