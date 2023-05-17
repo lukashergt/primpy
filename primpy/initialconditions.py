@@ -16,8 +16,8 @@ import primpy.bigbang as bb
 class SlowRollIC(object):
     """Slow-roll initial conditions given `phi_i` and either of `N_i` or `Omega_Ki`.
 
-    Class for setting up initial conditions at the start of inflation, when
-    the curvature density parameter was maximal after kinetic dominance.
+    Class for setting up initial conditions during slow-roll inflation where
+    the potential energy dominates over the kinetic energy.
     """
 
     def __init__(self, equations, phi_i, t_i=None, eta_i=None, x_end=1e300, **kwargs):
