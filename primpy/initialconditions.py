@@ -13,6 +13,76 @@ import primpy.bigbang as bb
 
 
 # noinspection PyPep8Naming
+class SlowRollIC(object):
+    """Slow-roll initial conditions given `phi_i` and either of `N_i` or `Omega_Ki`.
+
+    Class for setting up initial conditions during slow-roll inflation where
+    the potential energy dominates over the kinetic energy.
+    """
+
+    def __init__(self, equations, phi_i, t_i=None, eta_i=None, x_end=1e300, **kwargs):
+        self.equations = equations
+        self.phi_i = phi_i
+        self.t_i = t_i
+        self.eta_i = eta_i
+        self.x_end = x_end
+
+        self.V_i = equations.potential.V(self.phi_i)
+        self.dV_i = equations.potential.dV(self.phi_i)
+        if 'N_i' in kwargs and 'Omega_Ki' not in kwargs:
+            self.N_i = kwargs.pop('N_i')
+            self.ic_input_param = {'N_i': self.N_i}
+            self.aH2_i = self.V_i / 3 * np.exp(2 * self.N_i) - equations.K
+            if self.aH2_i < 0:
+                raise InflationStartError(
+                    "V_i / 3 * exp(2 N_i) - 1 = %s < 0 but needs to be > 0. Increase either N_i "
+                    "or phi_i." % self.aH2_i, geometry="closed")
+            self.aH_i = np.sqrt(self.V_i / 3 * np.exp(2 * self.N_i) - equations.K)
+            self.Omega_Ki = -equations.K / self.aH2_i
+        elif 'Omega_Ki' in kwargs and 'N_i' not in kwargs:
+            self.Omega_Ki = kwargs.pop('Omega_Ki')
+            self.ic_input_param = {'Omega_Ki': self.Omega_Ki}
+            if self.Omega_Ki >= 1:
+                raise InflationStartError(
+                    "Primordial curvature for open universes has to be Omega_Ki < 1, "
+                    "but Omega_Ki = %g was requested." % self.Omega_Ki, geometry="open")
+            self.N_i = np.log(3 * equations.K / self.V_i * (1 - 1 / self.Omega_Ki)) / 2
+            self.aH2_i = -equations.K / self.Omega_Ki
+            self.aH_i = np.sqrt(self.aH2_i)
+        else:
+            raise TypeError("Need to specify either N_i xor Omega_Ki.")
+        self.H_i = self.aH_i * np.exp(-self.N_i)
+        if isinstance(self.equations, InflationEquationsT):
+            self.x_ini = self.t_i
+            self.x_end = self.x_end
+            self.dphidt_i = -self.dV_i / (3 * self.H_i)
+        elif isinstance(self.equations, InflationEquationsN):
+            self.x_ini = self.N_i
+            self.x_end = self.x_end
+            self.dphidN_i = -self.dV_i / (3 * self.H_i**2)
+
+    def __call__(self, y0, **ivp_kwargs):
+        """Set background equations of inflation for `N`, `phi` and `dphi`."""
+        if isinstance(self.equations, InflationEquationsT):
+            y0[self.equations.idx['dphidt']] = self.dphidt_i
+            y0[self.equations.idx['N']] = self.N_i
+        elif isinstance(self.equations, InflationEquationsN):
+            y0[self.equations.idx['dphidN']] = self.dphidN_i
+            if self.equations.track_time:
+                assert self.t_i is not None, ("`track_time=%s`, but `t_i=%s`."
+                                              % (self.equations.track_time, self.t_i))
+                y0[self.equations.idx['t']] = self.t_i
+        else:
+            raise NotImplementedError("`equations` has to be either of type `InflationEquationsT`"
+                                      "or of type `InflationEquationsN`, but type `%s` was given."
+                                      % type(self.equations))
+        y0[self.equations.idx['phi']] = self.phi_i
+        if self.equations.track_eta:
+            assert self.eta_i is not None, ("`track_eta=%s`, but `eta_i=%s`."
+                                            % (self.equations.track_eta, self.eta_i))
+            y0[self.equations.idx['eta']] = self.eta_i
+
+
 class InflationStartIC(object):
     """Inflation start initial conditions given `phi_i` and either of `N_i` or `Omega_Ki`.
 
