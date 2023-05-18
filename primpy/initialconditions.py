@@ -271,8 +271,7 @@ class ISIC_NsOk(InflationStartIC):
                 warnings.filterwarnings(action=self.warn_action, category=InflationWarning)
                 sol = solve(ic, events=events, **kwargs)
             if np.isfinite(sol.N_tot) and sol.N_tot > self.N_star:
-                # Fixme: kind=linear
-                sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h, kind='linear')
+                sol.derive_approx_power(Omega_K0=self.Omega_K0, h=self.h)
                 self.vprint("N_tot = %.15g, N_star = %.15g for phi_i = %.15g"
                             % (sol.N_tot, sol.N_star, phi_i))
                 return sol.N_star - self.N_star
