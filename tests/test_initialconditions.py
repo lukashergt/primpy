@@ -217,7 +217,7 @@ def test_ISIC_NsOk(K, t_i, Eq):
     Omega_K0 = -K * 0.01
     eq = Eq(K=K, potential=pot)
     ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=N_star, Omega_K0=Omega_K0, h=h, t_i=t_i,
-                   phi_i_bracket=[15, 30], verbose=True)
+                   phi_i_bracket=[15, 30], verbose=False)
     y0 = np.zeros(len(ic.equations.idx))
     ic(y0)
     basic_ic_asserts(y0, ic, K, pot, N_i, ic.Omega_Ki, ic.phi_i, t_i)
