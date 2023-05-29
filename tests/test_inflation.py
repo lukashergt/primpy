@@ -140,6 +140,8 @@ def test_sol_time_efolds(K):
     assert bist.r == approx(bisn.r, rel=1e-5)
     assert_allclose(bist.logk2logP_s(np.log(k)), bisn.logk2logP_s(np.log(k)))
     assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)))
+    assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
+    assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
 
 
 def nan_inflation_end(background_sol):
