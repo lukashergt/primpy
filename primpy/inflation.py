@@ -244,11 +244,11 @@ class InflationEquations(Equations, ABC):
 
         def P_s_approx(k):
             """Slow-roll approximation for the primordial power spectrum for scalar modes."""
-            return sol.logk2P_scalar(np.log(k))
+            return np.exp(sol.logk2logP_s(np.log(k)))
 
         def P_t_approx(k):
             """Slow-roll approximation for the primordial power spectrum for tensor modes."""
-            return sol.logk2P_tensor(np.log(k))
+            return np.exp(sol.logk2logP_t(np.log(k)))
 
         sol.P_s_approx = P_s_approx
         sol.P_t_approx = P_t_approx
