@@ -3,8 +3,7 @@
 from warnings import warn
 from abc import ABC
 import numpy as np
-from scipy.interpolate import interp1d
-from scipy.misc import derivative
+from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
 from primpy.units import pi, c, lp_m, Mpc_m
 from primpy.parameters import K_STAR, rho_r0_mp_ilp3
@@ -209,48 +208,34 @@ class InflationEquations(Equations, ABC):
             sol.P_tensor_approx = 2 * (H / pi)**2
 
             logk, indices = np.unique(sol.logk, return_index=True)
-
-            bounds_error = interp1d_kwargs.pop('bounds_error', False)
-            fill_value = interp1d_kwargs.pop('fill_value', 1e-30)
-            kind = interp1d_kwargs.pop('kind', 'cubic')
-            sol.logk2P_scalar = interp1d(logk, sol.P_scalar_approx[indices],
-                                         bounds_error=bounds_error,
-                                         fill_value=fill_value,
-                                         kind=kind)
-            sol.logk2P_tensor = interp1d(logk, sol.P_tensor_approx[indices],
-                                         bounds_error=bounds_error,
-                                         fill_value=fill_value,
-                                         kind=kind)
-            derive_approx_ns()
-            derive_approx_nrun()
-            derive_approx_r()
-            derive_approx_As()
-
-        def derive_approx_ns(x0=np.log(K_STAR), dx=np.log(K_STAR)/10, order=9):
-            """Derive the spectral index `n_s` from `P_s_approx`."""
-            def logP(logk):
-                """Return log of PPS `P` w.r.t. log of wavenumber `k`."""
-                return np.log(sol.P_s_approx(np.exp(logk)))
-
-            sol.n_s = 1 + derivative(func=logP, x0=x0, dx=dx, n=1, order=order)
-            return sol.n_s
-
-        def derive_approx_nrun(x0=np.log(K_STAR), dx=np.log(K_STAR)/10., order=9):
-            """Derive the running of the spectral index `n_run` from `P_s_approx`."""
-            def logP(logk):
-                """Return log of PPS `P` w.r.t. log of wavenumber `k`."""
-                return np.log(sol.P_s_approx(np.exp(logk)))
-
-            sol.n_run = derivative(func=logP, x0=x0, dx=dx, n=2, order=order)
-            return sol.n_run
-
-        def derive_approx_r(k_pivot=K_STAR):
-            """Derive the tensor-to-scalar ratio `r` from `P_s_approx`."""
-            sol.r = sol.P_t_approx(k_pivot) / sol.P_s_approx(k_pivot)
-
-        def derive_approx_As(k_pivot=K_STAR):
-            """Derive the amplitude `A_s` from `P_s_approx`."""
-            sol.A_s = sol.P_s_approx(k_pivot)
+            spline_order = interp1d_kwargs.pop('k', 3)
+            extrapolate = interp1d_kwargs.pop('ext', 'zeros')
+            sol.logk2logP_s = InterpolatedUnivariateSpline(logk,
+                                                           np.log(sol.P_scalar_approx[indices]),
+                                                           k=spline_order, ext=extrapolate,
+                                                           **interp1d_kwargs)
+            sol.logk2logP_t = InterpolatedUnivariateSpline(logk,
+                                                           np.log(sol.P_tensor_approx[indices]),
+                                                           k=spline_order, ext=extrapolate,
+                                                           **interp1d_kwargs)
+            if sol.logk[0] < np.log(K_STAR) < sol.logk[-1]:
+                dlogPdlogk_s = sol.logk2logP_s.derivatives(np.log(K_STAR))
+                dlogPdlogk_t = sol.logk2logP_t.derivatives(np.log(K_STAR))
+                sol.A_s = np.exp(dlogPdlogk_s[0])
+                sol.n_s = 1 + dlogPdlogk_s[1]
+                sol.n_run = dlogPdlogk_s[2]
+                sol.n_runrun = dlogPdlogk_s[3]
+                sol.A_t = np.exp(dlogPdlogk_t[0])
+                sol.n_t = dlogPdlogk_t[1]
+                sol.r = sol.A_t / sol.A_s
+            else:
+                sol.A_s = np.nan
+                sol.n_s = np.nan
+                sol.n_run = np.nan
+                sol.n_runrun = np.nan
+                sol.A_t = np.nan
+                sol.n_t = np.nan
+                sol.r = np.nan
 
         if self.K == 0:
             sol.derive_approx_power = calibrate_wavenumber_flat
@@ -259,11 +244,11 @@ class InflationEquations(Equations, ABC):
 
         def P_s_approx(k):
             """Slow-roll approximation for the primordial power spectrum for scalar modes."""
-            return sol.logk2P_scalar(np.log(k))
+            return np.exp(sol.logk2logP_s(np.log(k)))
 
         def P_t_approx(k):
             """Slow-roll approximation for the primordial power spectrum for tensor modes."""
-            return sol.logk2P_tensor(np.log(k))
+            return np.exp(sol.logk2logP_t(np.log(k)))
 
         sol.P_s_approx = P_s_approx
         sol.P_t_approx = P_t_approx
