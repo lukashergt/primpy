@@ -20,7 +20,7 @@ def test_not_implemented_errors():
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
 def test_UntilTEvent(K):
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     t_i = 7e4
     N_i = 10
     phi_i = 17
@@ -37,7 +37,7 @@ def test_UntilTEvent(K):
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('Eq', [InflationEquationsT, InflationEquationsN])
 def test_UntilNEvent(K, Eq):
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     t_i = 7e4
     N_i = 10
     phi_i = 17
@@ -51,7 +51,7 @@ def test_UntilNEvent(K, Eq):
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
-@pytest.mark.parametrize('Lambda', [1, np.sqrt(6e-6)])
+@pytest.mark.parametrize('Lambda', [1, 0.0025])
 @pytest.mark.parametrize('Eq', [InflationEquationsT, InflationEquationsN])
 def test_InflationEvent(K, Lambda, Eq):
     t_i = 7e4
@@ -73,7 +73,7 @@ def test_InflationEvent(K, Lambda, Eq):
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('Eq', [InflationEquationsT, InflationEquationsN])
 def test_AfterInflationEndEvent(K, Eq):
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     t_i = 7e4
     N_i = 10
     phi_i = 17
@@ -96,7 +96,7 @@ def test_AfterInflationEndEvent(K, Eq):
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('Eq', [InflationEquationsT, InflationEquationsN])
 def test_Phi0Event(K, Eq):
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     t_i = 7e4
     N_i = 12
     phi_i = 17

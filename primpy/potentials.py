@@ -156,7 +156,7 @@ class MonomialPotential(InflationaryPotential):
 
     def __init__(self, **pot_kwargs):
         self.p = pot_kwargs.pop('p')
-        super(MonomialPotential, self).__init__(**pot_kwargs)
+        super().__init__(**pot_kwargs)
 
     def V(self, phi):
         """`V(phi) = Lambda**4 * phi**p`."""
@@ -177,6 +177,30 @@ class MonomialPotential(InflationaryPotential):
     def inv_V(self, V):
         """`phi(V) = (V / Lambda**4)**(1/p)`."""
         return (V / self.Lambda**4)**(1/self.p)
+
+    @staticmethod
+    def sr_Nstar2ns(N_star, **pot_kwargs):
+        """Slow-roll approximation for inferring `n_s` from `N_star`."""
+        p = pot_kwargs.pop('p')
+        return 1 - p / (2 * N_star) - 1 / N_star
+
+    @staticmethod
+    def sr_ns2Nstar(n_s, **pot_kwargs):
+        """Slow-roll approximation for inferring `N_star` from `n_s`."""
+        p = pot_kwargs.pop('p')
+        return (2 + p) / (2 * (1 - n_s))
+
+    @staticmethod
+    def sr_Nstar2r(N_star, **pot_kwargs):
+        """Slow-roll approximation for inferring `r` from `N_star`."""
+        p = pot_kwargs.pop('p')
+        return 16 * p / (4 * N_star + p)
+
+    @staticmethod
+    def sr_r2Nstar(r, **pot_kwargs):
+        """Slow-roll approximation for inferring `N_star` from `r`."""
+        p = pot_kwargs.pop('p')
+        return p * (16 - r) / (4 * r)
 
     @staticmethod
     def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
@@ -228,10 +252,26 @@ class LinearPotential(MonomialPotential):
     perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
-        super(LinearPotential, self).__init__(p=1, **pot_kwargs)
+        super().__init__(p=1, **pot_kwargs)
 
-    @classmethod
-    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
+    @staticmethod
+    def sr_Nstar2ns(N_star, **pot_params):  # noqa: D102
+        return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=1)
+
+    @staticmethod
+    def sr_ns2Nstar(n_s, **pot_params):  # noqa: D102
+        return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=1)
+
+    @staticmethod
+    def sr_Nstar2r(N_star, **pot_params):  # noqa: D102
+        return MonomialPotential.sr_Nstar2r(N_star=N_star, p=1)
+
+    @staticmethod
+    def sr_r2Nstar(r, **pot_params):  # noqa: D102
+        return MonomialPotential.sr_r2Nstar(r=r, p=1)
+
+    @staticmethod
+    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -259,11 +299,11 @@ class LinearPotential(MonomialPotential):
                 from horizon crossing till the end of inflation.
 
         """
-        return super(LinearPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=1)
+        return MonomialPotential.sr_As2Lambda(A_s, phi_star, N_star, p=1)
 
 
-class QuadraticPotential(InflationaryPotential):
-    """Quadratic potential: `V(phi) = 0.5 * m**2 * phi**2`."""
+class QuadraticPotential(MonomialPotential):
+    """Quadratic potential: `V(phi) = Lambda**4 * phi**2`."""
 
     tag = 'mn2'
     name = 'QuadraticPotential'
@@ -272,31 +312,44 @@ class QuadraticPotential(InflationaryPotential):
 
     def __init__(self, **pot_kwargs):
         if 'mass' in pot_kwargs:
-            if 'Lambda' in pot_kwargs:
-                raise Exception("'mass' and 'Lambda' must not be specified simultaneously.")
-            pot_kwargs['Lambda'] = np.sqrt(pot_kwargs.pop('mass'))
-        super(QuadraticPotential, self).__init__(**pot_kwargs)
-        self.mass = self.Lambda**2
+            raise ValueError("'mass' was dropped use 'Lambda' instead: Lambda**4=mass**2")
+        super().__init__(p=2, **pot_kwargs)
 
     def V(self, phi):
-        """`V(phi) = 0.5 * m**2 * phi**2`."""
-        return self.mass**2 * phi**2 / 2
+        """`V(phi) = Lambda**4 * phi**2`."""
+        return self.Lambda**4 * phi**2
 
     def dV(self, phi):
-        """`V'(phi) = m**2 phi`."""
-        return self.mass**2 * phi
+        """`V'(phi) = 2 * Lambda**4 * phi`."""
+        return 2 * self.Lambda**4 * phi
 
     def d2V(self, phi):
-        """`V''(phi) = m**2`."""
-        return self.mass**2
+        """`V''(phi) = 2 * Lambda**4`."""
+        return 2 * self.Lambda**4
 
     def d3V(self, phi):
         """`V'''(phi) = 0`."""
         return 0
 
     def inv_V(self, V):
-        """`phi(V) = sqrt(2 * V) / m`."""
-        return np.sqrt(2 * V) / self.mass
+        """`phi(V) = sqrt(V) / Lambda**2`."""
+        return np.sqrt(V) / self.Lambda**2
+
+    @staticmethod
+    def sr_Nstar2ns(N_star, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=2)
+
+    @staticmethod
+    def sr_ns2Nstar(n_s, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=2)
+
+    @staticmethod
+    def sr_Nstar2r(N_star, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_Nstar2r(N_star=N_star, p=2)
+
+    @staticmethod
+    def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_r2Nstar(r=r, p=2)
 
     @staticmethod
     def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
@@ -347,10 +400,26 @@ class CubicPotential(MonomialPotential):
     perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
-        super(CubicPotential, self).__init__(p=3, **pot_kwargs)
+        super().__init__(p=3, **pot_kwargs)
 
-    @classmethod
-    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
+    @staticmethod
+    def sr_Nstar2ns(N_star, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=3)
+
+    @staticmethod
+    def sr_ns2Nstar(n_s, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=3)
+
+    @staticmethod
+    def sr_Nstar2r(N_star, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_Nstar2r(N_star=N_star, p=3)
+
+    @staticmethod
+    def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_r2Nstar(r=r, p=3)
+
+    @staticmethod
+    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -378,7 +447,7 @@ class CubicPotential(MonomialPotential):
                 from horizon crossing till the end of inflation.
 
         """
-        return super(CubicPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=3)
+        return MonomialPotential.sr_As2Lambda(A_s, phi_star, N_star, p=3)
 
 
 class QuarticPotential(MonomialPotential):
@@ -390,10 +459,26 @@ class QuarticPotential(MonomialPotential):
     perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
-        super(QuarticPotential, self).__init__(p=4, **pot_kwargs)
+        super().__init__(p=4, **pot_kwargs)
 
-    @classmethod
-    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
+    @staticmethod
+    def sr_Nstar2ns(N_star, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=4)
+
+    @staticmethod
+    def sr_ns2Nstar(n_s, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=4)
+
+    @staticmethod
+    def sr_Nstar2r(N_star, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_Nstar2r(N_star=N_star, p=4)
+
+    @staticmethod
+    def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
+        return MonomialPotential.sr_r2Nstar(r=r, p=4)
+
+    @staticmethod
+    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
 
         Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
@@ -421,7 +506,7 @@ class QuarticPotential(MonomialPotential):
                 from horizon crossing till the end of inflation.
 
         """
-        return super(QuarticPotential, cls).sr_As2Lambda(A_s, phi_star, N_star, p=4)
+        return MonomialPotential.sr_As2Lambda(A_s, phi_star, N_star, p=4)
 
 
 class StarobinskyPotential(InflationaryPotential):
@@ -434,7 +519,7 @@ class StarobinskyPotential(InflationaryPotential):
     perturbation_ic = (1-2, 0, 0, 1e-8)
 
     def __init__(self, **pot_kwargs):
-        super(StarobinskyPotential, self).__init__(**pot_kwargs)
+        super().__init__(**pot_kwargs)
 
     def V(self, phi):
         """`V(phi) = Lambda**4 * (1 - exp(-sqrt(2/3) * phi))**2`."""
@@ -458,6 +543,34 @@ class StarobinskyPotential(InflationaryPotential):
     def inv_V(self, V):
         """`phi(V) = -np.log(1 - np.sqrt(V) / Lambda**2) / gamma`."""
         return -np.log(1 - np.sqrt(V) / self.Lambda**2) / StarobinskyPotential.gamma
+
+    @staticmethod
+    def sr_Nstar2ns(N_star):
+        """Slow-roll approximation for inferring `n_s` from `N_star`."""
+        gamma = StarobinskyPotential.gamma
+        num = 2 * N_star * gamma**2 + np.sqrt(2) * gamma + 2
+        den = N_star * gamma * (N_star * gamma + np.sqrt(2))
+        return 1 - num / den
+
+    @staticmethod
+    def sr_ns2Nstar(n_s):
+        """Slow-roll approximation for inferring `N_star` from `n_s`."""
+        gamma = StarobinskyPotential.gamma
+        num = 2*gamma - np.sqrt(2) * (1-n_s) + np.sqrt(2*(1-n_s)**2 + 8*(1-n_s) + 4*gamma**2)
+        den = 2 * gamma * (1-n_s)
+        return num / den
+
+    @staticmethod
+    def sr_Nstar2r(N_star):
+        """Slow-roll approximation for inferring `r` from `N_star`."""
+        gamma = StarobinskyPotential.gamma
+        return 32 / (2*N_star*gamma + np.sqrt(2))**2
+
+    @staticmethod
+    def sr_r2Nstar(r):
+        """Slow-roll approximation for inferring `N_star` from `r`."""
+        gamma = StarobinskyPotential.gamma
+        return np.sqrt(2) * (4 - np.sqrt(r)) / (2 * gamma * np.sqrt(r))
 
     @staticmethod
     def phi2efolds(phi):
@@ -542,7 +655,7 @@ class NaturalPotential(InflationaryPotential):
 
     def __init__(self, **pot_kwargs):
         self.phi0 = pot_kwargs.pop('phi0')
-        super(NaturalPotential, self).__init__(**pot_kwargs)
+        super().__init__(**pot_kwargs)
 
     def V(self, phi):
         """`V(phi) = Lambda**4 * (1 - cos(pi*phi/phi0))`."""
@@ -565,23 +678,37 @@ class NaturalPotential(InflationaryPotential):
         return np.arccos(1 - 2 * V / self.Lambda**4) * self.phi0 / pi
 
     @staticmethod
-    def sr_n_s(N_star, **pot_kwargs):
+    def sr_Nstar2ns(N_star, **pot_kwargs):
         """Slow-roll approximation for the spectral index `n_s`."""
         phi0 = pot_kwargs.pop('phi0')
         f = phi0 / pi
-        numerator = 1 + 4 * f**2
-        denominator = (-1 + np.exp(N_star / f**2)) * (1 + 2 * f**2)
-        return 1 - 1 / f**2 * (1 + numerator / denominator)
+        num = (2 * f**2 + (2 * f**2 + 1) * np.exp(N_star / f**2))
+        den = (f**2 * (2 * f**2 + 1) * (np.exp(N_star / f**2) - 1))
+        return 1 - num / den
 
     @staticmethod
-    def sr_r(N_star, **pot_kwargs):
+    def sr_ns2Nstar(n_s, **pot_kwargs):
+        """Slow-roll approximation for inferring `N_star` from `n_s`."""
+        phi0 = pot_kwargs.pop('phi0')
+        f = phi0 / pi
+        return f**2 * np.log(f**2 * (2*f**2*(1-n_s)+(1-n_s)+2) / ((2*f**2+1) * (f**2*(1-n_s)-1)))
+
+    @staticmethod
+    def sr_Nstar2r(N_star, **pot_kwargs):
         """Slow-roll approximation for the tensor-to-scalar ratio `r`."""
         phi0 = pot_kwargs.pop('phi0')
         f = phi0 / pi
-        return 16 / (-2 * f**2 + np.exp(N_star / f**2) * (1 + 2 * f**2))
+        return 16 / (-2 * f**2 + (2 * f**2 + 1) * np.exp(N_star / f**2))
 
-    @classmethod
-    def phi2efolds(cls, phi, phi0):
+    @staticmethod
+    def sr_r2Nstar(r, **pot_kwargs):
+        """Slow-roll approximation for inferring `N_star` from `r`."""
+        phi0 = pot_kwargs.pop('phi0')
+        f = phi0 / pi
+        return f**2 * np.log((2 * f**2 * r + 16) / (r * (2 * f**2 + 1)))
+
+    @staticmethod
+    def phi2efolds(phi, phi0):
         """Get e-folds `N` from inflaton `phi`.
 
         Find the number of e-folds `N` till end of inflation from inflaton `phi`
@@ -667,7 +794,7 @@ class DoubleWellPotential(InflationaryPotential):
     def __init__(self, **pot_kwargs):
         self.phi0 = pot_kwargs.pop('phi0')
         self.p = pot_kwargs.pop('p')
-        super(DoubleWellPotential, self).__init__(**pot_kwargs)
+        super().__init__(**pot_kwargs)
         self.prefactor = 2 * self.p * self.Lambda**4
 
     def V(self, phi):
@@ -732,7 +859,7 @@ class DoubleWell2Potential(DoubleWellPotential):
     perturbation_ic = (1e-1, 0, 0, 1e-5)
 
     def __init__(self, **pot_kwargs):
-        super(DoubleWell2Potential, self).__init__(p=2, **pot_kwargs)
+        super().__init__(p=2, **pot_kwargs)
 
     @staticmethod
     def phi2efolds(phi_shifted, phi0):
@@ -823,7 +950,7 @@ class DoubleWell4Potential(DoubleWellPotential):
     perturbation_ic = (1e-1, 0, 0, 1e-5)
 
     def __init__(self, **pot_kwargs):
-        super(DoubleWell4Potential, self).__init__(p=4, **pot_kwargs)
+        super().__init__(p=4, **pot_kwargs)
 
     @staticmethod
     def phi_end_squared(phi0):

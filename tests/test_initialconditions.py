@@ -35,7 +35,7 @@ def basic_ic_asserts(y0, ic, K, pot, N_i, Omega_Ki, phi_i, t_i):
     assert ic.equations.potential.d3V(phi_i) == pot.d3V(phi_i)
 
 
-@pytest.mark.parametrize('pot', [QuadraticPotential(Lambda=np.sqrt(6e-6)),
+@pytest.mark.parametrize('pot', [QuadraticPotential(Lambda=0.0025),
                                  StarobinskyPotential(Lambda=5e-2)])
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
@@ -102,7 +102,7 @@ def test_SlowRollIC_failures():
         ic(y0)
 
 
-@pytest.mark.parametrize('pot', [QuadraticPotential(Lambda=np.sqrt(6e-6)),
+@pytest.mark.parametrize('pot', [QuadraticPotential(Lambda=0.0025),
                                  StarobinskyPotential(Lambda=5e-2)])
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
@@ -151,7 +151,7 @@ def test_InflationStartIC(pot, K, t_i, Eq):
 def test_ISIC_Nt_Ni(K, t_i, Eq):
     N_i = 11
     N_tot = 60
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     eq = Eq(K=K, potential=pot)
     ic = ISIC_Nt(equations=eq, N_i=N_i, N_tot=N_tot, t_i=t_i, phi_i_bracket=[3, 30])
     y0 = np.zeros(len(ic.equations.idx))
@@ -179,7 +179,7 @@ def test_ISIC_Nt_Ni(K, t_i, Eq):
 def test_ISIC_Nt_Oi(K, abs_Omega_Ki, t_i, Eq):
     Omega_Ki = -K * abs_Omega_Ki
     N_tot = 60
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     eq = Eq(K=K, potential=pot)
     if Omega_Ki >= 1:
         with pytest.raises(InflationStartError):
@@ -208,7 +208,7 @@ def test_ISIC_Nt_Oi(K, abs_Omega_Ki, t_i, Eq):
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('t_i, Eq', [(1e4, InflationEquationsT), (None, InflationEquationsN)])
 def test_ISIC_NsOk(K, t_i, Eq):
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     N_star = 55
     h = 0.7
 

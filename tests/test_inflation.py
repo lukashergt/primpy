@@ -18,7 +18,7 @@ from primpy.solver import solve
 
 
 def test_not_implemented_errors():
-    eq = InflationEquations(K=1, potential=QuadraticPotential(Lambda=np.sqrt(6e-6)))
+    eq = InflationEquations(K=1, potential=QuadraticPotential(Lambda=0.0025))
     with pytest.raises(NotImplementedError, match="Equations must define H2 method."):
         eq.H(x=0, y=np.zeros(4))
     with pytest.raises(NotImplementedError, match="Equations must define H2 method."):
@@ -63,7 +63,7 @@ def test_basic_methods_time_vs_efolds():
     N = 10
     phi = 20
     for K in [-1, 0, 1]:
-        for Lambda in [1, np.sqrt(6e-6)]:
+        for Lambda in [1, 0.0025]:
             pot = QuadraticPotential(Lambda=Lambda)
             for dphidt_squared in [100 * pot.V(phi), 2 * pot.V(phi), pot.V(phi), pot.V(phi) / 100]:
                 dphidt = -np.sqrt(dphidt_squared)
@@ -87,7 +87,7 @@ def test_basic_methods_time_vs_efolds():
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
 def test_sol_time_efolds(K):
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     N_i = 10
     phi_i = 17
     t_i = 7e4
@@ -104,9 +104,9 @@ def test_sol_time_efolds(K):
             InflationEvent(eq_t, -1, terminal=True)]
     ev_N = [InflationEvent(eq_N, +1, terminal=False),
             InflationEvent(eq_N, -1, terminal=True)]
-    bist = solve(ic=ic_t, events=ev_t, dense_output=True)
-    bisn = solve(ic=ic_N, events=ev_N, dense_output=True)
-    assert bist.N_tot == approx(bisn.N_tot)
+    bist = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-12)
+    bisn = solve(ic=ic_N, events=ev_N, dense_output=True, method='DOP853', rtol=1e-12)
+    assert bist.N_tot == approx(bisn.N_tot, rel=1e-5)
 
     N2t = interp1d(bisn.N, bisn.t, kind='cubic')
     N2phi = interp1d(bisn.N, bisn.phi, kind='cubic')
@@ -138,12 +138,12 @@ def test_sol_time_efolds(K):
     assert bist.A_s == approx(bisn.A_s, rel=1e-8)
     assert bist.n_s == approx(bisn.n_s, rel=1e-5)
     assert bist.n_run == approx(bisn.n_run, rel=1e-3)
-    assert bist.n_runrun == approx(bisn.n_runrun, rel=1e-1)
+    assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1, abs=1e-6)
     assert bist.A_t == approx(bisn.A_t, rel=1e-8)
     assert bist.r == approx(bisn.r, rel=1e-5)
     assert bist.n_t == approx(bisn.n_t, rel=1e-5)
-    assert_allclose(bist.logk2logP_s(np.log(k)), bisn.logk2logP_s(np.log(k)))
-    assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)))
+    assert_allclose(bist.logk2logP_s(np.log(k)), bisn.logk2logP_s(np.log(k)), rtol=1e-6)
+    assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)), rtol=1e-6)
     assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
     assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
 
@@ -162,7 +162,7 @@ def test_postprocessing_inflation_end_warnings(K, Eq):
     t_i = 1e4
     N_i = 10
     phi_i = 17
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     eq = Eq(K=K, potential=pot, verbose=True)
 
     # stop at N=20 to trigger "Inflation has not ended." warning:
@@ -184,7 +184,7 @@ def test_postprocessing_inflation_end_warnings(K, Eq):
 
 
 def test_Ncross_nan():
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     N_i = 18
     phi_i = 15
     t_i = 7e4
@@ -197,7 +197,6 @@ def test_Ncross_nan():
             ev = [InflationEvent(eq, +1, terminal=False),
                   InflationEvent(eq, -1, terminal=True)]
             b_sol = solve(ic=ic, events=ev)
-            print(b_sol.N_tot)
             b_sol.derive_approx_power(Omega_K0=Omega_K0, h=h)
             assert np.log(K_STAR) < np.min(b_sol.logk)
             assert np.isnan(b_sol.N_cross)
@@ -208,7 +207,7 @@ def test_Ncross_nan():
 @pytest.mark.parametrize('N_star', [30, 90])
 def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
     K = +1
-    pot = QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = QuadraticPotential(Lambda=0.0025)
     t_i = 1e4
     N_i = 10
     Omega_K0 = -K * 0.01
@@ -226,7 +225,7 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
     for i, rtol in enumerate(rtols):
         eq = InflationEquationsT(K=K, potential=pot)
         ic = ISIC_NsOk(equations=eq, N_i=N_i, N_star=N_star, Omega_K0=Omega_K0, h=h, t_i=t_i,
-                       phi_i_bracket=[15.21, 30])
+                       phi_i_bracket=[12, 30])
         ev = [InflationEvent(ic.equations, +1, terminal=False),
               InflationEvent(ic.equations, -1, terminal=True)]
         bist = solve(ic=ic, events=ev, rtol=rtol)
