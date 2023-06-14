@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Tests for `primpy.potential` module."""
 import pytest
-from tests.test_tools import effequal
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 import primpy.potentials as pp
@@ -48,23 +47,21 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
             pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
 
 
-@pytest.mark.parametrize('mass, phi', [(1, 1), (6e-6, 20)])
-def test_quadratic_inflation_V(mass, phi):
+@pytest.mark.parametrize('Lambda, phi', [(1, 1), (0.0025, 20)])
+def test_quadratic_inflation_V(Lambda, phi):
     """Tests for `QuadraticPotential`."""
-    pot1 = pp.QuadraticPotential(Lambda=np.sqrt(mass))
-    assert pot1.V(phi=phi) == effequal(0.5 * mass**2 * phi**2)
-    assert pot1.dV(phi=phi) == effequal(mass**2 * phi)
-    assert pot1.d2V(phi=phi) == effequal(mass**2)
-    assert pot1.d3V(phi=phi) == effequal(0)
-    assert pot1.inv_V(V=mass**2) == effequal(np.sqrt(2))
-    pot2 = pp.QuadraticPotential(mass=mass)
-    assert pot1.V(phi=phi) == pot2.V(phi=phi)
+    pot1 = pp.QuadraticPotential(Lambda=Lambda)
+    assert pot1.V(phi=phi) == pytest.approx(Lambda**4 * phi**2)
+    assert pot1.dV(phi=phi) == pytest.approx(2 * Lambda**4 * phi)
+    assert pot1.d2V(phi=phi) == pytest.approx(2 * Lambda**4)
+    assert pot1.d3V(phi=phi) == pytest.approx(0)
+    assert pot1.inv_V(V=Lambda**4) == pytest.approx(np.sqrt(1))
     with pytest.raises(Exception):
-        pp.QuadraticPotential(mass=mass, Lambda=np.sqrt(mass))
+        pp.QuadraticPotential(mass=Lambda**2)
 
 
 def test_quadratic_inflation_power_to_potential():
-    pot = pp.QuadraticPotential(Lambda=np.sqrt(6e-6))
+    pot = pp.QuadraticPotential(Lambda=0.0025)
     assert pot.sr_As2Lambda(2e-9, None, 55)[1] == np.sqrt(4 * 55 + 2)
     assert pot.sr_As2Lambda(2e-9, 20, None)[2] == (20 ** 2 - 2) / 4
 
@@ -124,12 +121,63 @@ def test_starobinsky_inflation_power_to_potential():
     assert 0 < pot.sr_As2Lambda(2e-9, 5, None)[2] < 100
 
 
-@pytest.mark.parametrize('Pot, pot_kwargs', [(pp.NaturalPotential, dict(phi0=20)),
-                                             (pp.NaturalPotential, dict(phi0=50)),
-                                             (pp.NaturalPotential, dict(phi0=100)),
-                                             (pp.NaturalPotential, dict(phi0=200)),
-                                             (pp.NaturalPotential, dict(phi0=500))])
-@pytest.mark.parametrize('N_star', [50, 60])
-def test_slow_roll_methods(Pot, pot_kwargs, N_star, ):
-    assert 0.9 < Pot.sr_n_s(N_star=N_star, **pot_kwargs) < 1
-    assert 1e-3 < Pot.sr_r(N_star=N_star, **pot_kwargs) < 1
+@pytest.mark.parametrize('p', [2/3, 1, 4/3, 2, 4])
+@pytest.mark.parametrize('N_star', [20, 60, 90])
+def test_monomial_slow_roll(p, N_star):
+    Pot = pp.MonomialPotential
+    n_s = Pot.sr_Nstar2ns(N_star=N_star, p=p)
+    assert 0.8 < n_s < 1
+    assert n_s == 1 - p / (2 * N_star) - 1 / N_star
+    assert Pot.sr_ns2Nstar(n_s=n_s, p=p) == pytest.approx(N_star)
+
+    r = Pot.sr_Nstar2r(N_star=N_star, p=p)
+    assert 1e-2 < Pot.sr_Nstar2r(N_star=N_star, p=p) < 1
+    assert r == 16 * p / (4 * N_star + p)
+    assert Pot.sr_r2Nstar(r=r, p=p) == pytest.approx(N_star)
+
+
+@pytest.mark.parametrize('Pot, p', [(pp.LinearPotential, 1),
+                                    (pp.QuadraticPotential, 2),
+                                    (pp.CubicPotential, 3),
+                                    (pp.QuarticPotential, 4)])
+@pytest.mark.parametrize('N_star', [20, 60, 90])
+def test_specific_monomial_slow_roll(Pot, p, N_star):
+    n_s = Pot.sr_Nstar2ns(N_star=N_star)
+    assert 0.8 < n_s < 1
+    assert n_s == 1 - p / (2 *N_star) - 1 / N_star
+    assert Pot.sr_ns2Nstar(n_s=n_s) == pytest.approx(N_star)
+
+    r = Pot.sr_Nstar2r(N_star=N_star)
+    assert 1e-2 < Pot.sr_Nstar2r(N_star=N_star) < 1
+    assert r == 16 * p / (4 * N_star + p)
+    assert Pot.sr_r2Nstar(r=r) == pytest.approx(N_star)
+
+
+@pytest.mark.parametrize('N_star', [20, 60, 90])
+def test_starobinsky_slow_roll(N_star):
+    Pot = pp.StarobinskyPotential
+
+    n_s = Pot.sr_Nstar2ns(N_star=N_star)
+    approx = 1 - 2 / N_star + (-3 + np.sqrt(3)) / N_star**2 + (-3 + 3*np.sqrt(3)) / N_star**3
+    assert 0.8 < n_s < 1
+    assert n_s == pytest.approx(approx, rel=1e-3)
+    assert Pot.sr_ns2Nstar(n_s=n_s) == pytest.approx(N_star)
+
+    r = Pot.sr_Nstar2r(N_star=N_star)
+    approx = 12 / N_star**2 - 12 * np.sqrt(3) / N_star**3 + 27 / N_star**4
+    assert 1e-3 < r < 1
+    assert r == pytest.approx(approx, rel=1e-3)
+    assert Pot.sr_r2Nstar(r=r) == pytest.approx(N_star)
+
+
+@pytest.mark.parametrize('pot_kwargs', [dict(phi0=10), dict(phi0=100), dict(phi0=1000)])
+@pytest.mark.parametrize('N_star', [20, 60, 90])
+def test_natural_slow_roll(pot_kwargs, N_star):
+    Pot = pp.NaturalPotential
+    n_s = Pot.sr_Nstar2ns(N_star=N_star, **pot_kwargs)
+    assert 0.8 < n_s < 1
+    assert Pot.sr_ns2Nstar(n_s=n_s, **pot_kwargs) == pytest.approx(N_star)
+
+    r = Pot.sr_Nstar2r(N_star=N_star, **pot_kwargs)
+    assert 1e-4 < r < 1
+    assert Pot.sr_r2Nstar(r=r, **pot_kwargs) == pytest.approx(N_star)

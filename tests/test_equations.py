@@ -20,7 +20,7 @@ def test_not_implemented_errors():
 
 @pytest.mark.filterwarnings("ignore:invalid value encountered in sqrt:RuntimeWarning")
 @pytest.mark.parametrize('K', [-1, 0, +1])
-@pytest.mark.parametrize('phi_i, pot', [(17, QuadraticPotential(mass=6e-6)),
+@pytest.mark.parametrize('phi_i, pot', [(17, QuadraticPotential(Lambda=np.sqrt(6e-6))),
                                         (6, StarobinskyPotential(Lambda=5e-2))])
 def test_equations_sol_ordering_after_postprocessing(K, phi_i, pot):
     t_i = 7e4

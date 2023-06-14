@@ -14,8 +14,9 @@ def test_basic_methods(K):
     y0 = np.zeros(len(eq.idx))
     assert eq.H2(x=0, y=y0) == -K
     y1 = np.ones(len(eq.idx))
-    H2 = (1 - 6 * K * np.exp(-2)) / 5
+    V = 1
+    H2 = (2 * V - 6 * K * np.exp(-2)) / 5
     assert eq.H2(x=1, y=y1) == H2
     assert eq.H(x=1, y=y1) == np.sqrt(H2)
-    assert eq.w(x=1, y=y1) == (H2 - 1) / (H2 + 1)
-    assert eq.inflating(x=1, y=y1) == 1 / 2 - H2
+    assert eq.w(x=1, y=y1) == (H2/2 - V) / (H2/2 + V)
+    assert eq.inflating(x=1, y=y1) == V - H2

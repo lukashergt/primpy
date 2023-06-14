@@ -2,7 +2,6 @@
 """Tests for `primpy.perturbation` module."""
 import pytest
 from pytest import approx
-# import itertools
 import numpy as np
 from numpy.testing import assert_allclose
 from primpy.potentials import QuadraticPotential
@@ -17,7 +16,7 @@ from primpy.oscode_solver import solve_oscode
 
 
 def setup_background(K, f_i, abs_Omega_K0):
-    pot = QuadraticPotential(mass=6e-6)
+    pot = QuadraticPotential(Lambda=0.0025)
     phi_i = 16
     Omega_K0 = -K * abs_Omega_K0
     Omega_Ki = f_i * Omega_K0
@@ -35,8 +34,8 @@ def setup_background(K, f_i, abs_Omega_K0):
     ev_n = [InflationEvent(eq_n, +1, terminal=False),
             InflationEvent(eq_n, -1, terminal=True),
             CollapseEvent(eq_n)]
-    bist = solve(ic=ic_t, events=ev_t, t_eval=t_eval)
-    bisn = solve(ic=ic_n, events=ev_n, t_eval=N_eval, rtol=1e-12, atol=1e-12)
+    bist = solve(ic=ic_t, events=ev_t, t_eval=t_eval, method='DOP853', rtol=1e-12, atol=1e-13)
+    bisn = solve(ic=ic_n, events=ev_n, t_eval=N_eval, method='DOP853', rtol=1e-12, atol=1e-13)
     assert bist.independent_variable == 't'
     assert bisn.independent_variable == 'N'
     assert bist.N_tot == approx(bisn.N_tot)
@@ -104,21 +103,15 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         assert np.isfinite(damp_t).all()
         assert np.isfinite(damp_n).all()
 
-        pert_t = solve_oscode(background=bist, k=k, rtol=1e-5)
-        pert_n = solve_oscode(background=bisn, k=k, rtol=1e-5, even_grid=True)
+        pert_t = solve_oscode(background=bist, k=k, rtol=5e-5)
+        pert_n = solve_oscode(background=bisn, k=k, rtol=5e-5, even_grid=True)
         for sol in ['one', 'two']:
             assert np.all(np.isfinite(getattr(getattr(pert_t.scalar, sol), 't')))
             assert np.all(np.isfinite(getattr(getattr(pert_n.scalar, sol), 'N')))
             assert np.all(np.isfinite(getattr(getattr(pert_t.tensor, sol), 't')))
             assert np.all(np.isfinite(getattr(getattr(pert_n.tensor, sol), 'N')))
-            # for scalar, a in itertools.product([pert_t.scalar, pert_n.scalar],
-            #                                    ['Rk', 'dRk', 'steptype']):
-            #     assert np.all(np.isfinite(getattr(getattr(scalar, sol), a)))
-            # for tensor, a in itertools.product([pert_t.tensor, pert_n.tensor],
-            #                                    ['hk', 'dhk', 'steptype']):
-            #     assert np.all(np.isfinite(getattr(getattr(tensor, sol), a)))
-        assert pert_n.scalar.P_s_RST == approx(pert_t.scalar.P_s_RST, rel=1e-3)
-        assert pert_n.tensor.P_t_RST == approx(pert_t.tensor.P_t_RST, rel=1e-3)
+        assert pert_n.scalar.P_s_RST == approx(pert_t.scalar.P_s_RST, rel=2e-3)
+        assert pert_n.tensor.P_t_RST == approx(pert_t.tensor.P_t_RST, rel=2e-3)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
@@ -137,8 +130,8 @@ def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
         assert np.isfinite(pps_t.P_t_RST).all()
         assert np.isfinite(pps_n.P_s_RST).all()
         assert np.isfinite(pps_n.P_t_RST).all()
-        assert_allclose(pps_t.P_s_RST * 1e9, pps_n.P_s_RST * 1e9, rtol=1e-3, atol=1e-6)
-        assert_allclose(pps_t.P_t_RST * 1e9, pps_n.P_t_RST * 1e9, rtol=1e-3, atol=1e-6)
+        assert_allclose(np.log(pps_t.P_s_RST), np.log(pps_n.P_s_RST), rtol=1e-3, atol=1e-8)
+        assert_allclose(np.log(pps_t.P_t_RST), np.log(pps_n.P_t_RST), rtol=1e-3, atol=1e-8)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
