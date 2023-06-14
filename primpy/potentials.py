@@ -180,25 +180,25 @@ class MonomialPotential(InflationaryPotential):
 
     @staticmethod
     def sr_Nstar2ns(N_star, **pot_kwargs):
-        """Slow-roll approximation for inferring `n_s` from `N_star`"""
+        """Slow-roll approximation for inferring `n_s` from `N_star`."""
         p = pot_kwargs.pop('p')
         return 1 - p / (2 * N_star) - 1 / N_star
 
     @staticmethod
     def sr_ns2Nstar(n_s, **pot_kwargs):
-        """Slow-roll approximation for inferring `N_star` from `n_s`"""
+        """Slow-roll approximation for inferring `N_star` from `n_s`."""
         p = pot_kwargs.pop('p')
         return (2 + p) / (2 * (1 - n_s))
 
     @staticmethod
     def sr_Nstar2r(N_star, **pot_kwargs):
-        """Slow-roll approximation for inferring `r` from `N_star`"""
+        """Slow-roll approximation for inferring `r` from `N_star`."""
         p = pot_kwargs.pop('p')
         return 16 * p / (4 * N_star + p)
 
     @staticmethod
     def sr_r2Nstar(r, **pot_kwargs):
-        """Slow-roll approximation for inferring `N_star` from `r`"""
+        """Slow-roll approximation for inferring `N_star` from `r`."""
         p = pot_kwargs.pop('p')
         return p * (16 - r) / (4 * r)
 
@@ -255,19 +255,19 @@ class LinearPotential(MonomialPotential):
         super().__init__(p=1, **pot_kwargs)
 
     @staticmethod
-    def sr_Nstar2ns(N_star, **pot_params):
+    def sr_Nstar2ns(N_star, **pot_params):  # noqa: D102
         return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=1)
 
     @staticmethod
-    def sr_ns2Nstar(n_s, **pot_params):
+    def sr_ns2Nstar(n_s, **pot_params):  # noqa: D102
         return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=1)
 
     @staticmethod
-    def sr_Nstar2r(N_star, **pot_params):
+    def sr_Nstar2r(N_star, **pot_params):  # noqa: D102
         return MonomialPotential.sr_Nstar2r(N_star=N_star, p=1)
 
     @staticmethod
-    def sr_r2Nstar(r, **pot_params):
+    def sr_r2Nstar(r, **pot_params):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=1)
 
     @staticmethod
@@ -336,19 +336,19 @@ class QuadraticPotential(MonomialPotential):
         return np.sqrt(V) / self.Lambda**2
 
     @staticmethod
-    def sr_Nstar2ns(N_star, **pot_kwargs):
+    def sr_Nstar2ns(N_star, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=2)
 
     @staticmethod
-    def sr_ns2Nstar(n_s, **pot_kwargs):
+    def sr_ns2Nstar(n_s, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=2)
 
     @staticmethod
-    def sr_Nstar2r(N_star, **pot_kwargs):
+    def sr_Nstar2r(N_star, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_Nstar2r(N_star=N_star, p=2)
 
     @staticmethod
-    def sr_r2Nstar(r, **pot_kwargs):
+    def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=2)
 
     @staticmethod
@@ -403,19 +403,19 @@ class CubicPotential(MonomialPotential):
         super().__init__(p=3, **pot_kwargs)
 
     @staticmethod
-    def sr_Nstar2ns(N_star, **pot_kwargs):
+    def sr_Nstar2ns(N_star, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=3)
 
     @staticmethod
-    def sr_ns2Nstar(n_s, **pot_kwargs):
+    def sr_ns2Nstar(n_s, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=3)
 
     @staticmethod
-    def sr_Nstar2r(N_star, **pot_kwargs):
+    def sr_Nstar2r(N_star, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_Nstar2r(N_star=N_star, p=3)
 
     @staticmethod
-    def sr_r2Nstar(r, **pot_kwargs):
+    def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=3)
 
     @staticmethod
@@ -462,19 +462,19 @@ class QuarticPotential(MonomialPotential):
         super().__init__(p=4, **pot_kwargs)
 
     @staticmethod
-    def sr_Nstar2ns(N_star, **pot_kwargs):
+    def sr_Nstar2ns(N_star, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=4)
 
     @staticmethod
-    def sr_ns2Nstar(n_s, **pot_kwargs):
+    def sr_ns2Nstar(n_s, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_ns2Nstar(n_s=n_s, p=4)
 
     @staticmethod
-    def sr_Nstar2r(N_star, **pot_kwargs):
+    def sr_Nstar2r(N_star, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_Nstar2r(N_star=N_star, p=4)
 
     @staticmethod
-    def sr_r2Nstar(r, **pot_kwargs):
+    def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=4)
 
     @staticmethod
@@ -546,7 +546,7 @@ class StarobinskyPotential(InflationaryPotential):
 
     @staticmethod
     def sr_Nstar2ns(N_star):
-        """Slow-roll approximation for inferring `n_s` from `N_star`"""
+        """Slow-roll approximation for inferring `n_s` from `N_star`."""
         gamma = StarobinskyPotential.gamma
         num = 2 * N_star * gamma**2 + np.sqrt(2) * gamma + 2
         den = N_star * gamma * (N_star * gamma + np.sqrt(2))
@@ -554,7 +554,7 @@ class StarobinskyPotential(InflationaryPotential):
 
     @staticmethod
     def sr_ns2Nstar(n_s):
-        """Slow-roll approximation for inferring `N_star` from `n_s`"""
+        """Slow-roll approximation for inferring `N_star` from `n_s`."""
         gamma = StarobinskyPotential.gamma
         num = 2*gamma - np.sqrt(2) * (1-n_s) + np.sqrt(2*(1-n_s)**2 + 8*(1-n_s) + 4*gamma**2)
         den = 2 * gamma * (1-n_s)
@@ -562,13 +562,13 @@ class StarobinskyPotential(InflationaryPotential):
 
     @staticmethod
     def sr_Nstar2r(N_star):
-        """Slow-roll approximation for inferring `r` from `N_star`"""
+        """Slow-roll approximation for inferring `r` from `N_star`."""
         gamma = StarobinskyPotential.gamma
         return 32 / (2*N_star*gamma + np.sqrt(2))**2
 
     @staticmethod
     def sr_r2Nstar(r):
-        """Slow-roll approximation for inferring `N_star` from `r`"""
+        """Slow-roll approximation for inferring `N_star` from `r`."""
         gamma = StarobinskyPotential.gamma
         return np.sqrt(2) * (4 - np.sqrt(r)) / (2 * gamma * np.sqrt(r))
 
@@ -688,7 +688,7 @@ class NaturalPotential(InflationaryPotential):
 
     @staticmethod
     def sr_ns2Nstar(n_s, **pot_kwargs):
-        """Slow-roll approximation for inferring `N_star` from `n_s`"""
+        """Slow-roll approximation for inferring `N_star` from `n_s`."""
         phi0 = pot_kwargs.pop('phi0')
         f = phi0 / pi
         return f**2 * np.log(f**2 * (2*f**2*(1-n_s)+(1-n_s)+2) / ((2*f**2+1) * (f**2*(1-n_s)-1)))
@@ -702,7 +702,7 @@ class NaturalPotential(InflationaryPotential):
 
     @staticmethod
     def sr_r2Nstar(r, **pot_kwargs):
-        """Slow-roll approximation for inferring `N_star` from `r`"""
+        """Slow-roll approximation for inferring `N_star` from `r`."""
         phi0 = pot_kwargs.pop('phi0')
         f = phi0 / pi
         return f**2 * np.log((2 * f**2 * r + 16) / (r * (2 * f**2 + 1)))
