@@ -144,7 +144,7 @@ def test_monomial_slow_roll(p, N_star):
 def test_specific_monomial_slow_roll(Pot, p, N_star):
     n_s = Pot.sr_Nstar2ns(N_star=N_star)
     assert 0.8 < n_s < 1
-    assert n_s == 1 - p / (2 *N_star) - 1 / N_star
+    assert n_s == 1 - p / (2 * N_star) - 1 / N_star
     assert Pot.sr_ns2Nstar(n_s=n_s) == pytest.approx(N_star)
 
     r = Pot.sr_Nstar2r(N_star=N_star)

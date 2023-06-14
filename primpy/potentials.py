@@ -461,7 +461,6 @@ class QuarticPotential(MonomialPotential):
     def __init__(self, **pot_kwargs):
         super().__init__(p=4, **pot_kwargs)
 
-
     @staticmethod
     def sr_Nstar2ns(N_star, **pot_kwargs):
         return MonomialPotential.sr_Nstar2ns(N_star=N_star, p=4)
@@ -477,6 +476,7 @@ class QuarticPotential(MonomialPotential):
     @staticmethod
     def sr_r2Nstar(r, **pot_kwargs):
         return MonomialPotential.sr_r2Nstar(r=r, p=4)
+
     @staticmethod
     def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
