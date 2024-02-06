@@ -6,7 +6,7 @@ import numpy as np
 from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
 from primpy.units import pi, c, lp_m, Mpc_m
-from primpy.parameters import K_STAR, rho_r0_mp_ilp3
+from primpy.parameters import K_STAR, K_STAR_lp, rho_r0_mp_ilp3
 from primpy.equations import Equations
 
 
@@ -114,6 +114,7 @@ class InflationEquations(Equations, ABC):
                                     "but Omega_K0=%s whereas K=%s." % (Omega_K0, sol.K))
                 sol.Omega_K0 = Omega_K0
                 sol.a0 = 1.
+                sol.N0 = 0.
             # derive a0 from Omega_K0
             else:
                 assert np.sign(Omega_K0) == -sol.K, ("The global geometry needs to match, "
@@ -125,28 +126,33 @@ class InflationEquations(Equations, ABC):
 
         sol.derive_a0 = derive_a0
 
-        def calibrate_a_flat_universe(N_star, logaH_star=None):
+        def calibrate_a_flat_universe(N_star=None, delta_reh=None, w_reh=None, rho_reh=None,
+                                      g_th=1e2, logaH_star=None):
             """Calibrate the scale factor `a` for a flat universe using a given `N_star`."""
             # TODO: double check this function
             assert sol.K == 0
             derive_a0(Omega_K0=0, h=None)
             if logaH_star is None:
-                sol.N_star = N_star  # number e-folds of inflation after horizon crossing
-                sol.N_cross = sol.N_end - sol.N_star  # horizon crossing of pivot scale
-                # Calibrate aH=k using N_star at pivot scale K_STAR:
-                N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
-                sol.logaH_star = N2logaH(sol.N_cross)
+                if N_star:
+                    sol.N_star = N_star  # number e-folds of inflation after horizon crossing
+                    sol.N_cross = sol.N_end - sol.N_star  # horizon crossing of pivot scale
+                    # Calibrate aH=k using N_star at pivot scale K_STAR:
+                    N2logaH = interp1d(sol.N[sol.inflation_mask], sol.logaH[sol.inflation_mask])
+                    sol.logaH_star = N2logaH(sol.N_cross)
+                    sol.N_calib = sol.N + sol.N0 - sol.logaH_star + np.log(K_STAR_lp)
             else:  # allows manual override, e.g. when integrating backwards without any N_cross
                 sol.logaH_star = logaH_star
+                sol.N_calib = sol.N + sol.N0 - sol.logaH_star + np.log(K_STAR_lp)
 
-            sol.N_calib = sol.N + np.log(sol.a0) - sol.logaH_star + np.log(K_STAR / Mpc_m * lp_m)
             sol.a_calib = np.exp(sol.N_calib)
-            sol.a0_Mpc = np.exp(sol.logaH_star) / K_STAR
+            # sol.a0_Mpc = np.exp(sol.logaH_star) / K_STAR
 
-        def derive_comoving_hubble_horizon_flat(N_star, logaH_star=None):
+        def derive_comoving_hubble_horizon_flat(N_star=None, delta_reh=None, w_reh=None, 
+                                                rho_reh=None, g_th=1e2, logaH_star=None):
             """Derive the comoving Hubble horizon `cHH`."""
             # for flat universes we first need to calibrate the scale factor:
-            calibrate_a_flat_universe(N_star, logaH_star)
+            calibrate_a_flat_universe(N_star=N_star, delta_reh=delta_reh, w_reh=w_reh, 
+                                      rho_reh=rho_reh, g_th=g_th, logaH_star=logaH_star)
             sol.cHH_lp = sol.a0 / (sol.a_calib * sol.H)
             sol.cHH_Mpc = sol.cHH_lp * lp_m / Mpc_m
 
@@ -166,15 +172,17 @@ class InflationEquations(Equations, ABC):
         else:
             sol.derive_comoving_hubble_horizon = derive_comoving_hubble_horizon_curved
 
-        def calibrate_wavenumber_flat(N_star, logaH_star=None, **interp1d_kwargs):
+        def calibrate_wavenumber_flat(N_star=None, delta_reh=None, w_reh=None, rho_reh=None, 
+                                      g_th=1e2, logaH_star=None, **interp1d_kwargs):
             """Calibrate wavenumber for flat universes, then derive approximate power spectra."""
-            calibrate_a_flat_universe(N_star, logaH_star)
+            calibrate_a_flat_universe(N_star=N_star, delta_reh=delta_reh, w_reh=w_reh, 
+                                      rho_reh=rho_reh, g_th=g_th, logaH_star=logaH_star)
 
             sol.N_dagg = sol.N_tot - sol.N_star
             logaH = sol.logaH[sol.inflation_mask]
             sol.logk = np.log(K_STAR) + logaH - sol.logaH_star
             sol.k_iMpc = np.exp(sol.logk)
-            sol.k_comoving = sol.k_iMpc * sol.a0_Mpc
+            # sol.k_comoving = sol.k_iMpc * sol.a0_Mpc
 
             derive_approx_power(**interp1d_kwargs)
 
