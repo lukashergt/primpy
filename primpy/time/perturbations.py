@@ -47,10 +47,10 @@ class ScalarModeT(ScalarMode):
 
         """
         K = self.background.K
-        N = self.background.N[:self.idx_end]
-        dphidt = self.background.dphidt[:self.idx_end]
-        H = self.background.H[:self.idx_end]
-        dV = self.background.potential.dV(self.background.phi[:self.idx_end])
+        N = self.background.N[self.idx_beg:self.idx_end+1]
+        dphidt = self.background.dphidt[self.idx_beg:self.idx_end+1]
+        H = self.background.H[self.idx_beg:self.idx_end+1]
+        dV = self.background.potential.dV(self.background.phi[self.idx_beg:self.idx_end+1])
 
         kappa2 = self.k**2 + self.k * K * (K + 1) - 3 * K
         shared = 2 * kappa2 / (kappa2 + K * dphidt**2 / (2 * H**2))
@@ -65,9 +65,9 @@ class ScalarModeT(ScalarMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for scalar modes for RST vacuum w.r.t. cosmic time `t`."""
-        a_i = np.exp(self.background.N[0])
-        dphidt_i = self.background.dphidt[0]
-        H_i = self.background.H[0]
+        a_i = np.exp(self.background.N[self.idx_beg])
+        dphidt_i = self.background.dphidt[self.idx_beg]
+        H_i = self.background.H[self.idx_beg]
         z_i = a_i * dphidt_i / H_i
         Rk_i = 1 / np.sqrt(2 * self.k) / z_i
         dRk_i = -1j * self.k / a_i * Rk_i
@@ -94,9 +94,9 @@ class TensorModeT(TensorMode):
 
         """
         K = self.background.K
-        N = self.background.N[: self.idx_end]
+        N = self.background.N[self.idx_beg:self.idx_end+1]
         frequency2 = (self.k**2 + self.k * K * (K + 1) + 2 * K) * np.exp(-2 * N)
-        damping2 = 3 * self.background.H[: self.idx_end]
+        damping2 = 3 * self.background.H[self.idx_beg:self.idx_end+1]
         if np.all(frequency2 > 0):
             return np.sqrt(frequency2), damping2 / 2
         else:
@@ -104,7 +104,7 @@ class TensorModeT(TensorMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for tensor modes for RST vacuum w.r.t. cosmic time `t`."""
-        a_i = np.exp(self.background.N[0])
+        a_i = np.exp(self.background.N[self.idx_beg])
         hk_i = 2 / np.sqrt(2 * self.k) / a_i
         dhk_i = -1j * self.k / a_i * hk_i
         return hk_i, dhk_i

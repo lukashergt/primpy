@@ -80,6 +80,7 @@ class Mode(Equations, ABC):
 
     def __init__(self, background, k, **kwargs):
         super(Mode, self).__init__()
+        self.idx_beg = kwargs.get('idx_beg', 0)
         self.idx_end = kwargs.get('idx_end', background.x.size)
         self.background = background
         self.k = k

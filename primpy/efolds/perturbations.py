@@ -48,12 +48,12 @@ class ScalarModeN(ScalarMode):
 
         """
         K = self.background.K
-        a2 = np.exp(2 * self.background.N[:self.idx_end])
-        H = self.background.H[:self.idx_end]
-        dphidN = self.background.dphidN[:self.idx_end]
+        a2 = np.exp(2 * self.background.N[self.idx_beg:self.idx_end+1])
+        H = self.background.H[self.idx_beg:self.idx_end+1]
+        dphidN = self.background.dphidN[self.idx_beg:self.idx_end+1]
         H2 = H**2
-        dV = self.background.potential.dV(self.background.phi[:self.idx_end])
-        Omega_K = self.background.Omega_K[:self.idx_end]
+        dV = self.background.potential.dV(self.background.phi[self.idx_beg:self.idx_end+1])
+        Omega_K = self.background.Omega_K[self.idx_beg:self.idx_end+1]
 
         kappa2 = self.k**2 + self.k * K * (K + 1) - 3 * K
         epsilon = dphidN**2 / 2
@@ -68,9 +68,9 @@ class ScalarModeN(ScalarMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for scalar modes for RST vacuum w.r.t. e-folds `N`."""
-        a_i = np.exp(self.background.N[0])
-        H_i = self.background.H[0]
-        z_i = a_i * self.background.dphidN[0]
+        a_i = np.exp(self.background.N[self.idx_beg])
+        H_i = self.background.H[self.idx_beg]
+        z_i = a_i * self.background.dphidN[self.idx_beg]
         Rk_i = 1 / np.sqrt(2 * self.k) / z_i
         dRk_i = -1j * self.k / (a_i * H_i) * Rk_i
         return Rk_i, dRk_i
@@ -96,9 +96,9 @@ class TensorModeN(TensorMode):
 
         """
         K = self.background.K
-        N = self.background.N[:self.idx_end]
-        H2 = self.background.H[:self.idx_end]**2
-        dphidN = self.background.dphidN[:self.idx_end]
+        N = self.background.N[self.idx_beg:self.idx_end+1]
+        H2 = self.background.H[self.idx_beg:self.idx_end+1]**2
+        dphidN = self.background.dphidN[self.idx_beg:self.idx_end+1]
         frequency2 = (self.k**2 + self.k * K * (K + 1) + 2 * K) * np.exp(-2 * N) / H2
         damping2 = 3 - dphidN**2 / 2 + K * np.exp(-2 * N) / H2
         if np.all(frequency2 > 0):
@@ -108,8 +108,8 @@ class TensorModeN(TensorMode):
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for tensor modes for RST vacuum w.r.t. e-folds `N`."""
-        a_i = np.exp(self.background.N[0])
-        H_i = self.background.H[0]
+        a_i = np.exp(self.background.N[self.idx_beg])
+        H_i = self.background.H[self.idx_beg]
         hk_i = 2 / np.sqrt(2 * self.k) / a_i
         dhk_i = -1j * self.k / (a_i * H_i) * hk_i
         return hk_i, dhk_i
