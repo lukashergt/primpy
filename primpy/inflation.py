@@ -209,7 +209,7 @@ class InflationEquations(Equations, ABC):
 
             logk, indices = np.unique(sol.logk, return_index=True)
             spline_order = interp1d_kwargs.pop('k', 3)
-            extrapolate = interp1d_kwargs.pop('ext', 'zeros')
+            extrapolate = interp1d_kwargs.pop('ext', 'const')
             sol.logk2logP_s = InterpolatedUnivariateSpline(logk,
                                                            np.log(sol.P_scalar_approx[indices]),
                                                            k=spline_order, ext=extrapolate,
