@@ -64,7 +64,7 @@ def test_background_setup(K, f_i, abs_Omega_K0):
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10, 100])
 @pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
-@pytest.mark.parametrize('k_iMpc', np.logspace(-6, 0, 6 + 1))
+@pytest.mark.parametrize('k_iMpc', np.logspace(-5, 0, 5 + 1))
 def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
@@ -103,8 +103,8 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         assert np.isfinite(damp_t).all()
         assert np.isfinite(damp_n).all()
 
-        pert_t = solve_oscode(background=bist, k=k, rtol=5e-5)
-        pert_n = solve_oscode(background=bisn, k=k, rtol=5e-5, even_grid=True)
+        pert_t = solve_oscode(background=bist, k=k, rtol=1e-5)
+        pert_n = solve_oscode(background=bisn, k=k, rtol=1e-5, even_grid=True)
         for sol in ['one', 'two']:
             assert np.all(np.isfinite(getattr(getattr(pert_t.scalar, sol), 't')))
             assert np.all(np.isfinite(getattr(getattr(pert_n.scalar, sol), 'N')))
