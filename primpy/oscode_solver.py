@@ -84,7 +84,7 @@ def solve_oscode(background, k, **kwargs):
     PPS = PrimordialPowerSpectrum(background=b, k=k, **kwargs)
     # stop integration sufficiently after mode has crossed the horizon (lazy for loop):
     for i, ki in enumerate(k):
-        if fac_beg==0:
+        if fac_beg == 0:
             idx_beg = 0
         else:
             idx_beg = np.argwhere(np.log(ki) - b.logaH > np.log(fac_beg)).ravel()
