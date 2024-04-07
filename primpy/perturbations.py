@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from scipy.integrate import solve_ivp
 from primpy.units import pi
+from primpy.parameters import K_STAR
 from primpy.equations import Equations
 
 
@@ -13,7 +14,7 @@ class PrimordialPowerSpectrum(object):
     def __init__(self, background, k, **kwargs):
         self.background = background
         self.k = k
-        self.k_iMpc = k / background.a0_Mpc
+        self.k_iMpc = k * K_STAR / np.exp(background.logaH_star)
         vacuum = kwargs.pop('vacuum', ('RST',))
         for vac in vacuum:
             setattr(self, 'P_s_%s' % vac, np.full_like(k, np.nan, dtype=float))
@@ -80,6 +81,7 @@ class Mode(Equations, ABC):
 
     def __init__(self, background, k, **kwargs):
         super(Mode, self).__init__()
+        self.idx_beg = kwargs.get('idx_beg', 0)
         self.idx_end = kwargs.get('idx_end', background.x.size)
         self.background = background
         self.k = k

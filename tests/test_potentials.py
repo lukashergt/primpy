@@ -31,7 +31,7 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     pot.d2V(phi=phi)
     pot.d3V(phi=phi)
     assert pot.inv_V(V=Lambda**4/2) > 0
-    if type(pot) == pp.DoubleWellPotential:
+    if type(pot) is pp.DoubleWellPotential:
         with pytest.raises(NotImplementedError):
             pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
     else:
