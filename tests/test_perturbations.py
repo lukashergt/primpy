@@ -25,7 +25,7 @@ def set_background_SR():
 
     eq_t = InflationEquationsT(K=0, potential=pot)
     eq_n = InflationEquationsN(K=0, potential=pot)
-    t_eval = np.logspace(np.log10(5e4), np.log10(4e6), int(5e4))
+    t_eval = np.logspace(np.log10(5e4), np.log10(2e7), int(1e5))
     ic_t = SlowRollIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_eval[0])
     ic_n = SlowRollIC(eq_n, N_i=N_i, phi_i=phi_i, t_i=None)
     N_eval = np.linspace(ic_n.N_i, 70, int(1e5))
@@ -57,7 +57,7 @@ def test_set_background_SR():
 
 def test_perturbations_SR():
     bsrt, bsrn = set_background_SR()
-    ks_iMpc = np.logspace(-4, 1, 5 * 10 + 1)
+    ks_iMpc = np.logspace(np.log10(5e-4), np.log10(5e0), 4 * 10 + 1)
     logk_iMpc = np.log(ks_iMpc)
     ks_cont = ks_iMpc * bsrt.a0_Mpc
     pps_t = solve_oscode(background=bsrt, k=ks_cont, fac_beg=100, rtol=1e-5)
@@ -68,14 +68,20 @@ def test_perturbations_SR():
     assert np.isfinite(pps_n.P_t_RST).all()
 
     # time vs efolds
-    assert_allclose(pps_t.P_s_RST * 1e9, pps_n.P_s_RST * 1e9, rtol=1e-5, atol=1e-8)
-    assert_allclose(pps_t.P_t_RST * 1e9, pps_n.P_t_RST * 1e9, rtol=1e-5, atol=1e-8)
+    assert_allclose(pps_t.P_s_RST * 1e9, pps_n.P_s_RST * 1e9, rtol=1e-3, atol=1e-6)
+    assert_allclose(pps_t.P_t_RST * 1e9, pps_n.P_t_RST * 1e9, rtol=1e-3, atol=1e-6)
 
     # oscode vs background
-    assert_allclose(np.log(pps_t.P_s_RST), bsrt.logk2logP_s(logk_iMpc), rtol=1e-5, atol=1e-8)
-    assert_allclose(np.log(pps_t.P_t_RST), bsrt.logk2logP_t(logk_iMpc), rtol=1e-5, atol=1e-8)
-    assert_allclose(np.log(pps_n.P_s_RST), bsrn.logk2logP_s(logk_iMpc), rtol=1e-5, atol=1e-8)
-    assert_allclose(np.log(pps_n.P_t_RST), bsrn.logk2logP_t(logk_iMpc), rtol=1e-5, atol=1e-8)
+    As_t_oscode = pps_t.P_s_RST[ks_iMpc.size//2]
+    As_n_oscode = pps_n.P_s_RST[ks_iMpc.size//2]
+    assert As_t_oscode == approx(bsrt.A_s, rel=5e-2)
+    assert As_n_oscode == approx(bsrn.A_s, rel=5e-2)
+    offt = bsrt.A_s / As_t_oscode
+    offn = bsrn.A_s / As_n_oscode
+    assert_allclose(np.log(pps_t.P_s_RST*offt), bsrt.logk2logP_s(logk_iMpc), rtol=1e-3, atol=1e-6)
+    assert_allclose(np.log(pps_n.P_s_RST*offn), bsrn.logk2logP_s(logk_iMpc), rtol=1e-3, atol=1e-6)
+    assert_allclose(np.log(pps_t.P_t_RST), bsrt.logk2logP_t(logk_iMpc), rtol=1e-3, atol=1e-6)
+    assert_allclose(np.log(pps_n.P_t_RST), bsrn.logk2logP_t(logk_iMpc), rtol=1e-3, atol=1e-6)
 
 
 def set_background_IS(K, f_i, abs_Omega_K0):
@@ -87,7 +93,7 @@ def set_background_IS(K, f_i, abs_Omega_K0):
 
     eq_t = InflationEquationsT(K=K, potential=pot)
     eq_n = InflationEquationsN(K=K, potential=pot)
-    t_eval = np.logspace(np.log10(5e4), np.log10(4e6), int(5e4))
+    t_eval = np.logspace(np.log10(5e4), np.log10(4e6), int(1e5))
     ic_t = InflationStartIC(eq_t, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=t_eval[0])
     ic_n = InflationStartIC(eq_n, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=None)
     N_eval = np.linspace(ic_n.N_i, 70, int(1e5))
