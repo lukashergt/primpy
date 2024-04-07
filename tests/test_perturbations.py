@@ -4,18 +4,81 @@ import pytest
 from pytest import approx
 import numpy as np
 from numpy.testing import assert_allclose
-from primpy.potentials import QuadraticPotential
+from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, CollapseEvent
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC
+from primpy.initialconditions import InflationStartIC, SlowRollIC
 from primpy.time.perturbations import PerturbationT
 from primpy.efolds.perturbations import PerturbationN
 from primpy.solver import solve
 from primpy.oscode_solver import solve_oscode
 
 
-def setup_background(K, f_i, abs_Omega_K0):
+def set_background_SR():
+    pot = StarobinskyPotential(Lambda=3.3e-3)
+    N_i = 0
+    phi_i = 5.6
+    Omega_K0 = 0
+    h = 0.7
+    N_star = 55
+
+    eq_t = InflationEquationsT(K=0, potential=pot)
+    eq_n = InflationEquationsN(K=0, potential=pot)
+    t_eval = np.logspace(np.log10(5e4), np.log10(4e6), int(5e4))
+    ic_t = SlowRollIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_eval[0])
+    ic_n = SlowRollIC(eq_n, N_i=N_i, phi_i=phi_i, t_i=None)
+    N_eval = np.linspace(ic_n.N_i, 70, int(1e5))
+    ev_t = [InflationEvent(eq_t, +1, terminal=False),
+            InflationEvent(eq_t, -1, terminal=True),
+            CollapseEvent(eq_t)]
+    ev_n = [InflationEvent(eq_n, +1, terminal=False),
+            InflationEvent(eq_n, -1, terminal=True),
+            CollapseEvent(eq_n)]
+    bsrt = solve(ic=ic_t, events=ev_t, t_eval=t_eval, method='DOP853', rtol=1e-12, atol=1e-13)
+    bsrn = solve(ic=ic_n, events=ev_n, t_eval=N_eval, method='DOP853', rtol=1e-12, atol=1e-13)
+    bsrt.derive_a0(Omega_K0=Omega_K0, h=h)
+    bsrn.derive_a0(Omega_K0=Omega_K0, h=h)
+    bsrt.derive_approx_power(N_star=N_star)
+    bsrn.derive_approx_power(N_star=N_star)
+
+    return bsrt, bsrn
+
+
+def test_set_background_SR():
+    bsrt, bsrn = set_background_SR()
+    assert bsrt.independent_variable == 't'
+    assert bsrn.independent_variable == 'N'
+    assert bsrt.N_tot > bsrt.N_star + 10
+    assert bsrt.N_tot == approx(bsrn.N_tot)
+    assert bsrt.N_star == approx(bsrn.N_star)
+    assert bsrt.N_cross == approx(bsrn.N_cross, rel=1e-5)
+
+
+def test_perturbations_SR():
+    bsrt, bsrn = set_background_SR()
+    ks_iMpc = np.logspace(-4, 1, 5 * 10 + 1)
+    logk_iMpc = np.log(ks_iMpc)
+    ks_cont = ks_iMpc * bsrt.a0_Mpc
+    pps_t = solve_oscode(background=bsrt, k=ks_cont, fac_beg=100, rtol=1e-5)
+    pps_n = solve_oscode(background=bsrn, k=ks_cont, fac_beg=100, rtol=1e-5, even_grid=True)
+    assert np.isfinite(pps_t.P_s_RST).all()
+    assert np.isfinite(pps_t.P_t_RST).all()
+    assert np.isfinite(pps_n.P_s_RST).all()
+    assert np.isfinite(pps_n.P_t_RST).all()
+
+    # time vs efolds
+    assert_allclose(pps_t.P_s_RST * 1e9, pps_n.P_s_RST * 1e9, rtol=1e-5, atol=1e-8)
+    assert_allclose(pps_t.P_t_RST * 1e9, pps_n.P_t_RST * 1e9, rtol=1e-5, atol=1e-8)
+
+    # oscode vs background
+    assert_allclose(np.log(pps_t.P_s_RST), bsrt.logk2logP_s(logk_iMpc), rtol=1e-5, atol=1e-8)
+    assert_allclose(np.log(pps_t.P_t_RST), bsrt.logk2logP_t(logk_iMpc), rtol=1e-5, atol=1e-8)
+    assert_allclose(np.log(pps_n.P_s_RST), bsrn.logk2logP_s(logk_iMpc), rtol=1e-5, atol=1e-8)
+    assert_allclose(np.log(pps_n.P_t_RST), bsrn.logk2logP_t(logk_iMpc), rtol=1e-5, atol=1e-8)
+
+
+def set_background_IS(K, f_i, abs_Omega_K0):
     pot = QuadraticPotential(Lambda=0.0025)
     phi_i = 16
     Omega_K0 = -K * abs_Omega_K0
@@ -52,12 +115,12 @@ def setup_background(K, f_i, abs_Omega_K0):
 @pytest.mark.parametrize('K', [-1, +1])
 @pytest.mark.parametrize('f_i', [10, 100])
 @pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
-def test_background_setup(K, f_i, abs_Omega_K0):
+def test_set_background_IS(K, f_i, abs_Omega_K0):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+            set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
-        setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+        set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
 
 
 # noinspection DuplicatedCode
@@ -68,9 +131,9 @@ def test_background_setup(K, f_i, abs_Omega_K0):
 def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+            set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
-        bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+        bist, bisn = set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
         k = k_iMpc * bist.a0_Mpc
         pert_t = PerturbationT(background=bist, k=k)
         pert_n = PerturbationN(background=bisn, k=k)
@@ -120,9 +183,9 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
 def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+            set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
-        bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+        bist, bisn = set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
         ks_disc = np.arange(1, 100, 1)
         pps_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5)
         pps_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5, even_grid=True)
@@ -140,9 +203,9 @@ def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
 def test_perturbations_continuous_time_vs_efolds(K, f_i, abs_Omega_K0):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+            set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
-        bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+        bist, bisn = set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
         ks_iMpc = np.logspace(-4, 0, 4 * 10 + 1)
         ks_cont = ks_iMpc * bist.a0_Mpc
         pps_t = solve_oscode(background=bist, k=ks_cont, rtol=1e-5)
@@ -161,9 +224,9 @@ def test_perturbations_continuous_time_vs_efolds(K, f_i, abs_Omega_K0):
 def test_perturbations_large_scales_pyoscode_vs_background(K, f_i, abs_Omega_K0):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):
-            setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+            set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
-        bist, bisn = setup_background(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
+        bist, bisn = set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
         ks_iMpc = np.logspace(-1, 1, 100)
         logk_iMpc = np.log(ks_iMpc)
         ks_cont = ks_iMpc * bist.a0_Mpc
