@@ -182,7 +182,7 @@ class InflationEquations(Equations, ABC):
             logaH = sol.logaH[sol.inflation_mask]
             sol.logk = np.log(K_STAR) + logaH - sol.logaH_star
             sol.k_iMpc = np.exp(sol.logk)
-            # sol.k_comoving = sol.k_iMpc * sol.a0_Mpc
+            sol.k_comoving = np.exp(logaH)
 
             derive_approx_power(**interp1d_kwargs)
 
@@ -194,6 +194,7 @@ class InflationEquations(Equations, ABC):
             N = sol.N[sol.inflation_mask]
             logaH = sol.logaH[sol.inflation_mask]
             sol.logk = logaH - np.log(sol.a0_Mpc)
+            sol.logaH_star = np.log(K_STAR * sol.a0_Mpc)
             if np.log(K_STAR) < np.min(sol.logk) or np.log(K_STAR) > np.max(sol.logk):
                 sol.N_cross = np.nan
             else:
@@ -217,7 +218,7 @@ class InflationEquations(Equations, ABC):
 
             logk, indices = np.unique(sol.logk, return_index=True)
             spline_order = interp1d_kwargs.pop('k', 3)
-            extrapolate = interp1d_kwargs.pop('ext', 'zeros')
+            extrapolate = interp1d_kwargs.pop('ext', 'const')
             sol.logk2logP_s = InterpolatedUnivariateSpline(logk,
                                                            np.log(sol.P_scalar_approx[indices]),
                                                            k=spline_order, ext=extrapolate,
