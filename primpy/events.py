@@ -135,6 +135,6 @@ class ModeExitEvent(Event):
         self.name = 'ModeExit_dir%d_term%d_%e' % (self.direction, self.terminal, self.value)
 
     def __call__(self, x, y):
-        """Root of `logaH - log(value)`."""
+        """Root of `_logaH - log(value)`."""
         logH = np.log(np.abs(self.equations.H2(x, y))) / 2
         return logH + self.equations._N(x, y) - np.log(self.value)
