@@ -112,9 +112,9 @@ class InflationStartWarning(InflationWarning):
             self.message = "%s. %s" % (self.header, message)
         elif 'Inflation_dir+1_term1' not in events and 'Inflation_dir+1_term0' not in events:
             extra_info = ("Not tracking `InflationEvent`. Events tracked are %s. In order to "
-                          "determine the start of inflation `_N_beg`, make sure to track the event "
-                          "`InflationEvent(equations, direction=+1)` defined in `primpy.events`"
-                          % events)
+                          "determine the start of inflation `_N_beg`, make sure to track the "
+                          "event `InflationEvent(equations, direction=+1)` defined in "
+                          "`primpy.events`" % events)
             self.message = "%s: %s. %s" % (self.header, extra_info, message)
         else:
             self.message = "%s. %s" % (self.header, message)
