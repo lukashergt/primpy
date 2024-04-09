@@ -44,11 +44,12 @@ def get_N_BBN(h, Omega_K0):
     return np.log(get_a0(h=h, Omega_K0=Omega_K0, units='planck') / (1 + z_BBN))
 
 
-def get_w_reh(N1, N2, log_cHH1, log_cHH2):
+def get_w_delta_reh(N_end, N_reh, log_cHH_end, log_cHH_reh):
     """Get the e.o.s. parameter for reheating `w_reh` from e-folds and comoving Hubble horizon."""
-    delta_N = N2 - N1
-    delta_cHH = log_cHH2 - log_cHH1
-    return (2 * delta_cHH / delta_N - 1) / 3
+    delta_reh = N_reh - N_end
+    delta_cHH = log_cHH_reh - log_cHH_end
+    w_reh = (2 * delta_cHH / delta_reh - 1) / 3
+    return w_reh, delta_reh
 
 
 def get_rho_crit_kg_im3(h):
@@ -275,8 +276,8 @@ def conformal_time_ratio(Omega_m0, Omega_K0, h, b_forward, b_backward=None):
     conformal_time_before = eta_end - eta_beg
 
     # after (from the end of inflation until today)
-    conformal_time_after = conformal_time(N_start=b_forward.N_end,
-                                          N=np.log(b_forward.a0_lp),
+    conformal_time_after = conformal_time(N_start=b_forward._N_end,
+                                          N=np.log(b_forward.a0),
                                           Omega_m0=Omega_m0,
                                           Omega_K0=Omega_K0,
                                           h=h)[0]
