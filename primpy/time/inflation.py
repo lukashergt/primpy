@@ -14,7 +14,7 @@ class InflationEquationsT(InflationEquations):
         t: cosmic time
 
     Dependent variables:
-        N: number of e-folds
+        _N: number of e-folds
         phi: inflaton field
         dphidt: `d(phi)/dt`
 
@@ -23,14 +23,14 @@ class InflationEquationsT(InflationEquations):
     def __init__(self, K, potential, track_eta=False, verbose=False):
         super(InflationEquationsT, self).__init__(K=K, potential=potential, verbose=verbose)
         self._set_independent_variable('t')
-        self.add_variable('phi', 'dphidt', 'N')
+        self.add_variable('phi', 'dphidt', '_N')
         self.track_eta = track_eta
         if track_eta:
             self.add_variable('eta')
 
     def __call__(self, x, y):
         """System of coupled ODEs for underlying variables."""
-        N = self.N(x, y)
+        N = self._N(x, y)
         H = self.H(x, y)
         dphidt = self.dphidt(x, y)
         dVdphi = self.dVdphi(x, y)
@@ -38,14 +38,14 @@ class InflationEquationsT(InflationEquations):
         dy = np.zeros_like(y)
         dy[self.idx['phi']] = dphidt
         dy[self.idx['dphidt']] = -3 * H * dphidt - dVdphi
-        dy[self.idx['N']] = H
+        dy[self.idx['_N']] = H
         if self.track_eta:
             dy[self.idx['eta']] = np.exp(-N)
         return dy
 
     def H2(self, x, y):
         """Compute the square of the Hubble parameter using the Friedmann equation."""
-        N = self.N(x, y)
+        N = self._N(x, y)
         V = self.V(x, y)
         dphidt = self.dphidt(x, y)
         return (dphidt**2 / 2 + V) / 3 - self.K * np.exp(-2 * N)

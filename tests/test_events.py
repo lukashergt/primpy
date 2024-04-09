@@ -46,8 +46,8 @@ def test_UntilNEvent(K, Eq):
     ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
     ev = [UntilNEvent(eq, N_end)]
     sol = solve(ic=ic, events=ev)
-    assert sol.N[-1] == approx(N_end)
-    assert sol.N_events['UntilN'][-1] == approx(N_end)
+    assert sol._N[-1] == approx(N_end)
+    assert sol._N_events['UntilN'][-1] == approx(N_end)
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
@@ -63,8 +63,8 @@ def test_InflationEvent(K, Lambda, Eq):
     ev = [InflationEvent(eq, +1, terminal=False),
           InflationEvent(eq, -1, terminal=True)]
     sol = solve(ic=ic, events=ev)
-    assert np.isfinite(sol.N_beg)
-    assert np.isfinite(sol.N_end)
+    assert np.isfinite(sol._N_beg)
+    assert np.isfinite(sol._N_end)
     assert sol.w[0] == approx(-1 / 3)
     assert sol.w[-1] == approx(-1 / 3)
     assert np.all(sol.w[1:-1] < -1 / 3)
@@ -83,13 +83,13 @@ def test_AfterInflationEndEvent(K, Eq):
           InflationEvent(eq, -1, terminal=False),
           AfterInflationEndEvent(eq)]
     sol = solve(ic=ic, events=ev)
-    assert np.isfinite(sol.N_beg)
-    assert np.isfinite(sol.N_end)
+    assert np.isfinite(sol._N_beg)
+    assert np.isfinite(sol._N_end)
     assert sol.w[-1] == approx(0)
     assert np.all(sol.w[1:-1] < 0)
-    assert sol.N_events['Inflation_dir-1_term0'].size == 1
-    assert (sol.N_events['Inflation_dir-1_term0'][0] <
-            sol.N_events['AfterInflationEnd_dir1_term1'][0])
+    assert sol._N_events['Inflation_dir-1_term0'].size == 1
+    assert (sol._N_events['Inflation_dir-1_term0'][0] <
+            sol._N_events['AfterInflationEnd_dir1_term1'][0])
 
 
 @pytest.mark.filterwarnings("ignore:invalid value encountered in sqrt:RuntimeWarning")
@@ -106,9 +106,9 @@ def test_Phi0Event(K, Eq):
           InflationEvent(eq, -1, terminal=False),
           Phi0Event(eq)]
     sol = solve(ic=ic, events=ev)
-    assert np.isfinite(sol.N_beg)
-    assert np.isfinite(sol.N_end)
-    assert sol.N_events['Inflation_dir-1_term0'].size == 1
-    assert (sol.N_events['Inflation_dir-1_term0'][0] <
-            sol.N_events['Phi0_dir0_term1'][0])
+    assert np.isfinite(sol._N_beg)
+    assert np.isfinite(sol._N_end)
+    assert sol._N_events['Inflation_dir-1_term0'].size == 1
+    assert (sol._N_events['Inflation_dir-1_term0'][0] <
+            sol._N_events['Phi0_dir0_term1'][0])
     assert sol.phi[-1] == approx(0)

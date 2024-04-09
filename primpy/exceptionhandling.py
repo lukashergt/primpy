@@ -112,7 +112,7 @@ class InflationStartWarning(InflationWarning):
             self.message = "%s. %s" % (self.header, message)
         elif 'Inflation_dir+1_term1' not in events and 'Inflation_dir+1_term0' not in events:
             extra_info = ("Not tracking `InflationEvent`. Events tracked are %s. In order to "
-                          "determine the start of inflation `N_beg`, make sure to track the event "
+                          "determine the start of inflation `_N_beg`, make sure to track the event "
                           "`InflationEvent(equations, direction=+1)` defined in `primpy.events`"
                           % events)
             self.message = "%s: %s. %s" % (self.header, extra_info, message)
@@ -146,7 +146,7 @@ class InflationEndWarning(InflationWarning):
             self.message = "%s. %s" % (self.header, message)
         elif 'Inflation_dir-1_term1' not in events and 'Inflation_dir-1_term0' not in events:
             extra_info = ("Not tracking `InflationEvent`. Events tracked are %s. In order to "
-                          "determine the end of inflation `N_end`, make sure to track the event "
+                          "determine the end of inflation `_N_end`, make sure to track the event "
                           "`InflationEvent(equations, direction=-1)` defined in `primpy.events`"
                           % events)
             self.message = "%s: %s. %s" % (self.header, extra_info, message)
@@ -154,7 +154,7 @@ class InflationEndWarning(InflationWarning):
             self.message = "%s. %s" % (self.header, message)
         elif sol.w[-1] < -1 / 3:
             extra_info = ("Still inflating: N[-1]=%g, phi[-1]=%g, w[-1]=%g"
-                          % (sol.N[-1], sol.phi[-1], sol.w[-1]))
+                          % (sol._N[-1], sol.phi[-1], sol.w[-1]))
             self.message = "%s: %s. %s" % (self.header, extra_info, message)
         else:
             self.message = "%s. %s" % (self.header, message)

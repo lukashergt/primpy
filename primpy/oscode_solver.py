@@ -95,7 +95,7 @@ def solve_oscode(background, k, **kwargs):
         idx_end = idx_end if idx_end - idx_beg > b.logaH.size//20 else idx_beg + b.logaH.size//20
         if b.independent_variable == 't':
             p = PerturbationT(background=b, k=ki, idx_beg=idx_beg, idx_end=idx_end, **kwargs)
-        elif b.independent_variable == 'N':
+        elif b.independent_variable == '_N':
             p = PerturbationN(background=b, k=ki, idx_beg=idx_beg, idx_end=idx_end, **kwargs)
         else:
             raise NotImplementedError()

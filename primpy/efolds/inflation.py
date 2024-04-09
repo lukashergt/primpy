@@ -12,7 +12,8 @@ class InflationEquationsN(InflationEquations):
     and Friedmann equations.
 
     Independent variable:
-        N: e-folds of the scale-factor
+        _N: e-folds of the scale-factor
+        (the underscore here means that this is the as of yet uncalibrated scale factor)
 
     Dependent variables:
         phi: inflaton field
@@ -24,7 +25,7 @@ class InflationEquationsN(InflationEquations):
 
     def __init__(self, K, potential, track_time=False, track_eta=False, verbose=False):
         super(InflationEquationsN, self).__init__(K=K, potential=potential, verbose=verbose)
-        self._set_independent_variable('N')
+        self._set_independent_variable('_N')
         self.add_variable('phi', 'dphidN')
         self.track_time = track_time
         self.track_eta = track_eta
