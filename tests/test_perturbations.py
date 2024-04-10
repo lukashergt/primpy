@@ -60,8 +60,8 @@ def test_perturbations_SR():
     ks_iMpc = np.logspace(np.log10(5e-4), np.log10(5e0), 4 * 10 + 1)
     logk_iMpc = np.log(ks_iMpc)
     ks_cont = ks_iMpc * bsrt.a0_Mpc
-    pps_t = solve_oscode(background=bsrt, k=ks_cont, fac_beg=100, rtol=1e-5)
-    pps_n = solve_oscode(background=bsrn, k=ks_cont, fac_beg=100, rtol=1e-5, even_grid=True)
+    pps_t = solve_oscode(background=bsrt, k=ks_cont, fac_beg=100, rtol=5e-5)
+    pps_n = solve_oscode(background=bsrn, k=ks_cont, fac_beg=100, rtol=5e-5, even_grid=True)
     assert np.isfinite(pps_t.P_s_RST).all()
     assert np.isfinite(pps_t.P_t_RST).all()
     assert np.isfinite(pps_n.P_s_RST).all()
@@ -93,7 +93,7 @@ def set_background_IS(K, f_i, abs_Omega_K0):
 
     eq_t = InflationEquationsT(K=K, potential=pot)
     eq_n = InflationEquationsN(K=K, potential=pot)
-    t_eval = np.logspace(np.log10(5e4), np.log10(4e6), int(1e5))
+    t_eval = np.logspace(np.log10(5e4), np.log10(4e6), int(5e4))
     ic_t = InflationStartIC(eq_t, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=t_eval[0])
     ic_n = InflationStartIC(eq_n, phi_i=phi_i, Omega_Ki=Omega_Ki, t_i=None)
     N_eval = np.linspace(ic_n.N_i, 70, int(1e5))
@@ -172,8 +172,8 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         assert np.isfinite(damp_t).all()
         assert np.isfinite(damp_n).all()
 
-        pert_t = solve_oscode(background=bist, k=k, rtol=1e-5)
-        pert_n = solve_oscode(background=bisn, k=k, rtol=1e-5, even_grid=True)
+        pert_t = solve_oscode(background=bist, k=k, rtol=5e-5)
+        pert_n = solve_oscode(background=bisn, k=k, rtol=5e-5, even_grid=True)
         for sol in ['one', 'two']:
             assert np.all(np.isfinite(getattr(getattr(pert_t.scalar, sol), 't')))
             assert np.all(np.isfinite(getattr(getattr(pert_n.scalar, sol), 'N')))
@@ -193,8 +193,8 @@ def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
     else:
         bist, bisn = set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
         ks_disc = np.arange(1, 100, 1)
-        pps_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-5)
-        pps_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-5, even_grid=True)
+        pps_t = solve_oscode(background=bist, k=ks_disc, rtol=5e-5)
+        pps_n = solve_oscode(background=bisn, k=ks_disc, rtol=5e-5, even_grid=True)
         assert np.isfinite(pps_t.P_s_RST).all()
         assert np.isfinite(pps_t.P_t_RST).all()
         assert np.isfinite(pps_n.P_s_RST).all()
