@@ -18,6 +18,10 @@ def test_not_implemented_units():
         bb.get_H0(h=0.7, units='Mpc')
     with pytest.raises(NotImplementedError):
         bb.get_a0(h=0.7, Omega_K0=-0.01, units='H0')
+    with pytest.raises(NotImplementedError):
+        bb.Hubble_parameter(N=0, Omega_m0=0.3, Omega_K0=-0.01, h=0.7, units='Mpc')
+    with pytest.raises(NotImplementedError):
+        bb.comoving_Hubble_horizon(N=0, Omega_m0=0.3, Omega_K0=-0.01, h=0.7, units='H0')
 
 
 @pytest.mark.parametrize('h', [0.3, 0.5, 0.7, 0.9])
@@ -98,9 +102,10 @@ def test_Omega_r0(h):
 
 @pytest.mark.parametrize('h', [0.3, 0.5, 0.7, 0.9])
 @pytest.mark.parametrize('Omega_K0', [-0.15, -0.01, 0.01, 0.15])
-def test_Hubble_parameter(h, Omega_K0):
+@pytest.mark.parametrize('units', ['planck', 'H0', 'SI'])
+def test_Hubble_parameter(h, Omega_K0, units):
     N = np.linspace(0, 200, 201)
-    bb.Hubble_parameter(N=N, Omega_m0=0.3, Omega_K0=Omega_K0, h=h)
+    bb.Hubble_parameter(N=N, Omega_m0=0.3, Omega_K0=Omega_K0, h=h, units=units)
 
 
 def test_no_Big_Bang_line():
