@@ -39,7 +39,7 @@ def test_track_eta():
                    InflationEquationsN(K=K, potential=pot, track_eta=True)]:
             assert eq.track_eta
             assert hasattr(eq, 'phi')
-            assert hasattr(eq, 'N')
+            assert hasattr(eq, '_N')
             assert hasattr(eq, 'eta')
             assert 'eta' in eq.idx
             ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, eta_i=eta_i)
@@ -71,7 +71,7 @@ def test_basic_methods_time_vs_efolds():
                 eq_N = InflationEquationsN(K=K, potential=pot)
                 assert eq_t.idx['phi'] == 0
                 assert eq_t.idx['dphidt'] == 1
-                assert eq_t.idx['N'] == 2
+                assert eq_t.idx['_N'] == 2
                 assert eq_N.idx['phi'] == 0
                 assert eq_N.idx['dphidN'] == 1
                 y1_t = np.array([phi, dphidt, N])
@@ -108,31 +108,27 @@ def test_sol_time_efolds(K):
     bisn = solve(ic=ic_N, events=ev_N, dense_output=True, method='DOP853', rtol=1e-12)
     assert bist.N_tot == approx(bisn.N_tot, rel=1e-5)
 
-    N2t = interp1d(bisn.N, bisn.t, kind='cubic')
-    N2phi = interp1d(bisn.N, bisn.phi, kind='cubic')
-    N2H = interp1d(bisn.N, bisn.H, kind='cubic')
-    assert_allclose(bist.t[1:-1], N2t(bist.N[1:-1]), rtol=1e-5)
-    assert_allclose(bist.phi[1:-1], N2phi(bist.N[1:-1]), rtol=1e-4)
-    assert_allclose(bist.H[1:-1], N2H(bist.N[1:-1]), rtol=1e-4)
+    N2t = interp1d(bisn._N, bisn.t, kind='cubic')
+    N2phi = interp1d(bisn._N, bisn.phi, kind='cubic')
+    N2H = interp1d(bisn._N, bisn.H, kind='cubic')
+    assert_allclose(bist.t[1:-1], N2t(bist._N[1:-1]), rtol=1e-5)
+    assert_allclose(bist.phi[1:-1], N2phi(bist._N[1:-1]), rtol=1e-4)
+    assert_allclose(bist.H[1:-1], N2H(bist._N[1:-1]), rtol=1e-4)
 
-    bist.derive_a0(Omega_K0=Omega_K0, h=h)
-    bisn.derive_a0(Omega_K0=Omega_K0, h=h)
+    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
+    bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
     assert bist.K == K
     assert bisn.K == K
     assert bist.Omega_K0 == Omega_K0
     assert bisn.Omega_K0 == Omega_K0
     if K != 0:
-        assert bisn.a0_Mpc * Mpc_m == bisn.a0_lp * lp_m
-        bist.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
-        bisn.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
-        bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
-        bisn.derive_approx_power(Omega_K0=Omega_K0, h=h)
+        assert bisn.a0_Mpc * Mpc_m == bisn.a0 * lp_m
+        bist.derive_approx_power()
+        bisn.derive_approx_power()
     elif K == 0:
         assert bisn.a0 == 1
-        bist.derive_comoving_hubble_horizon(N_star=55)
-        bisn.derive_comoving_hubble_horizon(N_star=55)
-        bist.derive_approx_power(N_star=55)
-        bisn.derive_approx_power(N_star=55)
+        bist.derive_approx_power()
+        bisn.derive_approx_power()
     assert bist.N_star == approx(bisn.N_star, rel=1e-5)
     assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
     assert bist.A_s == approx(bisn.A_s, rel=1e-8)
@@ -149,7 +145,7 @@ def test_sol_time_efolds(K):
 
 
 def nan_inflation_end(background_sol):
-    assert not np.isfinite(background_sol.N_end)
+    assert not np.isfinite(background_sol._N_end)
     assert not np.isfinite(background_sol.phi_end)
     assert not np.isfinite(background_sol.V_end)
     assert not np.isfinite(background_sol.N_tot)
@@ -197,9 +193,10 @@ def test_Ncross_nan():
             ev = [InflationEvent(eq, +1, terminal=False),
                   InflationEvent(eq, -1, terminal=True)]
             b_sol = solve(ic=ic, events=ev)
-            b_sol.derive_approx_power(Omega_K0=Omega_K0, h=h)
+            b_sol.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
+            b_sol.derive_approx_power()
             assert np.log(K_STAR) < np.min(b_sol.logk)
-            assert np.isnan(b_sol.N_cross)
+            assert np.isnan(b_sol._N_cross)
             assert np.isnan(b_sol.N_star)
             assert np.isnan(b_sol.N_dagg)
 
@@ -229,7 +226,8 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
         ev = [InflationEvent(ic.equations, +1, terminal=False),
               InflationEvent(ic.equations, -1, terminal=True)]
         bist = solve(ic=ic, events=ev, rtol=rtol)
-        bist.derive_approx_power(Omega_K0=Omega_K0, h=h)
+        bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
+        bist.derive_approx_power()
         n_s = bist.n_s
         r = bist.r
         assert np.isclose(bist.N_star, N_star)

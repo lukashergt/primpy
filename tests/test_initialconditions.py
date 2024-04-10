@@ -231,7 +231,8 @@ def test_ISIC_NsOk(K, t_i, Eq):
     ev = [InflationEvent(ic.equations, +1, terminal=False),
           InflationEvent(ic.equations, -1, terminal=True)]
     b = solve(ic=ic, events=ev)
-    b.derive_approx_power(Omega_K0=Omega_K0, h=h)
+    b.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
+    b.derive_approx_power()
     assert b.N_tot > N_star
     assert pytest.approx(b.N_star) == N_star
 
@@ -255,6 +256,7 @@ def test_ISIC_NsOk(K, t_i, Eq):
     ev = [InflationEvent(ic.equations, +1, terminal=False),
           InflationEvent(ic.equations, -1, terminal=True)]
     b = solve(ic=ic, events=ev)
-    b.derive_approx_power(Omega_K0=Omega_K0, h=h)
+    b.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
+    b.derive_approx_power()
     assert b.N_tot > N_star
     assert pytest.approx(b.N_star) == N_star

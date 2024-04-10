@@ -69,14 +69,16 @@ def test_get_w_reh(N_tot):
     ev = [InflationEvent(eq, +1, terminal=False),
           InflationEvent(eq, -1, terminal=True)]
     bist = solve(ic=ic, events=ev)
-    bist.derive_comoving_hubble_horizon(Omega_K0=Omega_K0, h=h)
-    N_end = bist.N[-1]
-    log_cHH_end = bist.log_cHH_end_lp
+    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
 
     N_BBN = bb.get_N_BBN(h=h, Omega_K0=Omega_K0)
-    cHH_BBN = bb.comoving_Hubble_horizon(N=N_BBN, Omega_m0=0.3, Omega_K0=Omega_K0, h=h)
+    cHH_BBN_Mpc = bb.comoving_Hubble_horizon(N=N_BBN, Omega_m0=0.3, Omega_K0=Omega_K0, h=h,
+                                             units='Mpc')
 
-    w_reh = bb.get_w_reh(N1=N_end, N2=N_BBN, log_cHH1=log_cHH_end, log_cHH2=np.log(cHH_BBN))
+    w_reh, delta_reh = bb.get_w_delta_reh(N_end=bist.N_end,
+                                          N_reh=N_BBN,
+                                          log_cHH_end=np.log(bist.cHH_end_Mpc),
+                                          log_cHH_reh=np.log(cHH_BBN_Mpc))
     if N_tot < 15:
         assert w_reh < -1 / 3
     elif N_tot < 25:
@@ -182,7 +184,7 @@ def test_conformal_time_ratio(f_i, Omega_K0, h, Omega_m0):
     ev = [InflationEvent(eq, +1, terminal=False),
           InflationEvent(eq, -1, terminal=True)]
     bist_f = solve(ic=ic_f, events=ev)
-    bist_f.derive_a0(Omega_K0=Omega_K0, h=h)
+    bist_f.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
     bist_b = solve(ic=ic_b, events=[UntilNEvent(eq, 0)])
     assert np.isclose(bist_b.eta[-1], bist_b.eta[-2])
 
