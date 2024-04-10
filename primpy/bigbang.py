@@ -196,7 +196,7 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
     H = Hubble_parameter(N=N, Omega_m0=Omega_m0, Omega_K0=Omega_K0, h=h, units=units)
     if units == 'planck':
         return a0 / (a * H)
-    elif units == 'Mpc':
+    elif units == 'H0':  # actually Mpc
         return a0 * c / (a * H * 1e3)
     elif units == 'SI':
         return a0 * c / (a * H)
