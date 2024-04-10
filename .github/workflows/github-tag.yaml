@@ -1,0 +1,37 @@
+name: Create a GitHub tag on merging to master
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.step1.outputs.v }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get version number
+        id: step1 
+        run: echo "v=$(grep ':Version:' README.rst | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+  github-tag-and-release:
+    needs: get-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: set version number
+        run: echo "DIST_VERSION=v${{ needs.get-version.outputs.version }}" >> $GITHUB_ENV
+      - name: Create Tag
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const {DIST_VERSION} = process.env
+            github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${DIST_VERSION}`,
+                sha: context.sha
+            })
+
