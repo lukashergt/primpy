@@ -24,7 +24,7 @@ jobs:
       - name: set version number
         run: echo "DIST_VERSION=v${{ needs.get-version.outputs.version }}" >> $GITHUB_ENV
       - name: Create Tag
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const {DIST_VERSION} = process.env
