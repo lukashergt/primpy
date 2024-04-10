@@ -4,16 +4,16 @@ import warnings
 import numpy as np
 from scipy import integrate
 from primpy.exceptionhandling import BigBangWarning, BigBangError
-from primpy.units import pi, G, tp_s, lp_m, Mpc_m
+from primpy.units import pi, c, G, tp_s, lp_m, Mpc_m
 from primpy.parameters import rho_r0_kg_im3, z_BBN
 
 
 def get_H0(h, units='planck'):
     """Get present-day Hubble parameter from little Hubble `h`."""
     if units == 'planck':
-        return h * 100e3 / Mpc_m * tp_s  # in reduced Planck units
+        return h * 100e3 / Mpc_m * tp_s  # in reduced Planck units, i.e. tp^-1
     elif units == 'H0':
-        return h * 100  # in conventional Hubble parameter units
+        return h * 100  # in conventional Hubble parameter units, i.e. km/s/Mpc
     elif units == 'SI':
         return h * 100e3 / Mpc_m  # in SI units, i.e. s^-1
     else:
@@ -66,7 +66,7 @@ def get_Omega_r0(h):
     return Omega_r0
 
 
-def Hubble_parameter(N, Omega_m0, Omega_K0, h):
+def Hubble_parameter(N, Omega_m0, Omega_K0, h, units='planck'):
     """Hubble parameter (in reduced Planck units) at `N=ln(a)` during standard Big Bang.
 
     Parameters
@@ -81,6 +81,9 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
             curvature density parameter today
         h : float
             dimensionless Hubble parameter today, "little h"
+        units : str
+            Output units, can be any of {'planck', 'H0', 'SI'} returning
+            units of `1/tp`, `km/s/Mpc` or `1/s` respectively.
 
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
@@ -92,7 +95,7 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h):
             In reduced Planck units [tp^-1].
 
     """
-    H0 = get_H0(h=h, units='planck')  # in reduced Planck units
+    H0 = get_H0(h=h, units=units)
     Omega_r0 = get_Omega_r0(h=h)
     Omega_L0 = 1 - Omega_r0 - Omega_m0 - Omega_K0
     if Omega_L0 > no_Big_Bang_line(Omega_m0=Omega_m0):
@@ -176,7 +179,7 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
             dimensionless Hubble parameter today, "little h"
         units : str
             Output units, can be any of {'planck', 'Mpc', 'SI'} returning
-            units of `lp`, `Mpc` or `m` respectively.
+            units of `lp`, `Mpc`, or `m` respectively.
 
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
@@ -187,10 +190,19 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
             Comoving Hubble horizon during standard Big Bang evolution of the Universe.
 
     """
-    a0 = get_a0(h=h, Omega_K0=Omega_K0, units=units)
+    a0 = get_a0(h=h, Omega_K0=Omega_K0, units='planck')
     a = np.exp(N)
-    H = Hubble_parameter(N=N, Omega_m0=Omega_m0, Omega_K0=Omega_K0, h=h)
-    return a0 / (a * H)
+    units = 'H0' if units == 'Mpc' else units
+    H = Hubble_parameter(N=N, Omega_m0=Omega_m0, Omega_K0=Omega_K0, h=h, units=units)
+    if units == 'planck':
+        return a0 / (a * H)
+    elif units == 'Mpc':
+        return a0 * c / (a * H * 1e3)
+    elif units == 'SI':
+        return a0 * c / (a * H)
+    else:
+        raise NotImplementedError("%s not implemented for comoving Hubble horizon units, "
+                                  "please choose one of {'planck', 'Mpc', 'SI'}." % units)
 
 
 def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
