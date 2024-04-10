@@ -1,4 +1,4 @@
-name: Publish primpy to PyPI and TestPyPI
+name: Publish to PyPI
 
 on: 
   release:
@@ -6,7 +6,7 @@ on:
     
 jobs:
   build-n-publish:
-    name: Build and publish primpy to PyPI and TestPyPI
+    name: Build and publish to PyPI
     runs-on: ubuntu-latest
     
     steps:
