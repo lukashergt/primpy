@@ -1,10 +1,18 @@
 #!/usr/bin/env python
-from utils import run
-from packaging import version
 import sys
+import subprocess
+from packaging import version
 
 vfile = "primpy/__version__.py"
 README = "README.rst"
+
+
+def run(*args):
+    """Run a bash command and return the output in Python."""
+    return subprocess.run(args, text=True,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE).stdout
+
 
 current_version = run("cat", vfile)
 current_version = current_version.split("=")[-1].strip().strip("'")
