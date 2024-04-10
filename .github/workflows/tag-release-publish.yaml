@@ -1,4 +1,4 @@
-name: GitHub tag and release on merging to master
+name: Tag, Release, and Publish
 
 on:
   push:
@@ -42,3 +42,30 @@ jobs:
           generateReleaseNotes: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
+  build-n-publish:
+    name: Build and Publish to PyPI
+    needs: github-tag-and-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pypa/build
+        run: >-
+          python -m pip install build --user
+      - name: Build a binary wheel and a source tarball
+        run: >-
+          python -m build --sdist --wheel --outdir dist/
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
