@@ -104,7 +104,7 @@ def solve_oscode(background, k, **kwargs):
             for num in range(2):
                 oscode_sol.append(pyoscode.solve(ts=b.x[idx_beg:idx_end+1],
                                                  ti=b.x[idx_beg], tf=b.x[idx_end],
-                                                 ws=mode.ms_frequency, logw=False,
+                                                 ws=np.log(mode.ms_frequency), logw=True,
                                                  gs=mode.ms_damping, logg=False,
                                                  x0=y0[2*num]*ki,
                                                  dx0=y0[2*num+1]*ki**2,
