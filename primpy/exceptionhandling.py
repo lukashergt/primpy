@@ -43,6 +43,19 @@ class StepSizeError(PrimpyError):
         super(StepSizeError, self).__init__(message, *args)
 
 
+class InsufficientInflationError(PrimpyError):
+    """Exception when there are insufficient number of e-folds for inflation.
+
+    Attributes
+    ----------
+        message : str
+            Explanation of the error.
+    """
+
+    def __init__(self, message, *args):
+        self.message = message
+        super(InsufficientInflationError, self).__init__(self.message, *args)
+
 class BigBangError(PrimpyError):
     """Exceptions for the standard Big Bang evolution.
 
