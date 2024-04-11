@@ -21,7 +21,7 @@ def test_not_implemented_units():
     with pytest.raises(NotImplementedError):
         bb.Hubble_parameter(N=0, Omega_m0=0.3, Omega_K0=-0.01, h=0.7, units='Mpc')
     with pytest.raises(NotImplementedError):
-        bb.comoving_Hubble_horizon(N=0, Omega_m0=0.3, Omega_K0=-0.01, h=0.7, units='H0')
+        bb.comoving_Hubble_horizon(N=0, Omega_m0=0.3, Omega_K0=-0.01, h=0.7, units='spam')
 
 
 @pytest.mark.parametrize('h', [0.3, 0.5, 0.7, 0.9])
