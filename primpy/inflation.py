@@ -5,6 +5,7 @@ from abc import ABC
 import numpy as np
 from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
+from primpy.exceptionhandling import PrimpyError, InsufficientInflationError
 from primpy.units import pi, c, lp_m, Mpc_m, mp_GeV, lp_iGeV
 from primpy.parameters import K_STAR, K_STAR_lp, T_CMB_Tp, g0
 from primpy.equations import Equations
@@ -50,22 +51,28 @@ class InflationEquations(Equations, ABC):
     def postprocessing_inflation_start(self, sol):
         """Extract starting point of inflation from event tracking."""
         sol._N_beg = np.nan
+        sol.H_beg = np.nan
         # Case 0: Universe has collapsed
         if 'Collapse' in sol._N_events and sol._N_events['Collapse'].size > 0:
             self.vwarn(CollapseWarning(""))
         # Case 1: inflating from the start
         elif self.inflating(sol.x[0], sol.y[:, 0]) >= 0 or sol.w[0] <= -1/3:
             sol._N_beg = sol._N[0]
+            sol.H_beg = self.H(sol.x[0], sol.y[:, 0])
         # Case 2: there is a transition from non-inflating to inflating
         elif ('Inflation_dir1_term0' in sol._N_events and
               np.size(sol._N_events['Inflation_dir1_term0']) > 0):
             sol._N_beg = sol._N_events['Inflation_dir1_term0'][0]
+            sol.H_beg = self.H(sol.x_events['Inflation_dir1_term0'][0],
+                               sol.y_events['Inflation_dir1_term0'][0])
         else:
             self.vwarn(InflationStartWarning("", events=sol._N_events))
+        sol._logaH_beg = sol._N_beg + np.log(sol.H_beg)
 
     def postprocessing_inflation_end(self, sol):
         """Extract end point of inflation from event tracking."""
         sol._N_end = np.nan
+        sol._logaH_end = np.nan
         sol.phi_end = np.nan
         sol.H_end = np.nan
         sol.V_end = np.nan
@@ -75,6 +82,7 @@ class InflationEquations(Equations, ABC):
                 sol._N_end = sol._N_events[key][0]
                 sol.phi_end = sol.phi_events[key][0]
                 sol.H_end = self.H(sol.x_events[key][0], sol.y_events[key][0])
+                sol._logaH_end = sol._N_end + np.log(sol.H_end)
                 break
         if np.isfinite(sol.phi_end):
             sol.V_end = self.potential.V(sol.phi_end)
@@ -117,14 +125,14 @@ class InflationEquations(Equations, ABC):
             calibration_method : str
                 Method to calibrate the scale factor. Choose from:
 
-                    - flat universes: 'N_star' or 'reheating'
-                    - curved universes: 'Omega_K0' or 'reheating'
+                    - flat universes: 'N_star' (default) or 'reheating'
+                    - curved universes: 'Omega_K0' (default) or 'reheating'
 
             Omega_K0 : float
                 Curvature density parameter today. Required for ``calibration_method='Omega_K0'``.
 
             h : float
-                Hubble parameter today. Required for ``calibration_method='Omega_K0'``.
+                Hubble parameter today. Required for ``Omega_K0`` and ``reheating`` calibration.
 
             N_star : float
                 Number of e-folds of inflation after horizon crossing of pivot scale `K_STAR`.
@@ -168,14 +176,37 @@ class InflationEquations(Equations, ABC):
                         if N_star is None or N_star <= 0:
                             raise ValueError(f"For calibration_method='N_star' N_star>0 must be "
                                              f"given, but got N_star={N_star}.")
+                        if N_star > sol.N_tot:
+                            raise InsufficientInflationError(
+                                f"The total number of e-folds of inflation N_tot={sol.N_tot} is "
+                                f"smaller than the requested number of e-folds after horizon "
+                                f"crossing N_star={N_star}."
+                            )
                         sol.N_star = N_star
                         sol._N_cross = sol._N_end - sol.N_star
+                        N2logaH = interp1d(sol._N[sol.inflation_mask],
+                                           sol._logaH[sol.inflation_mask])
+                        sol._logaH_star = N2logaH(sol._N_cross)
+                        if rho_reh_GeV4 is None:
+                            sol.rho_reh_GeV4 = np.nan
+                            sol._N_reh = np.nan
+                            sol.w_reh = np.nan
+                            sol.delta_reh = np.nan
+                        else:
+                            sol.rho_reh_GeV4 = rho_reh_GeV4
+                            sol.rho_reh = rho_reh_GeV4 / mp_GeV * lp_iGeV**3
+                            sol._N_reh = (sol.N0
+                                          - np.log((45/pi**2)**(1/4) * g0**(-1/3))
+                                          - np.log(g_th) / 12
+                                          + np.log(3/2 * T_CMB_Tp**4 / sol.rho_reh) / 4)
+                            sol.delta_reh = sol._N_reh - sol._N_end
+                            sol.w_reh = np.log(3/2 * sol.V_end/sol.rho_reh) / (3 * sol.delta_reh) - 1
 
                     elif calibration_method == 'reheating':  # derive _N_cross from reheating
-                        N_end_calib = (sol.N0
-                                       - np.log((45/pi**2)**(1/4) * g0**(-1/3))
-                                       - np.log(g_th) / 12
-                                       - np.log(sol.V_end/T_CMB_Tp**4)/4)
+                        sol.N_end = (sol.N0
+                                     - np.log((45/pi**2)**(1/4) * g0**(-1/3))
+                                     - np.log(g_th) / 12
+                                     - np.log(sol.V_end/T_CMB_Tp**4)/4)
                         if ((w_reh is None and delta_reh is None)
                                 or delta_reh == 0 or w_reh == 1/3):
                             # assume instant reheating
@@ -193,7 +224,7 @@ class InflationEquations(Equations, ABC):
                                                  f"delta_reh={delta_reh} and w_reh={w_reh}.")
                             sol.w_reh = w_reh
                             sol.delta_reh = delta_reh
-                            N_end_calib -= 3/4 * (1/3 - w_reh) * delta_reh
+                            sol.N_end -= 3/4 * (1/3 - w_reh) * delta_reh
                             sol.rho_reh = 3/2 * sol.V_end * np.exp(-3 * (1 + w_reh) * delta_reh)
                             sol.rho_reh_GeV4 = sol.rho_reh * mp_GeV / lp_iGeV**3
                         elif ((w_reh is None and delta_reh is not None) or
@@ -202,13 +233,21 @@ class InflationEquations(Equations, ABC):
                                              f"reheating (or set both to None for instant "
                                              f"reheating), but got w_reh={w_reh} and "
                                              f"delta_reh={delta_reh}.")
-                        logaH_calib = sol._logaH[sol.inflation_mask] - sol._N_end + N_end_calib
-                        logaH2N = interp1d(logaH_calib, sol._N[sol.inflation_mask])
-                        sol._N_cross = logaH2N(np.log(K_STAR_lp))
+                        sol.delta_N_calib = sol.N_end - sol._N_end
+                        sol._logaH_star = np.log(K_STAR_lp) - sol.delta_N_calib
+                        logaH = sol._logaH[sol.inflation_mask] + sol.delta_N_calib
+                        logaH2N = interp1d(logaH, sol._N[sol.inflation_mask])
+                        if sol._logaH_star < sol._logaH_beg or sol._logaH_star > sol._logaH_end:
+                            raise InsufficientInflationError(
+                                f"Pivot scale log(K_STAR)={np.log(K_STAR_lp)} is not within the "
+                                f"range of the comoving Hubble horizon during inflation: "
+                                f"logaH_beg={sol._logaH_beg+sol.delta_N_calib}, "
+                                f"logaH_end={sol._logaH_end+sol.delta_N_calib}."
+                            )
+                        else:
+                            sol._N_cross = logaH2N(np.log(K_STAR_lp))
                         sol.N_star = sol._N_end - sol._N_cross
                         sol._N_reh = sol._N_end + sol.delta_reh
-                    N2logaH = interp1d(sol._N[sol.inflation_mask], sol._logaH[sol.inflation_mask])
-                    sol._logaH_star = N2logaH(sol._N_cross)
                 else:  # allows manual override, e.g. when integrating backwards without _N_cross
                     if N_star is None or N_star <= 0:
                         raise ValueError(f"To circumvent the calibration by providing logaH_star, "
@@ -222,6 +261,9 @@ class InflationEquations(Equations, ABC):
                 sol.logk = sol._logaH[sol.inflation_mask] + np.log(K_STAR) - sol._logaH_star
 
             else:  # curved universe
+                if h is None or h <= 0:
+                    raise ValueError(f"To calibrate curved universes little h must be provided, "
+                                     f"but got h={h}.")
                 sol.delta_N_calib = 0  # already calibrated through initial curvature Omega_Ki
                 if calibration_method == 'reheating':  # derive a0 and Omega_K0 from reheating
                     if Omega_K0 is not None:
@@ -290,16 +332,22 @@ class InflationEquations(Equations, ABC):
                 sol.logk = sol._logaH[sol.inflation_mask] - np.log(sol.a0_Mpc)
                 sol._logaH_star = np.log(K_STAR * sol.a0_Mpc)
                 if np.log(K_STAR) < np.min(sol.logk) or np.log(K_STAR) > np.max(sol.logk):
-                    sol._N_cross = np.nan
+                    raise InsufficientInflationError(
+                        f"Pivot scale log(K_STAR)={np.log(K_STAR)} is not within the "
+                        f"range of the comoving Hubble horizon during inflation: "
+                        f"logk_min={np.min(sol.logk)}, logk_max={np.max(sol.logk)}."
+                    )
                 else:
                     logk, indices = np.unique(sol.logk, return_index=True)
                     logk2N = interp1d(logk, sol._N[sol.inflation_mask][indices])
                     sol._N_cross = logk2N(np.log(K_STAR))
                 sol.N_star = sol._N_end - sol._N_cross
 
+            # both flat and curved universes
             sol.N = sol._N + sol.delta_N_calib
             sol.N_beg = sol._N_beg + sol.delta_N_calib
             sol.N_end = sol._N_end + sol.delta_N_calib
+            sol.N_reh = sol._N_reh + sol.delta_N_calib
             sol.N_cross = sol._N_cross + sol.delta_N_calib
             sol.N_dagg = sol.N_cross - sol.N_beg
             sol.k_iMpc = np.exp(sol.logk)
@@ -308,6 +356,9 @@ class InflationEquations(Equations, ABC):
             # derive comoving Hubble horizon
             sol.cHH_Mpc = sol.a0 / (np.exp(sol.N) * sol.H) * lp_m / Mpc_m
             sol.cHH_end_Mpc = sol.a0 / (np.exp(sol.N_end) * sol.H_end) * lp_m / Mpc_m
+
+            # derive approximate primordial power spectra
+            derive_approx_power()
 
         sol.calibrate_scale_factor = calibrate_scale_factor
 
@@ -332,26 +383,15 @@ class InflationEquations(Equations, ABC):
                                                            np.log(sol.P_tensor_approx[indices]),
                                                            k=spline_order, ext=extrapolate,
                                                            **interp1d_kwargs)
-            if sol.logk[0] < np.log(K_STAR) < sol.logk[-1]:
-                dlogPdlogk_s = sol.logk2logP_s.derivatives(np.log(K_STAR))
-                dlogPdlogk_t = sol.logk2logP_t.derivatives(np.log(K_STAR))
-                sol.A_s = np.exp(dlogPdlogk_s[0])
-                sol.n_s = 1 + dlogPdlogk_s[1]
-                sol.n_run = dlogPdlogk_s[2]
-                sol.n_runrun = dlogPdlogk_s[3]
-                sol.A_t = np.exp(dlogPdlogk_t[0])
-                sol.n_t = dlogPdlogk_t[1]
-                sol.r = sol.A_t / sol.A_s
-            else:
-                sol.A_s = np.nan
-                sol.n_s = np.nan
-                sol.n_run = np.nan
-                sol.n_runrun = np.nan
-                sol.A_t = np.nan
-                sol.n_t = np.nan
-                sol.r = np.nan
-
-        sol.derive_approx_power = derive_approx_power
+            dlogPdlogk_s = sol.logk2logP_s.derivatives(np.log(K_STAR))
+            dlogPdlogk_t = sol.logk2logP_t.derivatives(np.log(K_STAR))
+            sol.A_s = np.exp(dlogPdlogk_s[0])
+            sol.n_s = 1 + dlogPdlogk_s[1]
+            sol.n_run = dlogPdlogk_s[2]
+            sol.n_runrun = dlogPdlogk_s[3]
+            sol.A_t = np.exp(dlogPdlogk_t[0])
+            sol.n_t = dlogPdlogk_t[1]
+            sol.r = sol.A_t / sol.A_s
 
         def P_s_approx(k):
             """Slow-roll approximation for the primordial power spectrum for scalar modes."""
