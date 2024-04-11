@@ -37,8 +37,6 @@ def set_background_SR():
     bsrn = solve(ic=ic_n, events=ev_n, t_eval=N_eval, method='DOP853', rtol=1e-12, atol=1e-13)
     bsrt.calibrate_scale_factor(N_star=N_star)
     bsrn.calibrate_scale_factor(N_star=N_star)
-    bsrt.derive_approx_power()
-    bsrn.derive_approx_power()
 
     return bsrt, bsrn
 
@@ -109,8 +107,6 @@ def set_background_IS(K, f_i, abs_Omega_K0):
     bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
     bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
     assert bist.a0_Mpc == approx(bisn.a0_Mpc)
-    bist.derive_approx_power()
-    bisn.derive_approx_power()
     assert bist.N_star == approx(bisn.N_star)
 
     return bist, bisn
