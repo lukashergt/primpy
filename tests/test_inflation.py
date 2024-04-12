@@ -7,7 +7,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from primpy.exceptionhandling import InflationEndWarning, InsufficientInflationError
 from primpy.units import Mpc_m, lp_m
-from primpy.parameters import K_STAR
+from primpy.parameters import K_STAR, K_STAR_lp
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
@@ -57,32 +57,32 @@ def test_track_eta():
                 assert dy0[eq.idx['eta']] == np.exp(-N_i) / np.sqrt(H2)
 
 
-def test_basic_methods_time_vs_efolds():
+@pytest.mark.parametrize('K', [-1, 0, +1])
+def test_basic_methods_time_vs_efolds(K):
     tol = 1e-12
     t = 1
     N = 10
     phi = 20
-    for K in [-1, 0, 1]:
-        for Lambda in [1, 0.0025]:
-            pot = QuadraticPotential(Lambda=Lambda)
-            for dphidt_squared in [100 * pot.V(phi), 2 * pot.V(phi), pot.V(phi), pot.V(phi) / 100]:
-                dphidt = -np.sqrt(dphidt_squared)
-                eq_t = InflationEquationsT(K=K, potential=pot)
-                eq_N = InflationEquationsN(K=K, potential=pot)
-                assert eq_t.idx['phi'] == 0
-                assert eq_t.idx['dphidt'] == 1
-                assert eq_t.idx['_N'] == 2
-                assert eq_N.idx['phi'] == 0
-                assert eq_N.idx['dphidN'] == 1
-                y1_t = np.array([phi, dphidt, N])
-                y1_N = np.array([phi, dphidt / eq_t.H(t, y1_t)])
-                assert eq_t.H2(t, y1_t) == approx(eq_N.H2(N, y1_N), rel=tol, abs=tol)
-                assert eq_t.H(t, y1_t) == approx(eq_N.H(N, y1_N), rel=tol, abs=tol)
-                assert eq_t.V(t, y1_t) == approx(eq_N.V(N, y1_N), rel=tol, abs=tol)
-                assert eq_t.dVdphi(t, y1_t) == approx(eq_N.dVdphi(N, y1_N), rel=tol, abs=tol)
-                assert eq_t.d2Vdphi2(t, y1_t) == approx(eq_N.d2Vdphi2(N, y1_N), rel=tol, abs=tol)
-                assert eq_t.w(t, y1_t) == approx(eq_N.w(N, y1_N), rel=tol, abs=tol)
-                assert eq_t.inflating(t, y1_t) == approx(eq_N.inflating(N, y1_N), rel=tol, abs=tol)
+    for Lambda in [1, 0.0025]:
+        pot = QuadraticPotential(Lambda=Lambda)
+        for dphidt_squared in [100 * pot.V(phi), 2 * pot.V(phi), pot.V(phi), pot.V(phi) / 100]:
+            dphidt = -np.sqrt(dphidt_squared)
+            eq_t = InflationEquationsT(K=K, potential=pot)
+            eq_N = InflationEquationsN(K=K, potential=pot)
+            assert eq_t.idx['phi'] == 0
+            assert eq_t.idx['dphidt'] == 1
+            assert eq_t.idx['_N'] == 2
+            assert eq_N.idx['phi'] == 0
+            assert eq_N.idx['dphidN'] == 1
+            y1_t = np.array([phi, dphidt, N])
+            y1_N = np.array([phi, dphidt / eq_t.H(t, y1_t)])
+            assert eq_t.H2(t, y1_t) == approx(eq_N.H2(N, y1_N), rel=tol, abs=tol)
+            assert eq_t.H(t, y1_t) == approx(eq_N.H(N, y1_N), rel=tol, abs=tol)
+            assert eq_t.V(t, y1_t) == approx(eq_N.V(N, y1_N), rel=tol, abs=tol)
+            assert eq_t.dVdphi(t, y1_t) == approx(eq_N.dVdphi(N, y1_N), rel=tol, abs=tol)
+            assert eq_t.d2Vdphi2(t, y1_t) == approx(eq_N.d2Vdphi2(N, y1_N), rel=tol, abs=tol)
+            assert eq_t.w(t, y1_t) == approx(eq_N.w(N, y1_N), rel=tol, abs=tol)
+            assert eq_t.inflating(t, y1_t) == approx(eq_N.inflating(N, y1_N), rel=tol, abs=tol)
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
@@ -270,6 +270,69 @@ def test_Ncross_not_during_inflation(K, Eq):
         assert b_sol._logaH_star < b_sol._logaH_beg
     else:
         assert np.log(K_STAR) < np.min(b_sol.logk)
+
+
+def test_calibration_input_errors():
+    N_i = 10
+    phi_i = 20
+    t_i = 7e4
+    h = 0.7
+    pot = QuadraticPotential(Lambda=0.0025)
+
+    # flat universe
+    N_star = 55
+    eq = InflationEquationsT(K=0, potential=pot)
+    ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ev = [InflationEvent(eq, +1, terminal=False),
+          InflationEvent(eq, -1, terminal=True)]
+    b_sol = solve(ic=ic, events=ev)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(N_star=N_star, Omega_K0=-0.1, h=h)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(N_star=None)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(N_star=-N_star)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, delta_reh=-5)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=-1, delta_reh=5)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, delta_reh=None)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, delta_reh=5)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(logaH_star=np.log(K_STAR_lp), N_star=None)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(logaH_star=np.log(K_STAR_lp), N_star=-N_star)
+
+    # curved universe
+    K = 1
+    Omega_K0 = -K * 0.1
+    eq = InflationEquationsT(K=K, potential=pot)
+    ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ev = [InflationEvent(eq, +1, terminal=False),
+          InflationEvent(eq, -1, terminal=True)]
+    b_sol = solve(ic=ic, events=ev)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(Omega_K0=Omega_K0)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(Omega_K0=Omega_K0, h=-h)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(h=h)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(Omega_K0=0, h=h)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(Omega_K0=-Omega_K0, h=h)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', Omega_K0=Omega_K0, h=h)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, delta_reh=-5)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=-1, delta_reh=5)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, delta_reh=None)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, delta_reh=5)
 
 
 @pytest.mark.parametrize('N_star', [30, 90])

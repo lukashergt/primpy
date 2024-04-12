@@ -265,7 +265,7 @@ class InflationEquations(Equations, ABC):
 
             else:  # curved universe
                 if h is None or h <= 0:
-                    raise ValueError(f"To calibrate curved universes little h must be provided, "
+                    raise ValueError(f"To calibrate curved universes little h>0 must be provided, "
                                      f"but got h={h}.")
                 sol.delta_N_calib = 0  # already calibrated through initial curvature Omega_Ki
                 if calibration_method == 'reheating':  # derive a0 and Omega_K0 from reheating
