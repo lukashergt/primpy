@@ -304,6 +304,8 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(logaH_star=np.log(K_STAR_lp), N_star=None)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(logaH_star=np.log(K_STAR_lp), N_star=-N_star)
+    with pytest.raises(NotImplementedError):
+        b_sol.calibrate_scale_factor(calibration_method='spam')
 
     # curved universe
     K = 1
@@ -333,6 +335,8 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, delta_reh=None)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, delta_reh=5)
+    with pytest.raises(NotImplementedError):
+        b_sol.calibrate_scale_factor(calibration_method='spam', h=h)
 
 
 @pytest.mark.parametrize('N_star', [30, 90])
