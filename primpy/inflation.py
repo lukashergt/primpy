@@ -174,7 +174,7 @@ class InflationEquations(Equations, ABC):
                 sol.Omega_K0 = 0
 
                 if logaH_star is None:
-                    if calibration_method == 'N_star':
+                    if calibration_method == 'N_star':  # derive _N_cross from N_star
                         if N_star is None or N_star <= 0:
                             raise ValueError(f"For calibration_method='N_star' N_star>0 must be "
                                              f"given, but got N_star={N_star}.")
@@ -250,8 +250,16 @@ class InflationEquations(Equations, ABC):
                             )
                         else:
                             sol._N_cross = logaH2N(np.log(K_STAR_lp))
+
                         sol.N_star = sol._N_end - sol._N_cross
                         sol._N_reh = sol._N_end + sol.delta_reh
+
+                    else:  # only 'N_star' and 'reheating' as calibration methods for K==0
+                        raise NotImplementedError(
+                            f"Unknown calibration_method={calibration_method}, choose from "
+                            f"'N_star' or 'reheating' for flat universes."
+                        )
+
                 else:  # allows manual override, e.g. when integrating backwards without _N_cross
                     if N_star is None or N_star <= 0:
                         raise ValueError(f"To circumvent the calibration by providing logaH_star, "
@@ -268,7 +276,34 @@ class InflationEquations(Equations, ABC):
                     raise ValueError(f"To calibrate curved universes little h>0 must be provided, "
                                      f"but got h={h}.")
                 sol.delta_N_calib = 0  # already calibrated through initial curvature Omega_Ki
-                if calibration_method == 'reheating':  # derive a0 and Omega_K0 from reheating
+
+                if calibration_method == 'Omega_K0':  # derive a0 from curvature using Omega_K0
+                    if Omega_K0 is None or Omega_K0 == 0:
+                        raise ValueError(f"For calibration_method='Omega_K0', Omega_K0!=0 must be "
+                                         f"given, but got Omega_K0={Omega_K0}.")
+                    elif np.sign(Omega_K0) != -sol.K:
+                        raise ValueError(f"The global geometry needs to match, but "
+                                         f"Omega_K0={Omega_K0} whereas K={sol.K}.")
+                    sol.Omega_K0 = Omega_K0
+                    sol.a0_Mpc = c / (h * 100 * 1e3) * np.sqrt(-sol.K / Omega_K0)
+                    sol.a0 = sol.a0_Mpc * Mpc_m / lp_m
+                    sol.N0 = np.log(sol.a0)
+                    if rho_reh_GeV is None:
+                        sol.rho_reh_GeV = np.nan
+                        sol._N_reh = np.nan
+                        sol.w_reh = np.nan
+                        sol.delta_reh = np.nan
+                    else:
+                        sol.rho_reh_GeV = rho_reh_GeV
+                        sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
+                        sol._N_reh = (sol.N0
+                                      - np.log((45/pi**2)**(1/4) * g0**(-1/3))
+                                      - np.log(g_th) / 12
+                                      + np.log(3/2 * T_CMB_Tp**4 / sol.rho_reh_mp4) / 4)
+                        sol.delta_reh = sol._N_reh - sol._N_end
+                        sol.w_reh = np.log(3/2 * sol.V_end/sol.rho_reh_mp4) / (3*sol.delta_reh) - 1
+
+                elif calibration_method == 'reheating':  # derive a0 and Omega_K0 from reheating
                     if Omega_K0 is not None:
                         raise ValueError(f"For curved universes with "
                                          f"calibration_method='reheating' Omega_K0 must be None, "
@@ -306,31 +341,10 @@ class InflationEquations(Equations, ABC):
                     sol.a0_Mpc = sol.a0 * lp_m / Mpc_m
                     sol.Omega_K0 = -sol.K * c**2 / (sol.a0_Mpc * h * 100 * 1e3)**2
 
-                elif calibration_method == 'Omega_K0':  # derive a0 from curvature using Omega_K0
-                    if Omega_K0 is None or Omega_K0 == 0:
-                        raise ValueError(f"For calibration_method='Omega_K0', Omega_K0!=0 must be "
-                                         f"given, but got Omega_K0={Omega_K0}.")
-                    elif np.sign(Omega_K0) != -sol.K:
-                        raise ValueError(f"The global geometry needs to match, but "
-                                         f"Omega_K0={Omega_K0} whereas K={sol.K}.")
-                    sol.Omega_K0 = Omega_K0
-                    sol.a0_Mpc = c / (h * 100 * 1e3) * np.sqrt(-sol.K / Omega_K0)
-                    sol.a0 = sol.a0_Mpc * Mpc_m / lp_m
-                    sol.N0 = np.log(sol.a0)
-                    if rho_reh_GeV is None:
-                        sol.rho_reh_GeV = np.nan
-                        sol._N_reh = np.nan
-                        sol.w_reh = np.nan
-                        sol.delta_reh = np.nan
-                    else:
-                        sol.rho_reh_GeV = rho_reh_GeV
-                        sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
-                        sol._N_reh = (sol.N0
-                                      - np.log((45/pi**2)**(1/4) * g0**(-1/3))
-                                      - np.log(g_th) / 12
-                                      + np.log(3/2 * T_CMB_Tp**4 / sol.rho_reh_mp4) / 4)
-                        sol.delta_reh = sol._N_reh - sol._N_end
-                        sol.w_reh = np.log(3/2 * sol.V_end/sol.rho_reh_mp4) / (3*sol.delta_reh) - 1
+                else:  # only 'Omega_K0' and 'reheating' as calibration methods for K!=0
+                    raise NotImplementedError(f"Unknown calibration_method={calibration_method}, "
+                                              f"choose from 'Omega_K0' or 'reheating' for curved "
+                                              f"universes.")
 
                 sol.logk = sol._logaH[sol.inflation_mask] - np.log(sol.a0_Mpc)
                 sol._logaH_star = np.log(K_STAR * sol.a0_Mpc)
