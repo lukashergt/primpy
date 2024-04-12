@@ -5,10 +5,10 @@ from pytest import approx
 from scipy.interpolate import interp1d
 import numpy as np
 from numpy.testing import assert_allclose
-from primpy.exceptionhandling import InflationEndWarning
+from primpy.exceptionhandling import InflationEndWarning, InsufficientInflationError
 from primpy.units import Mpc_m, lp_m
 from primpy.parameters import K_STAR
-from primpy.potentials import QuadraticPotential
+from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
 from primpy.time.inflation import InflationEquationsT
@@ -115,6 +115,7 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.phi[1:-1], N2phi(bist._N[1:-1]), rtol=1e-4)
     assert_allclose(bist.H[1:-1], N2H(bist._N[1:-1]), rtol=1e-4)
 
+    # using Omega_K0 or N_star
     bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
     bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
     assert bist.K == K
@@ -123,12 +124,8 @@ def test_sol_time_efolds(K):
     assert bisn.Omega_K0 == Omega_K0
     if K != 0:
         assert bisn.a0_Mpc * Mpc_m == bisn.a0 * lp_m
-        bist.derive_approx_power()
-        bisn.derive_approx_power()
     elif K == 0:
         assert bisn.a0 == 1
-        bist.derive_approx_power()
-        bisn.derive_approx_power()
     assert bist.N_star == approx(bisn.N_star, rel=1e-5)
     assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
     assert bist.A_s == approx(bisn.A_s, rel=1e-8)
@@ -142,6 +139,71 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)), rtol=1e-6)
     assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
     assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
+
+    # reheating
+    bist.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=2, w_reh=0)
+    bisn.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=2, w_reh=0)
+    assert bist.N_star == approx(bisn.N_star, rel=1e-5)
+    assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
+    assert bist.A_s == approx(bisn.A_s, rel=1e-8)
+    assert bist.n_s == approx(bisn.n_s, rel=1e-5)
+    assert bist.n_run == approx(bisn.n_run, rel=1e-3)
+    assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1, abs=1e-6)
+    assert bist.A_t == approx(bisn.A_t, rel=1e-8)
+    assert bist.r == approx(bisn.r, rel=1e-5)
+    assert bist.n_t == approx(bisn.n_t, rel=1e-5)
+    assert_allclose(bist.logk2logP_s(np.log(k)), bisn.logk2logP_s(np.log(k)), rtol=1e-6)
+    assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)), rtol=1e-6)
+    assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
+    assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
+
+
+@pytest.mark.parametrize('K', [-1, 0, +1])
+@pytest.mark.parametrize('delta_reh', [0, 5])
+@pytest.mark.parametrize('w_reh', [-1/3, 0, 1/3, 1])
+def test_reheating(K, delta_reh, w_reh):
+    pot = StarobinskyPotential(Lambda=3.3e-3)
+    N_i = 14
+    phi_i = 6
+    t_i = 7e4
+    h = 0.7
+    eq_t = InflationEquationsT(K=K, potential=pot)
+    eq_N = InflationEquationsN(K=K, potential=pot, track_time=True)
+    ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ic_N = InflationStartIC(eq_N, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ev_t = [InflationEvent(eq_t, +1, terminal=False),
+            InflationEvent(eq_t, -1, terminal=True)]
+    ev_N = [InflationEvent(eq_N, +1, terminal=False),
+            InflationEvent(eq_N, -1, terminal=True)]
+    bist = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-12)
+    bisn = solve(ic=ic_N, events=ev_N, dense_output=True, method='DOP853', rtol=1e-12)
+    bist.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=delta_reh, w_reh=w_reh)
+    bisn.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=delta_reh, w_reh=w_reh)
+    assert bist.N_star == approx(bisn.N_star, rel=1e-5)
+    assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
+    assert bist.N_reh == approx(bisn.N_reh, rel=1e-5)
+
+
+@pytest.mark.parametrize('K', [-1, 0, +1])
+@pytest.mark.parametrize('rho_reh_GeV', [1e3, 1e9])
+def test_derived_reheating(K, rho_reh_GeV):
+    pot = StarobinskyPotential(Lambda=3.3e-3)
+    N_i = 14
+    phi_i = 6
+    t_i = 7e4
+    h = 0.7
+    Omega_K0 = -0.1 * K
+    N_star = 55
+    eq_t = InflationEquationsT(K=K, potential=pot)
+    ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ev_t = [InflationEvent(eq_t, +1, terminal=False),
+            InflationEvent(eq_t, -1, terminal=True)]
+    bist = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-12)
+    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star, rho_reh_GeV=rho_reh_GeV)
+    assert bist.rho_reh_GeV == rho_reh_GeV
+    assert bist.N_end < bist.N_reh
+    assert -1/3 <= bist.w_reh <= 1
+    assert bist.delta_reh >= 0
 
 
 def nan_inflation_end(background_sol):
@@ -179,26 +241,33 @@ def test_postprocessing_inflation_end_warnings(K, Eq):
     nan_inflation_end(background_sol=bist)
 
 
-def test_Ncross_nan():
+@pytest.mark.parametrize('K', [-1, 0, +1])
+@pytest.mark.parametrize('Eq', [InflationEquationsT, InflationEquationsN])
+def test_Ncross_not_during_inflation(K, Eq):
     pot = QuadraticPotential(Lambda=0.0025)
     N_i = 18
     phi_i = 15
     t_i = 7e4
     h = 0.7
-    for K in [-1, +1]:
-        for eq in [InflationEquationsT(K=K, potential=pot),
-                   InflationEquationsN(K=K, potential=pot)]:
-            Omega_K0 = -K * 0.1
-            ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
-            ev = [InflationEvent(eq, +1, terminal=False),
-                  InflationEvent(eq, -1, terminal=True)]
-            b_sol = solve(ic=ic, events=ev)
-            b_sol.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
-            b_sol.derive_approx_power()
-            assert np.log(K_STAR) < np.min(b_sol.logk)
-            assert np.isnan(b_sol._N_cross)
-            assert np.isnan(b_sol.N_star)
-            assert np.isnan(b_sol.N_dagg)
+    N_star = 55
+    eq = Eq(K=K, potential=pot)
+    Omega_K0 = -K * 0.1
+    ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
+    ev = [InflationEvent(eq, +1, terminal=False),
+          InflationEvent(eq, -1, terminal=True)]
+    b_sol = solve(ic=ic, events=ev)
+    with pytest.raises(InsufficientInflationError):
+        b_sol.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None)
+    if K == 0:
+        assert b_sol.N_tot < N_star
+    else:
+        assert np.log(K_STAR) < np.min(b_sol.logk)
+    with pytest.raises(InsufficientInflationError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=5, w_reh=0)
+    if K == 0:
+        assert b_sol._logaH_star < b_sol._logaH_beg
+    else:
+        assert np.log(K_STAR) < np.min(b_sol.logk)
 
 
 @pytest.mark.parametrize('N_star', [30, 90])
@@ -227,7 +296,6 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
               InflationEvent(ic.equations, -1, terminal=True)]
         bist = solve(ic=ic, events=ev, rtol=rtol)
         bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
-        bist.derive_approx_power()
         n_s = bist.n_s
         r = bist.r
         assert np.isclose(bist.N_star, N_star)
