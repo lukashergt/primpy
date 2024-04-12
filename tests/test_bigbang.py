@@ -124,12 +124,15 @@ def test_expand_recollapse_line():
         bb.expand_recollapse_line(Omega_m0=-1)
 
 
-def test_Hubble_parameter_exceptions():
+def test_Hubble_parameter_exceptions(recwarn):
     N = np.linspace(0, 200, 201)
     with pytest.raises(BigBangError, match="no Big Bang"):
         bb.Hubble_parameter(N=N, Omega_m0=0, Omega_K0=-0.01, h=0.7)
-    with pytest.warns(BigBangWarning, match="Universe recollapses"):
-        bb.Hubble_parameter(N=N, Omega_m0=1, Omega_K0=0.01, h=0.7)
+    bb.Hubble_parameter(N=N, Omega_m0=1, Omega_K0=0.01, h=0.7)
+    assert recwarn.list[0].category is BigBangWarning
+    assert "Universe recollapses" in str(recwarn.list[0].message)
+    assert recwarn.list[1].category is RuntimeWarning
+    assert "invalid value encountered in sqrt" == str(recwarn.list[1].message)
 
 
 @pytest.mark.parametrize('h', [0.3, 0.5, 0.7, 0.9])
@@ -141,12 +144,15 @@ def test_comoving_Hubble_horizon(h, Omega_K0, units):
 
 
 @pytest.mark.parametrize('units', ['planck', 'Mpc', 'SI'])
-def test_comoving_Hubble_horizon_exceptions(units):
+def test_comoving_Hubble_horizon_exceptions(units, recwarn):
     N = np.linspace(0, 200, 201)
     with pytest.raises(BigBangError, match="no Big Bang"):
         bb.comoving_Hubble_horizon(N=N, Omega_m0=0, Omega_K0=-0.01, h=0.7, units=units)
-    with pytest.warns(BigBangWarning, match="Universe recollapses"):
-        bb.comoving_Hubble_horizon(N=N, Omega_m0=1, Omega_K0=0.01, h=0.7, units=units)
+    bb.comoving_Hubble_horizon(N=N, Omega_m0=1, Omega_K0=0.01, h=0.7, units=units)
+    assert recwarn.list[0].category is BigBangWarning
+    assert "Universe recollapses" in str(recwarn.list[0].message)
+    assert recwarn.list[1].category is RuntimeWarning
+    assert "invalid value encountered in sqrt" == str(recwarn.list[1].message)
 
 
 @pytest.mark.parametrize('h', [0.3, 0.5, 0.7, 0.9])
@@ -162,13 +168,16 @@ def test_conformal_time(h, Omega_K0, N_BB):
     assert etas[-2] == pytest.approx(etas[-1])
 
 
-def test_conformal_time_exceptions():
+def test_conformal_time_exceptions(recwarn):
     with pytest.raises(BigBangError, match="no Big Bang"):
         bb.conformal_time(N_start=100, N=200, Omega_m0=0, Omega_K0=-0.01, h=0.7)
-    with pytest.warns(BigBangWarning, match="Universe recollapses"):
-        bb.conformal_time(N_start=100, N=200, Omega_m0=1, Omega_K0=0.01, h=0.7)
     with pytest.raises(TypeError, match="`N` needs to be either float or np.ndarray"):
         bb.conformal_time(N_start=100, N=[150, 200], Omega_m0=1, Omega_K0=0.01, h=0.7)
+    bb.conformal_time(N_start=100, N=200, Omega_m0=1, Omega_K0=0.01, h=0.7)
+    assert recwarn.list[0].category is BigBangWarning
+    assert "Universe recollapses" in str(recwarn.list[0].message)
+    assert recwarn.list[1].category is RuntimeWarning
+    assert "invalid value encountered in sqrt" == str(recwarn.list[1].message)
 
 
 @pytest.mark.parametrize('Omega_m0', [0.2, 0.4])
