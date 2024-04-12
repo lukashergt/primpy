@@ -56,6 +56,7 @@ class InsufficientInflationError(PrimpyError):
         self.message = message
         super(InsufficientInflationError, self).__init__(self.message, *args)
 
+
 class BigBangError(PrimpyError):
     """Exceptions for the standard Big Bang evolution.
 

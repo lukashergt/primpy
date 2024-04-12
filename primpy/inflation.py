@@ -5,7 +5,7 @@ from abc import ABC
 import numpy as np
 from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
-from primpy.exceptionhandling import PrimpyError, InsufficientInflationError
+from primpy.exceptionhandling import InsufficientInflationError
 from primpy.units import pi, c, lp_m, Mpc_m, mp_GeV, lp_iGeV
 from primpy.parameters import K_STAR, K_STAR_lp, T_CMB_Tp, g0
 from primpy.equations import Equations
@@ -330,7 +330,7 @@ class InflationEquations(Equations, ABC):
                                       - np.log(g_th) / 12
                                       + np.log(3/2 * T_CMB_Tp**4 / sol.rho_reh_mp4) / 4)
                         sol.delta_reh = sol._N_reh - sol._N_end
-                        sol.w_reh = np.log(3/2 * sol.V_end/sol.rho_reh_mp4) / (3 * sol.delta_reh) - 1
+                        sol.w_reh = np.log(3/2 * sol.V_end/sol.rho_reh_mp4) / (3*sol.delta_reh) - 1
 
                 sol.logk = sol._logaH[sol.inflation_mask] - np.log(sol.a0_Mpc)
                 sol._logaH_star = np.log(K_STAR * sol.a0_Mpc)

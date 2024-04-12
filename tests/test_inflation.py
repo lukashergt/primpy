@@ -177,8 +177,10 @@ def test_reheating(K, delta_reh, w_reh):
             InflationEvent(eq_N, -1, terminal=True)]
     bist = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-12)
     bisn = solve(ic=ic_N, events=ev_N, dense_output=True, method='DOP853', rtol=1e-12)
-    bist.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=delta_reh, w_reh=w_reh)
-    bisn.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=delta_reh, w_reh=w_reh)
+    bist.calibrate_scale_factor(calibration_method='reheating', h=h,
+                                delta_reh=delta_reh, w_reh=w_reh)
+    bisn.calibrate_scale_factor(calibration_method='reheating', h=h,
+                                delta_reh=delta_reh, w_reh=w_reh)
     assert bist.N_star == approx(bisn.N_star, rel=1e-5)
     assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
     assert bist.N_reh == approx(bisn.N_reh, rel=1e-5)
