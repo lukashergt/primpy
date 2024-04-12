@@ -200,9 +200,6 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
         return a0 * c / (a * H * 1e3)
     elif units == 'SI':
         return a0 * c / (a * H)
-    else:
-        raise NotImplementedError("%s not implemented for comoving Hubble horizon units, "
-                                  "please choose one of {'planck', 'Mpc', 'SI'}." % units)
 
 
 def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
