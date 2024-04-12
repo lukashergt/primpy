@@ -186,7 +186,12 @@ def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
             set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
         bist, bisn = set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
-        ks_disc = np.arange(1, 100, 1)
+        ks_disc = np.concatenate((
+            np.arange(1, 10, 1),
+            np.arange(10, 100, 10),
+            np.arange(100, 1000, 100),
+            np.arange(1000, 10000, 1000),
+        ))
         pps_t = solve_oscode(background=bist, k=ks_disc, rtol=5e-5)
         pps_n = solve_oscode(background=bisn, k=ks_disc, rtol=5e-5, even_grid=True)
         assert np.isfinite(pps_t.P_s_RST).all()
