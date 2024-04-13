@@ -315,27 +315,27 @@ def test_calibration_input_errors():
     ev = [InflationEvent(eq, +1, terminal=False),
           InflationEvent(eq, -1, terminal=True)]
     b_sol = solve(ic=ic, events=ev)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # missing h
         b_sol.calibrate_scale_factor(Omega_K0=Omega_K0)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # negative h
         b_sol.calibrate_scale_factor(Omega_K0=Omega_K0, h=-h)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # missing Omega_K0
         b_sol.calibrate_scale_factor(h=h)
-    with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(Omega_K0=0, h=h)
-    with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(Omega_K0=-Omega_K0, h=h)
-    with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(calibration_method='reheating', Omega_K0=Omega_K0, h=h)
-    with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, delta_reh=-5)
-    with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=-1, delta_reh=5)
-    with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, delta_reh=None)
-    with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, delta_reh=5)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError):  # wrong Omega_K0
+        b_sol.calibrate_scale_factor(h=h, Omega_K0=0)
+    with pytest.raises(ValueError):  # Omega_K0 and K do not match
+        b_sol.calibrate_scale_factor(h=h, Omega_K0=-Omega_K0)
+    with pytest.raises(ValueError):  # Omega_K0 should be None for calibration_method='reheating'
+        b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, Omega_K0=Omega_K0)
+    with pytest.raises(ValueError):  # negative delta_reh
+        b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=0, delta_reh=-5)
+    with pytest.raises(ValueError):  # w_reh < -1/3
+        b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=-1, delta_reh=5)
+    with pytest.raises(ValueError):  # w_reh provided but delta_reh missing
+        b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=0, delta_reh=None)
+    with pytest.raises(ValueError):  # delta_reh provided but w_reh missing
+        b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=None, delta_reh=5)
+    with pytest.raises(NotImplementedError):  # non-existent calibration_method
         b_sol.calibrate_scale_factor(calibration_method='spam', h=h)
 
 
