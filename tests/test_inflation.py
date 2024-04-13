@@ -157,6 +157,24 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
     assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
 
+    # logaH_star
+    if K == 0:
+        bist.calibrate_scale_factor(logaH_star=bist._logaH_star, N_star=bist.N_star)
+        bisn.calibrate_scale_factor(logaH_star=bist._logaH_star, N_star=bist.N_star)
+        assert bist.N_star == approx(bisn.N_star, rel=1e-5)
+        assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
+        assert bist.A_s == approx(bisn.A_s, rel=1e-8)
+        assert bist.n_s == approx(bisn.n_s, rel=1e-5)
+        assert bist.n_run == approx(bisn.n_run, rel=1e-3)
+        assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1, abs=1e-6)
+        assert bist.A_t == approx(bisn.A_t, rel=1e-8)
+        assert bist.r == approx(bisn.r, rel=1e-5)
+        assert bist.n_t == approx(bisn.n_t, rel=1e-5)
+        assert_allclose(bist.logk2logP_s(np.log(k)), bisn.logk2logP_s(np.log(k)), rtol=1e-6)
+        assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)), rtol=1e-6)
+        assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
+        assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
+
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
 @pytest.mark.parametrize('delta_reh', [0, 5])
