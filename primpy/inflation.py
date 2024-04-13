@@ -308,7 +308,6 @@ class InflationEquations(Equations, ABC):
                         raise ValueError(f"For curved universes with "
                                          f"calibration_method='reheating' Omega_K0 must be None, "
                                          f"but got Omega_K0={Omega_K0}.")
-                    sol._N_reh = sol._N_end + delta_reh
                     sol.N0 = (sol._N_end
                               + np.log((45/pi**2)**(1/4) * g0**(-1/3))
                               + np.log(g_th)/12
@@ -319,6 +318,7 @@ class InflationEquations(Equations, ABC):
                         sol.w_reh = np.nan
                         sol.rho_reh_mp4 = 3/2 * sol.V_end
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
+                        sol._N_reh = sol._N_end
                     elif w_reh is not None and delta_reh is not None:
                         if delta_reh < 0 or w_reh < -1 / 3:
                             raise ValueError(f"delta_reh must be positive (end of reheating "
@@ -332,6 +332,7 @@ class InflationEquations(Equations, ABC):
                         sol.N0 += 3/4 * (1/3 - w_reh) * delta_reh
                         sol.rho_reh_mp4 = 3/2 * sol.V_end * np.exp(-3 * (1+w_reh) * delta_reh)
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
+                        sol._N_reh = sol._N_end + delta_reh
                     elif ((w_reh is None and delta_reh is not None) or
                           (w_reh is not None and delta_reh is None)):
                         raise ValueError(f"Both w_reh and delta_reh must be given for reheating "
