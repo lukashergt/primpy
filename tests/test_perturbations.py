@@ -166,15 +166,15 @@ def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
         assert np.isfinite(damp_t).all()
         assert np.isfinite(damp_n).all()
 
-        pert_t = solve_oscode(background=bist, k=k, rtol=1e-4)
-        pert_n = solve_oscode(background=bisn, k=k, rtol=1e-4, even_grid=True)
+        pert_t = solve_oscode(background=bist, k=k, rtol=5e-5)
+        pert_n = solve_oscode(background=bisn, k=k, rtol=5e-5, even_grid=True)
         for sol in ['one', 'two']:
             assert np.all(np.isfinite(getattr(getattr(pert_t.scalar, sol), 't')))
             assert np.all(np.isfinite(getattr(getattr(pert_n.scalar, sol), '_N')))
             assert np.all(np.isfinite(getattr(getattr(pert_t.tensor, sol), 't')))
             assert np.all(np.isfinite(getattr(getattr(pert_n.tensor, sol), '_N')))
-        assert pert_n.scalar.P_s_RST == approx(pert_t.scalar.P_s_RST, rel=5e-3)
-        assert pert_n.tensor.P_t_RST == approx(pert_t.tensor.P_t_RST, rel=5e-3)
+        assert pert_n.scalar.P_s_RST == approx(pert_t.scalar.P_s_RST, rel=2e-3)
+        assert pert_n.tensor.P_t_RST == approx(pert_t.tensor.P_t_RST, rel=2e-3)
 
 
 @pytest.mark.parametrize('K', [-1, +1])
@@ -192,8 +192,8 @@ def test_perturbations_discrete_time_efolds(K, f_i, abs_Omega_K0):
             np.arange(100, 1000, 100),
             np.arange(1000, 10000, 1000),
         ))
-        pps_t = solve_oscode(background=bist, k=ks_disc, rtol=1e-4)
-        pps_n = solve_oscode(background=bisn, k=ks_disc, rtol=1e-4, even_grid=True)
+        pps_t = solve_oscode(background=bist, k=ks_disc, rtol=5e-5)
+        pps_n = solve_oscode(background=bisn, k=ks_disc, rtol=5e-5, even_grid=True)
         assert np.isfinite(pps_t.P_s_RST).all()
         assert np.isfinite(pps_t.P_t_RST).all()
         assert np.isfinite(pps_n.P_s_RST).all()

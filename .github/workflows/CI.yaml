@@ -58,9 +58,7 @@ jobs:
           python -m pip install pytest-cov pytest-xdist codecov  
 
       - name: Test with pytest
-        run: |
-          export OMP_NUM_THREADS=1
-          python -m pytest -n auto --cov=primpy --cov-report=xml
+        run: python -m pytest --cov=primpy --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
