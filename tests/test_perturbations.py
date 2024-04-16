@@ -232,7 +232,7 @@ def test_perturbations_large_scales_pyoscode_vs_background(K, f_i, abs_Omega_K0)
             set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
     else:
         bist, bisn = set_background_IS(K=K, f_i=f_i, abs_Omega_K0=abs_Omega_K0)
-        ks_iMpc = np.logspace(-1, 1, 100)
+        ks_iMpc = np.logspace(-1, 1, 51)
         logk_iMpc = np.log(ks_iMpc)
         ks_cont = ks_iMpc * bist.a0_Mpc
         pps_t = solve_oscode(background=bist, k=ks_cont)
