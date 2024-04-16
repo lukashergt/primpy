@@ -87,15 +87,15 @@ def solve_oscode(background, k, **kwargs):
         if fac_beg == 0:
             idx_beg = 0
         else:
-            idx_beg = np.argwhere(np.log(ki) - b.logaH > np.log(fac_beg)).ravel()
+            idx_beg = np.argwhere(np.log(ki) - b._logaH > np.log(fac_beg)).ravel()
             # set idx_beg to 0 if horizon starts out too small:
             idx_beg = 0 if idx_beg.size == 0 else idx_beg[-1]
-        idx_end = np.argwhere(b.logaH - np.log(ki) > np.log(fac_end)).ravel()[0]
+        idx_end = np.argwhere(b._logaH - np.log(ki) > np.log(fac_end)).ravel()[0]
         # set minimum for idx_end, needed e.g. in KD for superhorizon modes:
-        idx_end = idx_end if idx_end - idx_beg > b.logaH.size//20 else idx_beg + b.logaH.size//20
+        idx_end = idx_end if idx_end - idx_beg > b._logaH.size//20 else idx_beg + b._logaH.size//20
         if b.independent_variable == 't':
             p = PerturbationT(background=b, k=ki, idx_beg=idx_beg, idx_end=idx_end, **kwargs)
-        elif b.independent_variable == 'N':
+        elif b.independent_variable == '_N':
             p = PerturbationN(background=b, k=ki, idx_beg=idx_beg, idx_end=idx_end, **kwargs)
         else:
             raise NotImplementedError()

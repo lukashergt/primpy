@@ -65,15 +65,15 @@ class UntilTEvent(Event):
 
 
 class UntilNEvent(Event):
-    """Stop after a given number of e-folds `N`."""
+    """Stop after a given number of e-folds `_N`."""
 
     def __init__(self, equations, value, direction=0, terminal=True):
         super(UntilNEvent, self).__init__(equations, direction, terminal, value)
         self.name = 'UntilN'
 
     def __call__(self, x, y):
-        """Root of `N - value`."""
-        return self.equations.N(x, y) - self.value
+        """Root of `_N - value`."""
+        return self.equations._N(x, y) - self.value
 
 
 class InflationEvent(Event):
@@ -135,6 +135,6 @@ class ModeExitEvent(Event):
         self.name = 'ModeExit_dir%d_term%d_%e' % (self.direction, self.terminal, self.value)
 
     def __call__(self, x, y):
-        """Root of `logaH - log(value)`."""
+        """Root of `_logaH - log(value)`."""
         logH = np.log(np.abs(self.equations.H2(x, y))) / 2
-        return logH + self.equations.N(x, y) - np.log(self.value)
+        return logH + self.equations._N(x, y) - np.log(self.value)

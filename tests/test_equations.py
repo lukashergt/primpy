@@ -35,7 +35,7 @@ def test_equations_sol_ordering_after_postprocessing(K, phi_i, pot):
         # stop at end of inflation:
         ev_forwards = [InflationEvent(ic_forwards.equations, +1, terminal=False),
                        InflationEvent(ic_forwards.equations, -1, terminal=True)]
-        # stop when N = 0:
+        # stop when _N = 0:
         ev_backward = [UntilNEvent(ic_backward.equations, value=1, terminal=True)]
 
         b_forwards = solve(ic=ic_forwards, events=ev_forwards)
@@ -44,7 +44,7 @@ def test_equations_sol_ordering_after_postprocessing(K, phi_i, pot):
         # time and e-folds grow monotonically forwards in time
         assert np.all(np.diff(b_forwards.x) > 0)
         assert np.all(np.diff(b_forwards.t) > 0)
-        assert np.all(np.diff(b_forwards.N) > 0)
+        assert np.all(np.diff(b_forwards._N) > 0)
         # phi shrinks monotonically forwards in time (from start to end of inflation)
         assert np.all(np.diff(b_forwards.y[eq.idx['phi']]) < 0)
         assert np.all(np.diff(b_forwards.phi) < 0)
@@ -52,7 +52,7 @@ def test_equations_sol_ordering_after_postprocessing(K, phi_i, pot):
         # time and e-folds shrink monotonically backwards in time
         assert np.all(np.diff(b_backward.x) < 0)
         assert np.all(np.diff(b_backward.t) < 0)
-        assert np.all(np.diff(b_backward.N) < 0)
+        assert np.all(np.diff(b_backward._N) < 0)
         # phi grows monotonically backwards in time (before start of inflation)
         assert np.all(np.diff(b_backward.y[eq.idx['phi']]) > 0)
         assert np.all(np.diff(b_backward.phi) > 0)
@@ -76,13 +76,13 @@ def test_equations_sol_events(K):
         sol = solve(ic=ic, events=ev)
 
         assert hasattr(sol, 't_events')
-        assert hasattr(sol, 'N_events')
+        assert hasattr(sol, '_N_events')
         assert hasattr(sol, 'phi_events')
 
         for key, value in sol.y_events.items():
             if value.size == 0:
                 assert_equal(sol.t_events[key], value)
-                assert_equal(sol.N_events[key], value)
+                assert_equal(sol._N_events[key], value)
                 assert_equal(sol.phi_events[key], value)
                 if isinstance(eq, InflationEquationsT):
                     assert hasattr(sol, 'dphidt_events')
@@ -93,7 +93,7 @@ def test_equations_sol_events(K):
             else:
                 assert_equal(sol.phi_events[key], value[:, eq.idx['phi']])
                 if isinstance(eq, InflationEquationsT):
-                    assert_equal(sol.N_events[key], value[:, eq.idx['N']])
+                    assert_equal(sol._N_events[key], value[:, eq.idx['_N']])
                     assert hasattr(sol, 'dphidt_events')
                     assert_equal(sol.dphidt_events[key], value[:, eq.idx['dphidt']])
                 elif isinstance(eq, InflationEquationsN):

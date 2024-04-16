@@ -14,7 +14,7 @@ class PrimordialPowerSpectrum(object):
     def __init__(self, background, k, **kwargs):
         self.background = background
         self.k = k
-        self.k_iMpc = k * K_STAR / np.exp(background.logaH_star)
+        self.k_iMpc = k * K_STAR / np.exp(background._logaH_star)
         vacuum = kwargs.pop('vacuum', ('RST',))
         for vac in vacuum:
             setattr(self, 'P_s_%s' % vac, np.full_like(k, np.nan, dtype=float))
