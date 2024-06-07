@@ -1135,6 +1135,30 @@ class FeatureFunction(ABC):
         """Feature function 3rd derivative."""
 
 
+class GaussDip(FeatureFunction):
+    """Gaussian: `f(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
+
+    @staticmethod
+    def F(x, x0, a, b):
+        """`f(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
+        return a * np.exp(-(x - x0)**2 / (2 * b**2))
+
+    @staticmethod
+    def dF(x, x0, a, b):
+        """`f'(x) = -a/b**2 * (x-x0) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return -a / b**2 * (x - x0) * np.exp(-(x - x0)**2 / (2 * b**2))
+
+    @staticmethod
+    def d2F(x, x0, a, b):
+        """`f''(x) = -a/b**4 * (b**2 - (x-x0)**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return -a / b**4 * (b**2 - (x - x0)**2) * np.exp(-(x - x0)**2 / (2 * b**2))
+
+    @staticmethod
+    def d3F(x, x0, a, b):
+        """`f'''(x) = -a/b**6 * (x-x0) * ((x-x0)**2 - 3*b**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return -a / b**6 * (x - x0) * ((x - x0)**2 - 3 * b**2) * np.exp(-(x - x0)**2 / (2 * b**2))
+
+
 class FeaturePotential(InflationaryPotential, FeatureFunction):
     """Inflationary potential with a feature: `V(phi) = V0(phi) * (1+F(phi))`."""
 
