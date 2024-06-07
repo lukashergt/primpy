@@ -1109,3 +1109,27 @@ class DoubleWell4Potential(DoubleWellPotential):
 #     def inv_V(self, V):
 #         """`phi(V) = phi0 * (1 - sqrt(V) / Lambda**2)**(1/p)`."""
 #         return self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
+
+
+class FeatureFunction(ABC):
+    """Feature in the inflationary potential."""
+
+    @staticmethod
+    @abstractmethod
+    def F(x, x0, a, b):
+        """Feature function."""
+
+    @staticmethod
+    @abstractmethod
+    def dF(x, x0, a, b):
+        """Feature function derivative."""
+
+    @staticmethod
+    @abstractmethod
+    def d2F(x, x0, a, b):
+        """Feature function 2nd derivative."""
+
+    @staticmethod
+    @abstractmethod
+    def d3F(x, x0, a, b):
+        """Feature function 3rd derivative."""
