@@ -1136,27 +1136,54 @@ class FeatureFunction(ABC):
 
 
 class GaussDip(FeatureFunction):
-    """Gaussian: `f(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
+    """Gaussian: `F(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
 
     @staticmethod
     def F(x, x0, a, b):
-        """`f(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
+        """`F(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
         return a * np.exp(-(x - x0)**2 / (2 * b**2))
 
     @staticmethod
     def dF(x, x0, a, b):
-        """`f'(x) = -a/b**2 * (x-x0) * exp(-(x-x0)**2 / (2*b**2))`."""
+        """`F'(x) = -a/b**2 * (x-x0) * exp(-(x-x0)**2 / (2*b**2))`."""
         return -a / b**2 * (x - x0) * np.exp(-(x - x0)**2 / (2 * b**2))
 
     @staticmethod
     def d2F(x, x0, a, b):
-        """`f''(x) = -a/b**4 * (b**2 - (x-x0)**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        """`F''(x) = -a/b**4 * (b**2 - (x-x0)**2) * exp(-(x-x0)**2 / (2*b**2))`."""
         return -a / b**4 * (b**2 - (x - x0)**2) * np.exp(-(x - x0)**2 / (2 * b**2))
 
     @staticmethod
     def d3F(x, x0, a, b):
-        """`f'''(x) = -a/b**6 * (x-x0) * ((x-x0)**2 - 3*b**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        """`F'''(x) = -a/b**6 * (x-x0) * ((x-x0)**2 - 3*b**2) * exp(-(x-x0)**2 / (2*b**2))`."""
         return -a / b**6 * (x - x0) * ((x - x0)**2 - 3 * b**2) * np.exp(-(x - x0)**2 / (2 * b**2))
+
+
+class TanhStep(FeatureFunction):
+    """Tanh step function: `F(x) = a * tanh((x - x0) / b)`."""
+
+    @staticmethod
+    def F(x, x0, a, b):
+        """`F(x) = a * tanh((x-x0)/b)`."""
+        return a * np.tanh((x - x0) / b)
+
+    @staticmethod
+    def dF(x, x0, a, b):
+        """`F'(x) = a/b * (1 - tanh((x-x0)/b)**2)`."""
+        tanh = np.tanh((x - x0) / b)
+        return a / b * (1 - tanh**2)
+
+    @staticmethod
+    def d2F(x, x0, a, b):
+        """`F''(x) = -2*a/b**2 * tanh((x-x0)/b) * (1 - tanh((x-x0)/b)**2)`."""
+        tanh = np.tanh((x - x0) / b)
+        return -2 * a / b**2 * tanh * (1 - tanh**2)
+
+    @staticmethod
+    def d3F(x, x0, a, b):
+        """`F'''(x) = -2*a/b**3 * (1 - 4*tanh((x-x0)/b)**2 + 3*tanh((x-x0)/b)**4)`."""
+        tanh = np.tanh((x - x0) / b)
+        return -2 * a / b**3 * (1 - 4 * tanh**2 + 3 * tanh**4)
 
 
 class FeaturePotential(InflationaryPotential, FeatureFunction):
