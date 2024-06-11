@@ -1245,3 +1245,19 @@ class FeaturePotential(InflationaryPotential, FeatureFunction):
         d2F = super().d2F(phi, self.phi_feature, self.a_feature, self.b_feature)
         d3F = super().d3F(phi, self.phi_feature, self.a_feature, self.b_feature)
         return d3V0 * (1 + F) + 3 * d2V0 * dF + 3 * dV0 * d2F + V0 * d3F
+
+
+class StarobinskyGaussianDipPotential(FeaturePotential, StarobinskyPotential, GaussDip):
+    """Starobinsky potential with a Gaussian dip."""
+
+    tag = 'sgd'
+    name = 'StarobinskyGaussianDipPotential'
+    tex = r'Starobinsky with a Gaussian dip'
+
+
+class StarobinskyTanhStepPotential(FeaturePotential, StarobinskyPotential, TanhStep):
+    """Starobinsky potential with a hyperbolic tangent step."""
+
+    tag = 'sts'
+    name = 'StarobinskyTanhStepPotential'
+    tex = r'Starobinsky with a tanh step'
