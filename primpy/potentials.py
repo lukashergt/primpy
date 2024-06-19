@@ -1135,7 +1135,7 @@ class FeatureFunction(ABC):
         """Feature function 3rd derivative."""
 
 
-class GaussDip(FeatureFunction):
+class GaussianDip(FeatureFunction):
     """Gaussian: `F(x) = -a * exp(-(x-x0)**2 / (2*b**2))`."""
 
     @staticmethod
@@ -1247,7 +1247,7 @@ class FeaturePotential(InflationaryPotential, FeatureFunction):
         return d3V0 * (1 + F) + 3 * d2V0 * dF + 3 * dV0 * d2F + V0 * d3F
 
 
-class StarobinskyGaussianDipPotential(FeaturePotential, StarobinskyPotential, GaussDip):
+class StarobinskyGaussianDipPotential(FeaturePotential, StarobinskyPotential, GaussianDip):
     """Starobinsky potential with a Gaussian dip."""
 
     tag = 'sgd'
