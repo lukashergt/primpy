@@ -1109,3 +1109,155 @@ class DoubleWell4Potential(DoubleWellPotential):
 #     def inv_V(self, V):
 #         """`phi(V) = phi0 * (1 - sqrt(V) / Lambda**2)**(1/p)`."""
 #         return self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
+
+
+class FeatureFunction(ABC):
+    """Feature in the inflationary potential."""
+
+    @staticmethod
+    @abstractmethod
+    def F(x, x0, a, b):
+        """Feature function."""
+
+    @staticmethod
+    @abstractmethod
+    def dF(x, x0, a, b):
+        """Feature function derivative."""
+
+    @staticmethod
+    @abstractmethod
+    def d2F(x, x0, a, b):
+        """Feature function 2nd derivative."""
+
+    @staticmethod
+    @abstractmethod
+    def d3F(x, x0, a, b):
+        """Feature function 3rd derivative."""
+
+
+class GaussianDip(FeatureFunction):
+    """Gaussian: `F(x) = -a * exp(-(x-x0)**2 / (2*b**2))`."""
+
+    @staticmethod
+    def F(x, x0, a, b):
+        """`F(x) = -a * exp(-(x-x0)**2 / (2*b**2))`."""
+        return -a * np.exp(-(x - x0)**2 / (2 * b**2))
+
+    @staticmethod
+    def dF(x, x0, a, b):
+        """`F'(x) = a/b**2 * (x-x0) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return a / b**2 * (x - x0) * np.exp(-(x - x0)**2 / (2 * b**2))
+
+    @staticmethod
+    def d2F(x, x0, a, b):
+        """`F''(x) = a/b**4 * (b**2 - (x-x0)**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return a / b**4 * (b**2 - (x - x0)**2) * np.exp(-(x - x0)**2 / (2 * b**2))
+
+    @staticmethod
+    def d3F(x, x0, a, b):
+        """`F'''(x) = a/b**6 * (x-x0) * ((x-x0)**2 - 3*b**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return a / b**6 * (x - x0) * ((x - x0)**2 - 3 * b**2) * np.exp(-(x - x0)**2 / (2 * b**2))
+
+
+class TanhStep(FeatureFunction):
+    """Tanh step function: `F(x) = a * tanh((x - x0) / b)`."""
+
+    @staticmethod
+    def F(x, x0, a, b):
+        """`F(x) = a * tanh((x-x0)/b)`."""
+        return a * np.tanh((x - x0) / b)
+
+    @staticmethod
+    def dF(x, x0, a, b):
+        """`F'(x) = a/b * (1 - tanh((x-x0)/b)**2)`."""
+        tanh = np.tanh((x - x0) / b)
+        return a / b * (1 - tanh**2)
+
+    @staticmethod
+    def d2F(x, x0, a, b):
+        """`F''(x) = -2*a/b**2 * tanh((x-x0)/b) * (1 - tanh((x-x0)/b)**2)`."""
+        tanh = np.tanh((x - x0) / b)
+        return -2 * a / b**2 * tanh * (1 - tanh**2)
+
+    @staticmethod
+    def d3F(x, x0, a, b):
+        """`F'''(x) = -2*a/b**3 * (1 - 4*tanh((x-x0)/b)**2 + 3*tanh((x-x0)/b)**4)`."""
+        tanh = np.tanh((x - x0) / b)
+        return -2 * a / b**3 * (1 - 4 * tanh**2 + 3 * tanh**4)
+
+
+class FeaturePotential(InflationaryPotential, FeatureFunction):
+    """Inflationary potential with a feature: `V(phi) = V0(phi) * (1+F(phi))`."""
+
+    def __init__(self, **pot_kwargs):
+        self.phi_feature = pot_kwargs.pop('phi_feature')  # position of feature
+        self.a_feature = pot_kwargs.pop('a_feature')      # e.g. height or amplitude of feature
+        self.b_feature = pot_kwargs.pop('b_feature')      # e.g. width or gradient of feature
+        super().__init__(**pot_kwargs)
+
+    def V(self, phi):
+        """Inflationary potential V0(phi) with a feature function F(phi).
+
+        `V(phi) = V0(phi) * (1 + F(phi))`
+        """
+        V0 = super().V(phi)
+        F = super().F(phi, self.phi_feature, self.a_feature, self.b_feature)
+        return V0 * (1 + F)
+
+    def dV(self, phi):
+        """First derivative of the inflationary potential with a feature.
+
+        `V'(phi) = V0'(phi) * (1 + F(phi)) + V0(phi) * F'(phi)`
+        """
+        V0 = super().V(phi)
+        dV0 = super().dV(phi)
+        F = super().F(phi, self.phi_feature, self.a_feature, self.b_feature)
+        dF = super().dF(phi, self.phi_feature, self.a_feature, self.b_feature)
+        return dV0 * (1 + F) + V0 * dF
+
+    def d2V(self, phi):
+        """Second derivative of the inflationary potential with a feature.
+
+        `V''(phi) = V0''(phi) * (1 + F(phi)) + 2*V0'(phi)*F'(phi) + V0(phi)*F''(phi)`
+        """
+        V0 = super().V(phi)
+        dV0 = super().dV(phi)
+        d2V0 = super().d2V(phi)
+        F = super().F(phi, self.phi_feature, self.a_feature, self.b_feature)
+        dF = super().dF(phi, self.phi_feature, self.a_feature, self.b_feature)
+        d2F = super().d2F(phi, self.phi_feature, self.a_feature, self.b_feature)
+        return d2V0 * (1 + F) + 2 * dV0 * dF + V0 * d2F
+
+    def d3V(self, phi):
+        """Third derivative of the inflationary potential with a feature.
+
+        `V'''(phi) = V0'''(phi) * (1 + F(phi))
+                     + 3 * V0''(phi) * F'(phi)
+                     + 3 * V0'(phi) * F''(phi)
+                     + V0(phi) * F'''(phi)`
+        """
+        V0 = super().V(phi)
+        dV0 = super().dV(phi)
+        d2V0 = super().d2V(phi)
+        d3V0 = super().d3V(phi)
+        F = super().F(phi, self.phi_feature, self.a_feature, self.b_feature)
+        dF = super().dF(phi, self.phi_feature, self.a_feature, self.b_feature)
+        d2F = super().d2F(phi, self.phi_feature, self.a_feature, self.b_feature)
+        d3F = super().d3F(phi, self.phi_feature, self.a_feature, self.b_feature)
+        return d3V0 * (1 + F) + 3 * d2V0 * dF + 3 * dV0 * d2F + V0 * d3F
+
+
+class StarobinskyGaussianDipPotential(FeaturePotential, StarobinskyPotential, GaussianDip):
+    """Starobinsky potential with a Gaussian dip."""
+
+    tag = 'sgd'
+    name = 'StarobinskyGaussianDipPotential'
+    tex = r'Starobinsky with a Gaussian dip'
+
+
+class StarobinskyTanhStepPotential(FeaturePotential, StarobinskyPotential, TanhStep):
+    """Starobinsky potential with a hyperbolic tangent step."""
+
+    tag = 'sts'
+    name = 'StarobinskyTanhStepPotential'
+    tex = r'Starobinsky with a tanh step'
