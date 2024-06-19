@@ -1136,27 +1136,27 @@ class FeatureFunction(ABC):
 
 
 class GaussDip(FeatureFunction):
-    """Gaussian: `F(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
+    """Gaussian: `F(x) = -a * exp(-(x-x0)**2 / (2*b**2))`."""
 
     @staticmethod
     def F(x, x0, a, b):
-        """`F(x) = a * exp(-(x-x0)**2 / (2*b**2))`."""
-        return a * np.exp(-(x - x0)**2 / (2 * b**2))
+        """`F(x) = -a * exp(-(x-x0)**2 / (2*b**2))`."""
+        return -a * np.exp(-(x - x0)**2 / (2 * b**2))
 
     @staticmethod
     def dF(x, x0, a, b):
-        """`F'(x) = -a/b**2 * (x-x0) * exp(-(x-x0)**2 / (2*b**2))`."""
-        return -a / b**2 * (x - x0) * np.exp(-(x - x0)**2 / (2 * b**2))
+        """`F'(x) = a/b**2 * (x-x0) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return a / b**2 * (x - x0) * np.exp(-(x - x0)**2 / (2 * b**2))
 
     @staticmethod
     def d2F(x, x0, a, b):
-        """`F''(x) = -a/b**4 * (b**2 - (x-x0)**2) * exp(-(x-x0)**2 / (2*b**2))`."""
-        return -a / b**4 * (b**2 - (x - x0)**2) * np.exp(-(x - x0)**2 / (2 * b**2))
+        """`F''(x) = a/b**4 * (b**2 - (x-x0)**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return a / b**4 * (b**2 - (x - x0)**2) * np.exp(-(x - x0)**2 / (2 * b**2))
 
     @staticmethod
     def d3F(x, x0, a, b):
-        """`F'''(x) = -a/b**6 * (x-x0) * ((x-x0)**2 - 3*b**2) * exp(-(x-x0)**2 / (2*b**2))`."""
-        return -a / b**6 * (x - x0) * ((x - x0)**2 - 3 * b**2) * np.exp(-(x - x0)**2 / (2 * b**2))
+        """`F'''(x) = a/b**6 * (x-x0) * ((x-x0)**2 - 3*b**2) * exp(-(x-x0)**2 / (2*b**2))`."""
+        return a / b**6 * (x - x0) * ((x - x0)**2 - 3 * b**2) * np.exp(-(x - x0)**2 / (2 * b**2))
 
 
 class TanhStep(FeatureFunction):
