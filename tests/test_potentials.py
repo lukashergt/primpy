@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Tests for `primpy.potential` module."""
 import pytest
+from pytest import approx
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 import primpy.potentials as pp
@@ -51,11 +52,11 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
 def test_quadratic_inflation_V(Lambda, phi):
     """Tests for `QuadraticPotential`."""
     pot1 = pp.QuadraticPotential(Lambda=Lambda)
-    assert pot1.V(phi=phi) == pytest.approx(Lambda**4 * phi**2)
-    assert pot1.dV(phi=phi) == pytest.approx(2 * Lambda**4 * phi)
-    assert pot1.d2V(phi=phi) == pytest.approx(2 * Lambda**4)
-    assert pot1.d3V(phi=phi) == pytest.approx(0)
-    assert pot1.inv_V(V=Lambda**4) == pytest.approx(np.sqrt(1))
+    assert pot1.V(phi=phi) == approx(Lambda**4 * phi**2)
+    assert pot1.dV(phi=phi) == approx(2 * Lambda**4 * phi)
+    assert pot1.d2V(phi=phi) == approx(2 * Lambda**4)
+    assert pot1.d3V(phi=phi) == approx(0)
+    assert pot1.inv_V(V=Lambda**4) == approx(np.sqrt(1))
     with pytest.raises(Exception):
         pp.QuadraticPotential(mass=Lambda**2)
 
@@ -128,12 +129,12 @@ def test_monomial_slow_roll(p, N_star):
     n_s = Pot.sr_Nstar2ns(N_star=N_star, p=p)
     assert 0.8 < n_s < 1
     assert n_s == 1 - p / (2 * N_star) - 1 / N_star
-    assert Pot.sr_ns2Nstar(n_s=n_s, p=p) == pytest.approx(N_star)
+    assert Pot.sr_ns2Nstar(n_s=n_s, p=p) == approx(N_star)
 
     r = Pot.sr_Nstar2r(N_star=N_star, p=p)
     assert 1e-2 < Pot.sr_Nstar2r(N_star=N_star, p=p) < 1
     assert r == 16 * p / (4 * N_star + p)
-    assert Pot.sr_r2Nstar(r=r, p=p) == pytest.approx(N_star)
+    assert Pot.sr_r2Nstar(r=r, p=p) == approx(N_star)
 
 
 @pytest.mark.parametrize('Pot, p', [(pp.LinearPotential, 1),
@@ -145,12 +146,12 @@ def test_specific_monomial_slow_roll(Pot, p, N_star):
     n_s = Pot.sr_Nstar2ns(N_star=N_star)
     assert 0.8 < n_s < 1
     assert n_s == 1 - p / (2 * N_star) - 1 / N_star
-    assert Pot.sr_ns2Nstar(n_s=n_s) == pytest.approx(N_star)
+    assert Pot.sr_ns2Nstar(n_s=n_s) == approx(N_star)
 
     r = Pot.sr_Nstar2r(N_star=N_star)
     assert 1e-2 < Pot.sr_Nstar2r(N_star=N_star) < 1
     assert r == 16 * p / (4 * N_star + p)
-    assert Pot.sr_r2Nstar(r=r) == pytest.approx(N_star)
+    assert Pot.sr_r2Nstar(r=r) == approx(N_star)
 
 
 @pytest.mark.parametrize('N_star', [20, 60, 90])
@@ -158,16 +159,16 @@ def test_starobinsky_slow_roll(N_star):
     Pot = pp.StarobinskyPotential
 
     n_s = Pot.sr_Nstar2ns(N_star=N_star)
-    approx = 1 - 2 / N_star + (-3 + np.sqrt(3)) / N_star**2 + (-3 + 3*np.sqrt(3)) / N_star**3
+    aprx = 1 - 2 / N_star + (-3 + np.sqrt(3)) / N_star**2 + (-3 + 3*np.sqrt(3)) / N_star**3
     assert 0.8 < n_s < 1
-    assert n_s == pytest.approx(approx, rel=1e-3)
-    assert Pot.sr_ns2Nstar(n_s=n_s) == pytest.approx(N_star)
+    assert n_s == approx(aprx, rel=1e-3)
+    assert Pot.sr_ns2Nstar(n_s=n_s) == approx(N_star)
 
     r = Pot.sr_Nstar2r(N_star=N_star)
-    approx = 12 / N_star**2 - 12 * np.sqrt(3) / N_star**3 + 27 / N_star**4
+    aprx = 12 / N_star**2 - 12 * np.sqrt(3) / N_star**3 + 27 / N_star**4
     assert 1e-3 < r < 1
-    assert r == pytest.approx(approx, rel=1e-3)
-    assert Pot.sr_r2Nstar(r=r) == pytest.approx(N_star)
+    assert r == approx(aprx, rel=1e-3)
+    assert Pot.sr_r2Nstar(r=r) == approx(N_star)
 
 
 @pytest.mark.parametrize('pot_kwargs', [dict(phi0=10), dict(phi0=100), dict(phi0=1000)])
@@ -176,8 +177,56 @@ def test_natural_slow_roll(pot_kwargs, N_star):
     Pot = pp.NaturalPotential
     n_s = Pot.sr_Nstar2ns(N_star=N_star, **pot_kwargs)
     assert 0.8 < n_s < 1
-    assert Pot.sr_ns2Nstar(n_s=n_s, **pot_kwargs) == pytest.approx(N_star)
+    assert Pot.sr_ns2Nstar(n_s=n_s, **pot_kwargs) == approx(N_star)
 
     r = Pot.sr_Nstar2r(N_star=N_star, **pot_kwargs)
     assert 1e-4 < r < 1
-    assert Pot.sr_r2Nstar(r=r, **pot_kwargs) == pytest.approx(N_star)
+    assert Pot.sr_r2Nstar(r=r, **pot_kwargs) == approx(N_star)
+
+
+@pytest.mark.parametrize('a_feature', [0.1, 0.01])
+@pytest.mark.parametrize('b_feature', [0.5, 0.05])
+def test_feature_potential(a_feature, b_feature):
+    eps = np.finfo(float).eps
+    Lambda = 1e-3
+    phi_feature = 5
+    phi = np.linspace(0, 10, 200 + 1)[1:]
+    phi_smaller = phi[phi < phi_feature]
+    phi_greater = phi[phi > phi_feature]
+    phi_outside = phi[np.argwhere((phi < phi_feature - 3 * b_feature) |
+                                  (phi > phi_feature + 4 * b_feature)).ravel()]
+    pot = pp.StarobinskyPotential(Lambda=Lambda)
+
+    # Gaussian dip
+    fpot = pp.StarobinskyGaussianDipPotential(Lambda=Lambda, phi_feature=phi_feature,
+                                              a_feature=a_feature, b_feature=b_feature)
+    max_dV = np.max(np.abs(fpot.dV(phi=phi) / pot.dV(phi=phi) - 1))
+    max_d2V = np.max(np.abs(fpot.d2V(phi=phi) / pot.d2V(phi=phi) - 1))
+    max_d3V = np.max(np.abs(fpot.d3V(phi=phi) / pot.d3V(phi=phi) - 1))
+    assert np.all(fpot.V(phi=phi) >= 0)
+    assert np.all(fpot.V(phi=phi) <= pot.V(phi=phi))
+    assert_allclose(fpot.V(phi=phi) / pot.V(phi=phi), 1, rtol=a_feature + eps)
+    assert_allclose(fpot.dV(phi_outside) / pot.dV(phi_outside), 1, rtol=max_dV/10)
+    assert_allclose(fpot.d2V(phi_outside) / pot.d2V(phi_outside), 1, rtol=max_d2V/10)
+    assert_allclose(fpot.d3V(phi_outside) / pot.d3V(phi_outside), 1, rtol=max_d3V/10)
+    assert np.mean(fpot.dV(phi=phi_smaller) / pot.dV(phi=phi_smaller) - 1) < 0
+    assert np.mean(fpot.dV(phi=phi_greater) / pot.dV(phi=phi_greater) - 1) > 0
+    assert np.mean(fpot.d3V(phi=phi_smaller) / pot.d3V(phi=phi_smaller) - 1) > 0
+    assert np.mean(fpot.d3V(phi=phi_greater) / pot.d3V(phi=phi_greater) - 1) < 0
+
+    # Tanh step
+    fpot = pp.StarobinskyTanhStepPotential(Lambda=Lambda, phi_feature=phi_feature,
+                                           a_feature=a_feature, b_feature=b_feature)
+    max_dV = np.max(np.abs(fpot.dV(phi=phi) / pot.dV(phi=phi) - 1))
+    max_d2V = np.max(np.abs(fpot.d2V(phi=phi) / pot.d2V(phi=phi) - 1))
+    max_d3V = np.max(np.abs(fpot.d3V(phi=phi) / pot.d3V(phi=phi) - 1))
+    assert np.all(fpot.V(phi=phi) >= 0)
+    assert np.all(fpot.V(phi=phi_smaller) <= pot.V(phi=phi_smaller))
+    assert np.all(fpot.V(phi=phi_greater) >= pot.V(phi=phi_greater))
+    assert_allclose(fpot.V(phi=phi) / pot.V(phi=phi), 1, rtol=a_feature + eps)
+    assert_allclose(fpot.dV(phi_outside) / pot.dV(phi_outside), 1, rtol=max_dV/10)
+    assert_allclose(fpot.d2V(phi_outside) / pot.d2V(phi_outside), 1, rtol=max_d2V/10)
+    assert_allclose(fpot.d3V(phi_outside) / pot.d3V(phi_outside), 1, rtol=max_d3V/10)
+    assert np.mean(fpot.dV(phi=phi) / pot.dV(phi=phi) - 1) > 0
+    assert np.mean(fpot.d2V(phi=phi_smaller) / pot.d2V(phi=phi_smaller) - 1) < 0
+    assert np.mean(fpot.d2V(phi=phi_greater) / pot.d2V(phi=phi_greater) - 1) > 0
