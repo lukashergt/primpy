@@ -80,7 +80,9 @@ the Starobinsky potential with the following additional parameter setup:
 We compute the background equations keeping track of the start and the end of
 inflation and ending the ODE integration once a given number of e-folds has
 been reached. We set the initial conditions at the start of inflation and
-integrate both forwards and backwards in time.
+integrate both forwards and backwards in time. We finish by calibrating the
+scale factor for a flat universe (such that :math:`a_0=1`), which comes down to
+shifting the number of e-folds :math:`N` by a constant.
 
 .. plot:: :context: close-figs
 
@@ -100,6 +102,9 @@ integrate both forwards and backwards in time.
     # need to shift time, since we initially did not know the precise starting time of inflation
     backwards_t = (backwards.t - backwards.t.min())
     forewards_t = (forewards.t - backwards.t.min())
+    # calibrate the scale factor by providing the number `N_star` of e-folds of inflation after horizon crossing of the pivot scale
+    forewards.calibrate_scale_factor(N_star=N_star)
+    backwards.calibrate_scale_factor(N_star=N_star, background=forewards)
 
 
 Plot of some background variables in reduced Planck units. The inflaton field
@@ -156,14 +161,6 @@ parameter :math:`H`:
 Comoving Hubble horizon
 -----------------------
 
-Compute comoving Hubble horizon from background equations:
-
-.. plot:: :context: close-figs
-
-    forewards.derive_comoving_hubble_horizon(N_star=N_star)
-    backwards.derive_comoving_hubble_horizon(N_star=N_star, logaH_star=forewards.logaH_star)
-
-
 Plot the comoving Hubble horizon which initially increases during kinetic
 dominance, decreases during inflation, and eventually increases again during
 reheating:
@@ -189,14 +186,6 @@ reheating:
 
 Slow-roll approximation of the primordial power spectrum
 --------------------------------------------------------
-
-Compute the slow-roll approximation of the primordial power spectrum from the
-background variables:
-
-.. plot:: :context: close-figs
-
-    forewards.derive_approx_power(N_star=N_star)
-
 
 Estimate of the distance to recombination to get a sense of the CMB observable
 range for the primordial power spectrum which depends on the wavenumber
@@ -243,16 +232,8 @@ extra calibration that needs doing for flat universes:
 
 .. plot:: :context: close-figs
 
-    forewards.a0_Mpc = np.exp(np.mean(forewards.logaH[forewards.inflation_mask] - forewards.logk))
     k_iMpc = np.logspace(-6, 1, 2000)
     k_comoving = k_iMpc * forewards.a0_Mpc
-
-.. warning::
-    `primpy` has undergone a lot of revisions to adapt it to curvature. During
-    that process the treatment for flat universes has been somewhat neglected.
-    The calibration for flat universes will change in the future to try and
-    streamline this a bit more, but for now there is more care needed when it
-    comes to questions of units and calibration for flat universes.
 
 
 Compute the primordial power spectrum using :mod:`pyoscode` to solve the
