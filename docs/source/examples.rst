@@ -50,9 +50,9 @@ There are various large, single, scalar field inflation models implemented in
     ax.set_ylim(-0.05, 1.55)
     ax.set_yticks([])
     ax.set_xticks([0, 10])
-    ax.set_xticklabels([0, "$\phi_0$"])
-    ax.set_xlabel("$\phi$")
-    ax.set_ylabel("$V(\phi)$")
+    ax.set_xticklabels([0, "$\\phi_0$"])
+    ax.set_xlabel(r"$\phi$")
+    ax.set_ylabel(r"$V(\phi)$")
     ax.legend(bbox_to_anchor=(1, 0.5), loc='center left', labelcolor='linecolor',
               handlelength=0, markerscale=0);
     fig.tight_layout()
@@ -148,12 +148,12 @@ parameter :math:`H`:
     ax[3, 1].semilogy(backwards.N, backwards.H, c='r')
     ax[3, 1].semilogy(forewards.N, forewards.H, c='r')
 
-    ax[0, 0].set_ylabel("$\phi\ /\ m_\mathrm{p}$")
-    ax[1, 0].set_ylabel("$\dot\phi\ /\ m_\mathrm{p}^2$")
+    ax[0, 0].set_ylabel(r"$\phi\ /\ m_\mathrm{p}$")
+    ax[1, 0].set_ylabel(r"$\dot\phi\ /\ m_\mathrm{p}^2$")
     ax[2, 0].set_ylabel(r"$w_\phi \equiv p_\phi/\rho_\phi$")
-    ax[3, 0].set_ylabel("$H\ /\ m_\mathrm{p}$")
-    ax[3, 0].set_xlabel("$t\ /\ t_\mathrm{p}$");
-    ax[3, 1].set_xlabel("$N = \ln(a/a_\mathrm{p})$");
+    ax[3, 0].set_ylabel(r"$H\ /\ m_\mathrm{p}$")
+    ax[3, 0].set_xlabel(r"$t\ /\ t_\mathrm{p}$");
+    ax[3, 1].set_xlabel(r"$N = \ln(a/a_\mathrm{p})$");
 
     fig.tight_layout()
 
@@ -171,10 +171,10 @@ reheating:
 
     ax.semilogy(backwards.N, backwards.cHH_Mpc, c='r')
     ax.semilogy(forewards.N, forewards.cHH_Mpc, c='r')
-    ax.set_xlabel("$N \equiv \ln(a/\ell_\mathrm{p})$")
-    ax.set_ylabel("$a_0 (aH)^{-1}\ /\ \mathrm{Mpc}$")
+    ax.set_xlabel(r"$N \equiv \ln(a/\ell_\mathrm{p})$")
+    ax.set_ylabel(r"$a_0 (aH)^{-1}\ /\ \mathrm{Mpc}$")
 
-    ax.axhline(1/K_STAR, ls=':', color='0.5', label="pivot scale $k_\\ast=%g\,\mathrm{Mpc^{-1}}$" % K_STAR)
+    ax.axhline(1/K_STAR, ls=':', color='0.5', label="pivot scale $k_\\ast=%g\\,\\mathrm{Mpc^{-1}}$" % K_STAR)
     ax.axvline(forewards.N_cross, ls='--', color='0.5', label="horizon corssing of the pivot scale")
     ax.text(forewards.N_cross+(forewards.N_end-forewards.N_cross)/2, 1/K_STAR, r"$N_\ast=%g$" % forewards.N_star, ha='center', va='bottom')
     ax.text(forewards.N_beg  +(forewards.N_cross-forewards.N_beg)/2, forewards.cHH_Mpc[0], r"$N_\dagger=%g$" % (forewards.N_tot-forewards.N_star), ha='center', va='bottom')
@@ -211,13 +211,13 @@ Plot:
     ax.loglog(forewards.k_iMpc, forewards.P_tensor_approx,
               label="tensor PPS with $r\\approx%.2g$" % (forewards.r))
     ax.axvline(K_STAR, ls=':', color='k',
-               label="pivot scale $k_\\ast=%g\,\mathrm{Mpc^{-1}}$" % K_STAR)
+               label="pivot scale $k_\\ast=%g\\,\\mathrm{Mpc^{-1}}$" % K_STAR)
     ax.axvspan(2/D_rec, 2500/D_rec, color='0.5', alpha=0.5,
-               label="observable range by Planck ($\ell$ from 2 to 2500), \n" +
+               label="observable range by Planck ($\\ell$ from 2 to 2500), \n" +
                      "estimated from $r_\\ast=%g$ and $\\theta_\\ast=%g$" % (r_ast, theta_ast))
     ax.set_ylim(1e-12, 1e-8)
-    ax.set_ylabel("$\mathcal{P}(k)$")
-    ax.set_xlabel("$k\ /\ \mathrm{Mpc^{-1}}$")
+    ax.set_ylabel(r"$\mathcal{P}(k)$")
+    ax.set_xlabel(r"$k\ /\ \mathrm{Mpc^{-1}}$")
     ax.legend(bbox_to_anchor=(1, 1), loc='lower right')
     fig.tight_layout()
 
@@ -255,7 +255,7 @@ oscillatory ODE.
     ax.loglog(pps.k_iMpc, pps.P_t_RST, c=plt.cm.tab20(2), label="numeric tensor PPS")
     ax.set_xlim(pps.k_iMpc[0], pps.k_iMpc[-1])
     ax.set_ylim(1e-12, 1e-8)
-    ax.set_ylabel("$\mathcal{P}(k)$")
-    ax.set_xlabel("$k\ /\ \mathrm{Mpc^{-1}}$")
+    ax.set_ylabel(r"$\mathcal{P}(k)$")
+    ax.set_xlabel(r"$k\ /\ \mathrm{Mpc^{-1}}$")
     ax.legend(bbox_to_anchor=(1, 1), loc='lower right', ncol=2)
     fig.tight_layout()
