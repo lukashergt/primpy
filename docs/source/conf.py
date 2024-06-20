@@ -74,8 +74,8 @@ numpydoc_class_members_toctree = False
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'numpy':('http://docs.scipy.org/doc/numpy/', None),
-    'scipy':('http://docs.scipy.org/doc/scipy/', None),
-    'matplotlib':('http://matplotlib.org', None),
+    'numpy':('https://numpy.org/doc/stable/', None),
+    'scipy':('https://docs.scipy.org/doc/scipy/', None),
+    'matplotlib':('https://matplotlib.org/stable/', None),
     'pyoscode': ('https://oscode.readthedocs.io/en/latest', None)
 }
