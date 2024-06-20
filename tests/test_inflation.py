@@ -159,8 +159,8 @@ def test_sol_time_efolds(K):
 
     # logaH_star
     if K == 0:
-        bist.calibrate_scale_factor(logaH_star=bist._logaH_star, N_star=bist.N_star)
-        bisn.calibrate_scale_factor(logaH_star=bist._logaH_star, N_star=bist.N_star)
+        bist.calibrate_scale_factor(background=bist, N_star=bist.N_star)
+        bisn.calibrate_scale_factor(background=bist, N_star=bist.N_star)
         assert bist.N_star == approx(bisn.N_star, rel=1e-5)
         assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
         assert bist.A_s == approx(bisn.A_s, rel=1e-8)
@@ -303,6 +303,8 @@ def test_calibration_input_errors():
     ic = InflationStartIC(equations=eq, N_i=N_i, phi_i=phi_i, t_i=t_i)
     ev = [InflationEvent(eq, +1, terminal=False),
           InflationEvent(eq, -1, terminal=True)]
+    b = solve(ic=ic, events=ev)
+    b.calibrate_scale_factor(N_star=N_star)
     b_sol = solve(ic=ic, events=ev)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(N_star=N_star, Omega_K0=-0.1, h=h)
@@ -319,9 +321,11 @@ def test_calibration_input_errors():
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, delta_reh=5)
     with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(logaH_star=np.log(K_STAR_lp), N_star=None)
+        b_sol.calibrate_scale_factor(background=b, N_star=None)
     with pytest.raises(ValueError):
-        b_sol.calibrate_scale_factor(logaH_star=np.log(K_STAR_lp), N_star=-N_star)
+        b_sol.calibrate_scale_factor(background=b, N_star=-N_star)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(background=b, N_star=50)
     with pytest.raises(NotImplementedError):
         b_sol.calibrate_scale_factor(calibration_method='spam')
 
