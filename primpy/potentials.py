@@ -1229,12 +1229,13 @@ class FeaturePotential(InflationaryPotential, FeatureFunction):
         return d2V0 * (1 + F) + 2 * dV0 * dF + V0 * d2F
 
     def d3V(self, phi):
-        """Third derivative of the inflationary potential with a feature.
+        r"""Third derivative of the inflationary potential with a feature.
 
-        `V'''(phi) = V0'''(phi) * (1 + F(phi))
-                     + 3 * V0''(phi) * F'(phi)
-                     + 3 * V0'(phi) * F''(phi)
-                     + V0(phi) * F'''(phi)`
+        .. math::
+            V'''(\phi) = V_0'''(\phi) * (1 + F(\phi))
+                        + 3 * V_0''(\phi) * F'(\phi)
+                        + 3 * V_0'(\phi) * F''(\phi)
+                        + V_0(\phi) * F'''(\phi)
         """
         V0 = super().V(phi)
         dV0 = super().dV(phi)
