@@ -749,8 +749,8 @@ class NaturalPotential(InflationaryPotential):
                 Number of observable e-folds of inflation `N_star`
                 from horizon crossing till the end of inflation.
 
-        Keyword Arguments
-        -----------------
+        Other Parameters
+        ----------------
             phi0 : float
                 Inflaton distance between local maximum and minima.
 
@@ -905,8 +905,8 @@ class DoubleWell2Potential(DoubleWellPotential):
                 Number of observable e-folds of inflation `N_star`
                 from horizon crossing till the end of inflation.
 
-        Keyword Arguments
-        -----------------
+        Other Parameters
+        ----------------
             phi0 : float
                 Inflaton distance between local maximum and minima.
 
@@ -1016,8 +1016,8 @@ class DoubleWell4Potential(DoubleWellPotential):
                 Number of observable e-folds of inflation `N_star`
                 from horizon crossing till the end of inflation.
 
-        Keyword Arguments
-        -----------------
+        Other Parameters
+        ----------------
             phi0 : float
                 Inflaton distance between local maximum and minima.
 

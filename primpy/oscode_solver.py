@@ -21,8 +21,8 @@ def solve_oscode(background, k, **kwargs):
         k : int, float, np.ndarray
             Comoving wavenumber used to evolve the Mukhanov-Sasaki equation.
 
-    Keyword args
-    ------------
+    Other Parameters
+    ----------------
         y0 : (float, float, float, float)
             Initial values (y0_1, dy0_1, y0_2, dy0_2) of perturbations and
             their derivatives for two independent solutions. The perturbations
