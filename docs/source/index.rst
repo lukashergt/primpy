@@ -9,7 +9,7 @@
 
     README <readme>
     Examples <examples>
-    primpy API <primpy>
+    Modules <modules>
 
 
 Indices and tables
