@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.events`: setup for event tracking in :func:`scipy.integrate.solve_ivp`."""
+"""Setup for event tracking in :func:`scipy.integrate.solve_ivp`."""
 import numpy as np
 
 
@@ -11,17 +10,17 @@ class Event(object):
 
     Parameters
     ----------
-        equations: Equations
-            The equations for computing derived variables.
+    equations: Equations
+        The equations for computing derived variables.
 
-        direction: int [-1, 0, +1], optional, default 0
-            The direction of the root finding (if any)
+    direction: int, default: 0
+        The direction of the root finding (if any), one of {-1, 0, +1}.
 
-        terminal: bool, optional, default False
-            Whether to stop at this root
+    terminal: bool, default: False
+        Whether to stop at this root or continue integrating.
 
-        value: float, optional, default 0
-            Offset to root
+    value: float, default: 0
+        Offset to root.
 
     """
 
@@ -37,16 +36,16 @@ class Event(object):
 
         Parameters
         ----------
-            x : float
-                independent variable
+        x : float
+            independent variable
 
-            y : np.ndarray
-                dependent variables
+        y : np.ndarray
+            dependent variables
 
         Returns
         -------
-            root : float
-                event occurs when this is zero from a given direction
+        root : float
+            event occurs when this is zero from a given direction
 
         """
         raise NotImplementedError("Event class must define __call__.")
