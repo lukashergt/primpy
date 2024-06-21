@@ -13,9 +13,9 @@ class InflationEquationsT(InflationEquations):
         ``t``: cosmic time
 
     Dependent variables:
-        ``_N``: number of e-folds
-        ``phi``: inflaton field
-        ``dphidt``: `d(phi)/dt`
+        * ``_N``: number of e-folds
+        * ``phi``: inflaton field
+        * ``dphidt``: `d(phi)/dt`
 
     """
 

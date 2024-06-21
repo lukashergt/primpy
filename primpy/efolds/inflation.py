@@ -15,10 +15,10 @@ class InflationEquationsN(InflationEquations):
         (the underscore here means that this is the as of yet uncalibrated scale factor)
 
     Dependent variables:
-        ``phi``: inflaton field
-        ``dphidN``: `d(phi)/dN`
-        ``t``: time (optional)
-        ``eta``: conformal time (optional)
+        * ``phi``: inflaton field
+        * ``dphidN``: `d(phi)/dN`
+        * ``t``: time (optional)
+        * ``eta``: conformal time (optional)
 
     """
 
