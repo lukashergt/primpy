@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.time.perturbations`: curvature perturbations with respect to time `t`."""
+"""Curvature perturbations with respect to time `t`."""
 import numpy as np
 from primpy.perturbations import Perturbation, ScalarMode, TensorMode
 
@@ -9,15 +8,12 @@ class PerturbationT(Perturbation):
 
     Solves the Mukhanov--Sasaki equations w.r.t. cosmic time for curved universes.
 
-    Input Parameters
-    ----------------
-        background : Bunch object
-            Background solution as returned by
-            :func:`primpy.time.inflation.InflationEquationsN.sol`.
-            Monkey-patched version of the Bunch type usually returned by
-            :func:`scipy.integrate.solve_ivp`.
-        k : float
-            wavenumber
+    Parameters
+    ----------
+    background : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+        Background solution as returned by :func:`primpy.time.inflation.InflationEquationsT.sol`.
+    k : float
+        wavenumber
 
     """
 

@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.efolds.perturbations`: curvature perturbations with respect to e-folds `_N`."""
+"""Curvature perturbations with respect to e-folds `_N`."""
 import numpy as np
 from primpy.perturbations import Perturbation, ScalarMode, TensorMode
 
@@ -10,15 +9,12 @@ class PerturbationN(Perturbation):
     Solves the Mukhanov--Sasaki equations w.r.t. number of e-folds `_N` of the
     scale factor `a` for curved universes.
 
-    Input Parameters
-    ----------------
-        background : Bunch object
-            Background solution as returned by
-            :func:`primpy.efolds.inflation.InflationEquationsN.sol`.
-            Monkey-patched version of the Bunch type usually returned by
-            :func:`scipy.integrate.solve_ivp`.
-        k : float
-            wavenumber
+    Parameters
+    ----------
+    background : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+        Background solution as returned by :func:`primpy.efolds.inflation.InflationEquationsN.sol`.
+    k : float
+        wavenumber
 
     """
 

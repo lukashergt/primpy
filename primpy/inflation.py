@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.inflation`: general setup for equations for cosmic inflation."""
+"""General setup for equations for cosmic inflation."""
 from warnings import warn
 from abc import ABC
 import numpy as np

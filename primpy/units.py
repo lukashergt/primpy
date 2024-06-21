@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.units`: units and constants for primpy."""
+"""Units and constants for primpy."""
 import numpy as np
 from scipy.constants import mega, giga, parsec as parsec_m
 from scipy.constants import pi, c, hbar, G, k as k_B, e

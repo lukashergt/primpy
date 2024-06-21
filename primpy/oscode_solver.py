@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.oscode_solver`: setup for running :func:`pyoscode.solve`."""
+"""Setup for running :func:`pyoscode.solve`."""
 import numpy as np
 import pyoscode
 from primpy.perturbations import PrimordialPowerSpectrum
@@ -15,56 +14,57 @@ def solve_oscode(background, k, **kwargs):
 
     Parameters
     ----------
-        background : Bunch object as returned by :func:`primpy.solver.solve`
-            Solution to the inflationary background equations used to calculate
-            the frequency and damping term passed to oscode.
-        k : int, float, np.ndarray
-            Comoving wavenumber used to evolve the Mukhanov-Sasaki equation.
+    background : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+        Bunch object as returned by :func:`primpy.solver.solve`.
+        Solution to the inflationary background equations used to calculate
+        the frequency and damping term passed to oscode.
+    k : int, float, np.ndarray
+        Comoving wavenumber used to evolve the Mukhanov-Sasaki equation.
 
     Other Parameters
     ----------------
-        y0 : (float, float, float, float)
-            Initial values (y0_1, dy0_1, y0_2, dy0_2) of perturbations and
-            their derivatives for two independent solutions. The perturbations
-            (y0_1, y0_2) are scaled with `k` and their derivatives with `k**2`
-            in order to produce freeze-out values of about order(~1).
-            default : determined by input inflationary potential
-        rtol : float
-            Tolerance passed to pyoscode.
-            default : 5e-5
-        fac_beg : int, float
-            Integration of the mode evolution starts when the considered
-            scale 1/k is within a factor of `fac_beg` of the comoving Hubble
-            horizon, i.e. when `1/k > 1/aH / fac_beg`.
-            `fac_beg=0` starts integration immediately.
-            default : 0
-        fac_end : int, float
-            Integration of the mode evolution stops when the considered
-            scale 1/k exceeds the comoving Hubble horizon by a factor of
-            `fac_end`, i.e. when `1/k > 1/aH * fac_end`.
-            default : 100
-        even_grid : bool
-            Set this to True if the grid of the independent variable is
-            equally spaced.
-            default : False
-        vacuum : tuple
-            Set of vacuum initial conditions to be computed.
-            Choose any of ('RST', ).
-            default : ('RST', )
-        drop_closed_large_scales : bool
-            If true, this will set the PPS for closed universes on comoving
-            scales of `k < 1` to close to zero (1e-30). Strictly speaking, the
-            PPS for closed universes is only defined for rational numbers
-            `k > 2`.
-            default : True
+    y0 : (float, float, float, float)
+        Initial values (y0_1, dy0_1, y0_2, dy0_2) of perturbations and
+        their derivatives for two independent solutions. The perturbations
+        (y0_1, y0_2) are scaled with `k` and their derivatives with `k**2`
+        in order to produce freeze-out values of about order(~1).
+        default : determined by input inflationary potential
+    rtol : float
+        Tolerance passed to pyoscode.
+        default : 5e-5
+    fac_beg : int, float
+        Integration of the mode evolution starts when the considered
+        scale 1/k is within a factor of `fac_beg` of the comoving Hubble
+        horizon, i.e. when `1/k > 1/aH / fac_beg`.
+        `fac_beg=0` starts integration immediately.
+        default : 0
+    fac_end : int, float
+        Integration of the mode evolution stops when the considered
+        scale 1/k exceeds the comoving Hubble horizon by a factor of
+        `fac_end`, i.e. when `1/k > 1/aH * fac_end`.
+        default : 100
+    even_grid : bool
+        Set this to True if the grid of the independent variable is
+        equally spaced.
+        default : False
+    vacuum : tuple
+        Set of vacuum initial conditions to be computed.
+        Choose any of ('RST', ).
+        default : ('RST', )
+    drop_closed_large_scales : bool
+        If true, this will set the PPS for closed universes on comoving
+        scales of `k < 1` to close to zero (1e-30). Strictly speaking, the
+        PPS for closed universes is only defined for rational numbers
+        `k > 2`.
+        default : True
 
     Returns
     -------
-        sol : Bunch object
-            Solution to the inverse value problem, containing the primordial
-            power spectrum value corresponding to the wavenumber `k`.
-            Monkey-patched version of the Bunch type usually returned by
-            :func:`scipy.integrate.solve_ivp`.
+    sol : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+        Solution to the inverse value problem, containing the primordial
+        power spectrum value corresponding to the wavenumber `k`.
+        Monkey-patched version of the Bunch type usually returned by
+        :func:`scipy.integrate.solve_ivp`.
 
     """
     assert 'tol' not in kwargs

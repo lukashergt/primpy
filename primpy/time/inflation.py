@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.time.inflation`: differential equations for inflation w.r.t. time `t`."""
+"""Differential equations for inflation w.r.t. time `t`."""
 import numpy as np
 from primpy.inflation import InflationEquations
 
@@ -11,12 +10,12 @@ class InflationEquationsT(InflationEquations):
     using the Klein-Gordon and Friedmann equations.
 
     Independent variable:
-        t: cosmic time
+        ``t``: cosmic time
 
     Dependent variables:
-        _N: number of e-folds
-        phi: inflaton field
-        dphidt: `d(phi)/dt`
+        ``_N``: number of e-folds
+        ``phi``: inflaton field
+        ``dphidt``: `d(phi)/dt`
 
     """
 

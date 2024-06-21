@@ -261,11 +261,10 @@ def conformal_time_ratio(Omega_m0, Omega_K0, h, b_forward, b_backward=None):
     b_forward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
         Solution returned by :func:`primpy.solver.solve`. Needs to have been run
         with `track_eta=True`.
-    b_backward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+    b_backward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`, default: None
         Additional solution returned by :func:`primpy.solver.solve`. This second
         solution is assumed to be an integration from inflation start
         backwards in time.
-        optional, default : None
 
     Returns
     -------

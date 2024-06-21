@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.efolds.inflation`: differential equations for inflation w.r.t. e-folds `N`."""
+"""Differential equations for inflation w.r.t. e-folds `N`."""
 import numpy as np
 from primpy.inflation import InflationEquations
 
@@ -12,14 +11,14 @@ class InflationEquationsN(InflationEquations):
     and Friedmann equations.
 
     Independent variable:
-        _N: e-folds of the scale-factor
+        ``_N``: e-folds of the scale-factor
         (the underscore here means that this is the as of yet uncalibrated scale factor)
 
     Dependent variables:
-        phi: inflaton field
-        dphidN: `d(phi)/dN`
-        t: time (optional)
-        eta: conformal time (optional)
+        ``phi``: inflaton field
+        ``dphidN``: `d(phi)/dN`
+        ``t``: time (optional)
+        ``eta``: conformal time (optional)
 
     """
 

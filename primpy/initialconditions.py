@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.initialconditions`: initial conditions for inflation."""
+"""Initial conditions for inflation."""
 import warnings
 import numpy as np
 from scipy.optimize import root_scalar

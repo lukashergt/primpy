@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.exceptions`: Custom exceptions and warnings."""
+"""Custom exceptions and warnings."""
 
 
 class PrimpyError(Exception):
@@ -11,15 +10,14 @@ class InflationStartError(PrimpyError):
 
     Parameters
     ----------
-        message : str
-            Explanation of the error.
+    message : str
+        Explanation of the error.
 
     Other Parameters
     ----------------
-        geometry : str
-            Should be either 'open' or 'closed' to relate to the respective
-            condition at inflation start.
-            default : "all types of"
+    geometry : str, default: "all types of"
+        Should be either 'open' or 'closed' to relate to the respective
+        condition at inflation start.
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -34,8 +32,8 @@ class StepSizeError(PrimpyError):
 
     Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
@@ -48,8 +46,8 @@ class InsufficientInflationError(PrimpyError):
 
     Parameters
     ----------
-        message : str
-            Explanation of the error.
+    message : str
+        Explanation of the error.
     """
 
     def __init__(self, message, *args):
@@ -62,8 +60,8 @@ class BigBangError(PrimpyError):
 
     Parameters
     ----------
-        message : str
-            Explanation of the error.
+    message : str
+        Explanation of the error.
     """
 
     def __init__(self, message, *args):
@@ -80,8 +78,8 @@ class InflationWarning(PrimpyWarning):
 
     Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
@@ -94,8 +92,8 @@ class CollapseWarning(InflationWarning):
 
     Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
@@ -109,14 +107,13 @@ class InflationStartWarning(InflationWarning):
 
     Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
 
     Other Parameters
     ----------------
-        events : dict
-            Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
-            default : None
+    events : dict, default: None
+        Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -140,16 +137,15 @@ class InflationEndWarning(InflationWarning):
 
     Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
 
     Other Parameters
     ----------------
-        events : dict
-            Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
-            default : None
-        sol : Bunch object returned by :func:`primpy.solver.solve`
-            default : None
+    events : dict, default: None
+        Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
+    sol : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`, default: None
+        Bunch object returned by :func:`primpy.solver.solve`.
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -180,8 +176,8 @@ class BigBangWarning(PrimpyWarning):
 
     Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
