@@ -59,6 +59,17 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes.
+#
+html_theme = 'sphinx_rtd_theme'
+
+html_static_path = []
+
+
 # -- Options for autodoc -------------------------------------------------
 autodoc_default_options = {
     'members': True,
@@ -91,17 +102,6 @@ plot_include_source = True
 plot_html_show_source_link = False
 plot_html_show_formats = False
 plot_pre_code = "import numpy as np; from matplotlib import pyplot as plt"
-
-
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = 'sphinx_rtd_theme'
-
-html_static_path = []
 
 
 # -- Options for intersphinx extension ---------------------------------------
