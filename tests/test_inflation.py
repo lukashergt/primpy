@@ -7,7 +7,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from primpy.exceptionhandling import InflationEndWarning, InsufficientInflationError
 from primpy.units import Mpc_m, lp_m
-from primpy.parameters import K_STAR, K_STAR_lp
+from primpy.parameters import K_STAR
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
