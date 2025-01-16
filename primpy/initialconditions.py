@@ -1,4 +1,5 @@
 """Initial conditions for inflation."""
+from abc import ABC, abstractmethod
 import warnings
 import numpy as np
 from scipy.optimize import root_scalar
@@ -11,8 +12,20 @@ from primpy.events import InflationEvent, CollapseEvent, UntilNEvent
 import primpy.bigbang as bb
 
 
+class InitialConditions(ABC):
+    """Base class for initial conditions."""
+
+    @abstractmethod
+    def __init__(self, equations, **kwargs):
+        self.equations = equations
+
+    @abstractmethod
+    def __call__(self, y0, **ivp_kwargs):
+        """Initialise background equations of inflation."""
+
+
 # noinspection PyPep8Naming
-class SlowRollIC(object):
+class SlowRollIC(InitialConditions):
     """Slow-roll initial conditions given `phi_i` and either of `N_i` or `Omega_Ki`.
 
     Class for setting up initial conditions during slow-roll inflation where
@@ -20,7 +33,7 @@ class SlowRollIC(object):
     """
 
     def __init__(self, equations, phi_i, t_i=None, eta_i=None, x_end=1e300, **kwargs):
-        self.equations = equations
+        super().__init__(equations=equations, **kwargs)
         self.phi_i = phi_i
         self.t_i = t_i
         self.eta_i = eta_i
@@ -82,7 +95,7 @@ class SlowRollIC(object):
             y0[self.equations.idx['eta']] = self.eta_i
 
 
-class InflationStartIC(object):
+class InflationStartIC(InitialConditions):
     """Inflation start initial conditions given `phi_i` and either of `N_i` or `Omega_Ki`.
 
     Class for setting up initial conditions at the start of inflation, when
@@ -90,7 +103,7 @@ class InflationStartIC(object):
     """
 
     def __init__(self, equations, phi_i, t_i=None, eta_i=None, x_end=1e300, **kwargs):
-        self.equations = equations
+        super().__init__(equations=equations, **kwargs)
         self.phi_i = phi_i
         self.t_i = t_i
         self.eta_i = eta_i

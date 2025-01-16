@@ -1,4 +1,9 @@
-"""General setup for running :func:`scipy.integrate.solve_ivp`."""
+"""General setup for running :func:`scipy.integrate.solve_ivp`.
+
+(Modified from "primordial" by Will Handley.)
+"""
+
+
 import numpy as np
 from scipy import integrate
 
@@ -11,18 +16,16 @@ def solve(ic, *args, **kwargs):
 
     Parameters
     ----------
-    ic : primordial.initialconditions.InitialConditions
+    ic : :class:`primpy.initialconditions.InitialConditions`
         Initial conditions specifying relevant equations, variables, and
         initial numerical values.
-
-    All other arguments are identical to :func:`scipy.integrate.solve_ivp`.
+    *args, **kwargs
+        All other arguments are identical to :func:`scipy.integrate.solve_ivp`.
 
     Returns
     -------
     sol : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
         Solution to the inverse value problem.
-
-    `(c)` modified from "primordial" by Will Handley.
 
     """
     events = kwargs.pop('events', [])
