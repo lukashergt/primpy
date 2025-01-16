@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.equations`: general setup for ODEs."""
+"""General setup for ODEs."""
 from abc import ABC
 from types import MethodType
 import numpy as np
@@ -13,10 +12,10 @@ class Equations(ABC):
 
     Attributes
     ----------
-        idx : dict
-            dictionary mapping variable names to indices in the solution vector `y`
-        independent_variable : string
-            name of independent variable
+    idx : dict
+        dictionary mapping variable names to indices in the solution vector `y`
+    independent_variable : string
+        name of independent variable
 
     """
 
@@ -28,16 +27,16 @@ class Equations(ABC):
 
         Parameters
         ----------
-            x : float
-                independent variable
+        x : float
+            independent variable
 
-            y : np.ndarray
-                dependent variables
+        y : np.ndarray
+            dependent variables
 
         Returns
         -------
-            dy : np.ndarray
-                Vector of derivatives
+        dy : np.ndarray
+            Vector of derivatives
 
         """
         raise NotImplementedError("Equations class must define __call__.")
@@ -66,8 +65,8 @@ class Equations(ABC):
 
         Parameters
         ----------
-            name : str
-                Name of the independent variable.
+        name : str
+            Name of the independent variable.
 
         """
         def method(self, x, y):
@@ -88,8 +87,8 @@ class Equations(ABC):
 
         Parameters
         ----------
-            *args : str
-                Name of the dependent variables
+        *args : str
+            Name of the dependent variables
 
         """
         for name in args:
@@ -103,18 +102,18 @@ class Equations(ABC):
 
         method.__doc__ = """Retrieve %s from the solution vector.
 
-        Arguments
-        ---------
-            x : float
-                independent variable
+        Parameters
+        ----------
+        x : float
+            independent variable
 
-            y : np.array
-                dependent variables
+        y : np.array
+            dependent variables
 
         Returns
         -------
-            %s : float
-                value of  %s
+        %s : float
+            value of  %s
 
         """ % (name, name, name)
 

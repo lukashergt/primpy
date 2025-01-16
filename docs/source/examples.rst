@@ -33,7 +33,7 @@ There are various large, single, scalar field inflation models implemented in
 
     phi_range = np.linspace(-3, 13, 100)
 
-    mn2 = pp.QuadraticPotential(Lambda=(2/10**2)**(1/4))
+    mn2 = pp.QuadraticPotential(Lambda=1/10**(1/2))
     mn4 = pp.QuarticPotential(Lambda=1/10)
     nat = pp.NaturalPotential(Lambda=1, phi0=10)
     dw2 = pp.DoubleWell2Potential(Lambda=1, phi0=10)
@@ -50,11 +50,11 @@ There are various large, single, scalar field inflation models implemented in
     ax.set_ylim(-0.05, 1.55)
     ax.set_yticks([])
     ax.set_xticks([0, 10])
-    ax.set_xticklabels([0, "$\phi_0$"])
-    ax.set_xlabel("$\phi$")
-    ax.set_ylabel("$V(\phi)$")
+    ax.set_xticklabels([0, "$\\phi_0$"])
+    ax.set_xlabel(r"$\phi$")
+    ax.set_ylabel(r"$V(\phi)$")
     ax.legend(bbox_to_anchor=(1, 0.5), loc='center left', labelcolor='linecolor',
-              handlelength=0, markerscale=0);
+              handlelength=0, markerscale=0)
     fig.tight_layout()
 
 
@@ -80,11 +80,14 @@ the Starobinsky potential with the following additional parameter setup:
 We compute the background equations keeping track of the start and the end of
 inflation and ending the ODE integration once a given number of e-folds has
 been reached. We set the initial conditions at the start of inflation and
-integrate both forwards and backwards in time.
+integrate both forwards and backwards in time. We finish by calibrating the
+scale factor for a flat universe (such that :math:`a_0=1`), which comes down to
+shifting the number of e-folds :math:`N` by a constant.
 
 .. plot:: :context: close-figs
 
-    Lambda, phi_star, N_star = Pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None) # crude slow-roll estimate
+    # slow-roll estimate of amplitude `Lambda` and field value `phi_star` at horizon crossing
+    Lambda, phi_star, N_star = Pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None)
     pot = Pot(Lambda=Lambda)
     eq = InflationEquations(K=K, potential=pot, track_eta=False)
     ev = [UntilNEvent(eq, value=N_end+delta_N_reh),  # decides stopping criterion
@@ -92,14 +95,20 @@ integrate both forwards and backwards in time.
           InflationEvent(eq, -1, terminal=False)]    # records inflation end
 
     # from inflation start forwards in time, optimising to get `N_tot` e-folds of inflation
-    ic_fore = ISIC_Nt(equations=eq, N_tot=N_tot, N_i=N_end-N_tot, phi_i_bracket=[phi_star-3, phi_star+3], t_i=t_eval[0])
-    forewards = solve(ic=ic_fore, events=ev, t_eval=t_eval)
+    ic_fore = ISIC_Nt(equations=eq, N_tot=N_tot, N_i=N_end-N_tot, t_i=t_eval[0],
+                      phi_i_bracket=[phi_star-3, phi_star+3])
+    fward = solve(ic=ic_fore, events=ev, t_eval=t_eval)
     # from inflation start backwards in time
-    ic_back = InflationStartIC(equations=eq, phi_i=ic_fore.phi_i, N_i=ic_fore.N_i, t_i=t_eval[0], x_end=1)
-    backwards = solve(ic=ic_back, events=ev)
+    ic_back = InflationStartIC(equations=eq, phi_i=ic_fore.phi_i, N_i=ic_fore.N_i, t_i=t_eval[0],
+                               x_end=1)
+    bward = solve(ic=ic_back, events=ev)
     # need to shift time, since we initially did not know the precise starting time of inflation
-    backwards_t = (backwards.t - backwards.t.min())
-    forewards_t = (forewards.t - backwards.t.min())
+    bward_t = (bward.t - bward.t.min())
+    fward_t = (fward.t - bward.t.min())
+    # calibrate the scale factor by providing the number `N_star` of e-folds of inflation after
+    # horizon crossing of the pivot scale
+    fward.calibrate_scale_factor(N_star=N_star)
+    bward.calibrate_scale_factor(N_star=N_star, background=fward)
 
 
 Plot of some background variables in reduced Planck units. The inflaton field
@@ -109,60 +118,53 @@ parameter :math:`H`:
 
 .. plot:: :context: close-figs
 
-    fig, ax = plt.subplots(4, 2, sharex='col', sharey='row', gridspec_kw={'hspace': 0, 'wspace': 0})
+    fig, ax = plt.subplots(4, 2, sharex='col', sharey='row',
+                           gridspec_kw={'hspace': 0, 'wspace': 0})
 
     ax[0, 0].set_xlim(1, 2e7)
     ax[0, 0].set_ylim(-3, 23)
     ax[1, 0].set_ylim(-5e-1, 5e-5)
     ax[3, 0].set_ylim(0.5e-7, 1e-0)
 
-    ax[0, 0].semilogx(backwards_t, backwards.phi, c='r')
-    ax[0, 0].semilogx(forewards_t, forewards.phi, c='r')
-    ax[1, 0].semilogx(backwards_t, backwards.dphidt, c='r')
-    ax[1, 0].semilogx(forewards_t, forewards.dphidt, c='r')
+    ax[0, 0].semilogx(bward_t, bward.phi, c='r')
+    ax[0, 0].semilogx(fward_t, fward.phi, c='r')
+    ax[1, 0].semilogx(bward_t, bward.dphidt, c='r')
+    ax[1, 0].semilogx(fward_t, fward.dphidt, c='r')
     ax[1, 0].set_yscale('symlog', linthresh=1e-5)
     ax[1, 0].axhspan(-1e-5, 1e-5, color='0.7', alpha=0.3, label="linear scaling")
     ax[1, 0].legend()
-    ax[2, 0].semilogx(backwards_t, backwards.w, c='r')
-    ax[2, 0].semilogx(forewards_t, forewards.w, c='r')
+    ax[2, 0].semilogx(bward_t, bward.w, c='r')
+    ax[2, 0].semilogx(fward_t, fward.w, c='r')
     ax[2, 0].axhline(-1/3, ls=':', c='0.5', label=r"$\ddot a=0 \Leftrightarrow V(\phi)=\dot\phi$")
     ax[2, 0].text(x=ax[2, 0].get_xlim()[0] * 2, y=-1/3+0.10, s="not inflating", va='bottom')
     ax[2, 0].text(x=ax[2, 0].get_xlim()[0] * 2, y=-1/3-0.12, s="    inflating", va='top')
-    ax[3, 0].loglog(backwards_t, backwards.H, c='r')
-    ax[3, 0].loglog(forewards_t, forewards.H, c='r')
+    ax[3, 0].loglog(bward_t, bward.H, c='r')
+    ax[3, 0].loglog(fward_t, fward.H, c='r')
 
-    ax[0, 1].plot(backwards.N, backwards.phi, c='r')
-    ax[0, 1].plot(forewards.N, forewards.phi, c='r')
-    ax[1, 1].plot(backwards.N, backwards.dphidt, c='r')
-    ax[1, 1].plot(forewards.N, forewards.dphidt, c='r')
+    ax[0, 1].plot(bward.N, bward.phi, c='r')
+    ax[0, 1].plot(fward.N, fward.phi, c='r')
+    ax[1, 1].plot(bward.N, bward.dphidt, c='r')
+    ax[1, 1].plot(fward.N, fward.dphidt, c='r')
     ax[1, 1].set_yscale('symlog', linthresh=1e-5)
     ax[1, 1].axhspan(-1e-5, 1e-5, color='0.7', alpha=0.3, label="linear scaling")
-    ax[2, 1].plot(forewards.N, forewards.w, c='r')
-    ax[2, 1].plot(backwards.N, backwards.w, c='r')
+    ax[2, 1].plot(fward.N, fward.w, c='r')
+    ax[2, 1].plot(bward.N, bward.w, c='r')
     ax[2, 1].axhline(-1/3, ls=':', c='0.5', label=r"$\ddot a=0 \Leftrightarrow V(\phi)=\dot\phi$")
-    ax[3, 1].semilogy(backwards.N, backwards.H, c='r')
-    ax[3, 1].semilogy(forewards.N, forewards.H, c='r')
+    ax[3, 1].semilogy(bward.N, bward.H, c='r')
+    ax[3, 1].semilogy(fward.N, fward.H, c='r')
 
-    ax[0, 0].set_ylabel("$\phi\ /\ m_\mathrm{p}$")
-    ax[1, 0].set_ylabel("$\dot\phi\ /\ m_\mathrm{p}^2$")
-    ax[2, 0].set_ylabel(r"$w_\phi \equiv p_\phi/\rho_\phi$")
-    ax[3, 0].set_ylabel("$H\ /\ m_\mathrm{p}$")
-    ax[3, 0].set_xlabel("$t\ /\ t_\mathrm{p}$");
-    ax[3, 1].set_xlabel("$N = \ln(a/a_\mathrm{p})$");
+    ax[0, 0].set_ylabel(r"$\phi\;/\;m_\mathrm{p}$")
+    ax[1, 0].set_ylabel(r"$\dot\phi\;/\;m_\mathrm{p}^2$")
+    ax[2, 0].set_ylabel(r"$w_\phi\,\equiv\,p_\phi/\rho_\phi$")
+    ax[3, 0].set_ylabel(r"$H\;/\;m_\mathrm{p}$")
+    ax[3, 0].set_xlabel(r"$t\;/\;t_\mathrm{p}$")
+    ax[3, 1].set_xlabel(r"$N = \ln(a/a_\mathrm{p})$")
 
     fig.tight_layout()
 
 
 Comoving Hubble horizon
 -----------------------
-
-Compute comoving Hubble horizon from background equations:
-
-.. plot:: :context: close-figs
-
-    forewards.derive_comoving_hubble_horizon(N_star=N_star)
-    backwards.derive_comoving_hubble_horizon(N_star=N_star, logaH_star=forewards.logaH_star)
-
 
 Plot the comoving Hubble horizon which initially increases during kinetic
 dominance, decreases during inflation, and eventually increases again during
@@ -172,31 +174,29 @@ reheating:
 
     fig, ax = plt.subplots(1, 1)
 
-    ax.semilogy(backwards.N, backwards.cHH_Mpc, c='r')
-    ax.semilogy(forewards.N, forewards.cHH_Mpc, c='r')
-    ax.set_xlabel("$N \equiv \ln(a/\ell_\mathrm{p})$")
-    ax.set_ylabel("$a_0 (aH)^{-1}\ /\ \mathrm{Mpc}$")
+    ax.semilogy(bward.N, bward.cHH_Mpc, c='r')
+    ax.semilogy(fward.N, fward.cHH_Mpc, c='r')
+    ax.set_xlabel(r"$N \equiv \ln(a/\ell_\mathrm{p})$")
+    ax.set_ylabel(r"$a_0 (aH)^{-1}\ /\ \mathrm{Mpc}$")
 
-    ax.axhline(1/K_STAR, ls=':', color='0.5', label="pivot scale $k_\\ast=%g\,\mathrm{Mpc^{-1}}$" % K_STAR)
-    ax.axvline(forewards.N_cross, ls='--', color='0.5', label="horizon corssing of the pivot scale")
-    ax.text(forewards.N_cross+(forewards.N_end-forewards.N_cross)/2, 1/K_STAR, r"$N_\ast=%g$" % forewards.N_star, ha='center', va='bottom')
-    ax.text(forewards.N_beg  +(forewards.N_cross-forewards.N_beg)/2, forewards.cHH_Mpc[0], r"$N_\dagger=%g$" % (forewards.N_tot-forewards.N_star), ha='center', va='bottom')
-    ax.annotate("", xy=(forewards.N_cross, 1/K_STAR), xytext=(forewards.N_end, 1/K_STAR), arrowprops=dict(arrowstyle='|-|', mutation_scale=3, shrinkA=0, shrinkB=0))
-    ax.annotate("", xy=(forewards.N_beg, forewards.cHH_Mpc[0]), xytext=(forewards.N_cross, forewards.cHH_Mpc[0]), arrowprops=dict(arrowstyle='|-|', mutation_scale=3, shrinkA=0, shrinkB=0))
+    ax.axhline(1/K_STAR, ls=':', color='0.5',
+               label="pivot scale $k_\\ast=%g\\,\\mathrm{Mpc^{-1}}$" % K_STAR)
+    ax.axvline(fward.N_cross, ls='--', color='0.5',
+               label="horizon crossing of the pivot scale")
+    ax.text(fward.N_cross+(fward.N_end-fward.N_cross)/2, 1/K_STAR,
+            r"$N_\ast=%g$" % fward.N_star, ha='center', va='bottom')
+    ax.text(fward.N_beg  +(fward.N_cross-fward.N_beg)/2, fward.cHH_Mpc[0],
+            r"$N_\dagger=%g$" % (fward.N_tot-fward.N_star), ha='center', va='bottom')
+    ax.annotate("", xy=(fward.N_cross, 1/K_STAR), xytext=(fward.N_end, 1/K_STAR),
+                arrowprops=dict(arrowstyle='|-|', mutation_scale=3, shrinkA=0, shrinkB=0))
+    ax.annotate("", xy=(fward.N_beg, fward.cHH_Mpc[0]), xytext=(fward.N_cross, fward.cHH_Mpc[0]),
+                arrowprops=dict(arrowstyle='|-|', mutation_scale=3, shrinkA=0, shrinkB=0))
     ax.legend(loc='lower left')
     fig.tight_layout()
 
 
 Slow-roll approximation of the primordial power spectrum
 --------------------------------------------------------
-
-Compute the slow-roll approximation of the primordial power spectrum from the
-background variables:
-
-.. plot:: :context: close-figs
-
-    forewards.derive_approx_power(N_star=N_star)
-
 
 Estimate of the distance to recombination to get a sense of the CMB observable
 range for the primordial power spectrum which depends on the wavenumber
@@ -214,21 +214,21 @@ Plot:
 .. plot:: :context: close-figs
 
     fig, ax = plt.subplots(1, 1)
-    ax.loglog(forewards.k_iMpc, forewards.P_scalar_approx,
+    ax.loglog(fward.k_iMpc, fward.P_scalar_approx,
               label=("scalar PPS with " +
-                     "$A_\\mathrm{s}\\approx%.3g$, " % forewards.A_s +
-                     "$n_\\mathrm{s}\\approx%.2g$, " % forewards.n_s +
-                     "$n_\\mathrm{run}\\approx%.1g$" % forewards.n_run))
-    ax.loglog(forewards.k_iMpc, forewards.P_tensor_approx,
-              label="tensor PPS with $r\\approx%.2g$" % (forewards.r))
+                     "$A_\\mathrm{s}\\approx%.3g$, " % fward.A_s +
+                     "$n_\\mathrm{s}\\approx%.2g$, " % fward.n_s +
+                     "$n_\\mathrm{run}\\approx%.1g$" % fward.n_run))
+    ax.loglog(fward.k_iMpc, fward.P_tensor_approx,
+              label="tensor PPS with $r\\approx%.2g$" % (fward.r))
     ax.axvline(K_STAR, ls=':', color='k',
-               label="pivot scale $k_\\ast=%g\,\mathrm{Mpc^{-1}}$" % K_STAR)
+               label="pivot scale $k_\\ast=%g\\,\\mathrm{Mpc^{-1}}$" % K_STAR)
     ax.axvspan(2/D_rec, 2500/D_rec, color='0.5', alpha=0.5,
-               label="observable range by Planck ($\ell$ from 2 to 2500), \n" +
+               label="observable range by Planck ($\\ell$ from 2 to 2500), \n" +
                      "estimated from $r_\\ast=%g$ and $\\theta_\\ast=%g$" % (r_ast, theta_ast))
     ax.set_ylim(1e-12, 1e-8)
-    ax.set_ylabel("$\mathcal{P}(k)$")
-    ax.set_xlabel("$k\ /\ \mathrm{Mpc^{-1}}$")
+    ax.set_ylabel(r"$\mathcal{P}(k)$")
+    ax.set_xlabel(r"$k\ /\ \mathrm{Mpc^{-1}}$")
     ax.legend(bbox_to_anchor=(1, 1), loc='lower right')
     fig.tight_layout()
 
@@ -243,16 +243,8 @@ extra calibration that needs doing for flat universes:
 
 .. plot:: :context: close-figs
 
-    forewards.a0_Mpc = np.exp(np.mean(forewards.logaH[forewards.inflation_mask] - forewards.logk))
     k_iMpc = np.logspace(-6, 1, 2000)
-    k_comoving = k_iMpc * forewards.a0_Mpc
-
-.. warning::
-    `primpy` has undergone a lot of revisions to adapt it to curvature. During
-    that process the treatment for flat universes has been somewhat neglected.
-    The calibration for flat universes will change in the future to try and
-    streamline this a bit more, but for now there is more care needed when it
-    comes to questions of units and calibration for flat universes.
+    k_comoving = k_iMpc * fward.a0_Mpc
 
 
 Compute the primordial power spectrum using :mod:`pyoscode` to solve the
@@ -260,7 +252,7 @@ oscillatory ODE.
 
 .. plot:: :context: close-figs
 
-    pps = solve_oscode(background=forewards, k=k_comoving, vacuum=('RST',))
+    pps = solve_oscode(background=fward, k=k_comoving, vacuum=('RST',))
 
 
 .. plot:: :context: close-figs
@@ -268,13 +260,15 @@ oscillatory ODE.
     fig, ax = plt.subplots(1, 1)
     ax.axvline(K_STAR, ls=':', color='k')
     ax.axvspan(2/D_rec, 2500/D_rec, color='0.5', alpha=0.5)
-    ax.loglog(forewards.k_iMpc, forewards.P_scalar_approx, c=plt.cm.tab20(1), label="scalar slow-roll approximation")
-    ax.loglog(forewards.k_iMpc, forewards.P_tensor_approx, c=plt.cm.tab20(3), label="tensor slow-roll approximation")
+    ax.loglog(fward.k_iMpc, fward.P_scalar_approx, c=plt.cm.tab20(1),
+              label="scalar slow-roll approximation")
+    ax.loglog(fward.k_iMpc, fward.P_tensor_approx, c=plt.cm.tab20(3),
+              label="tensor slow-roll approximation")
     ax.loglog(pps.k_iMpc, pps.P_s_RST, c=plt.cm.tab20(0), label="numeric scalar PPS")
     ax.loglog(pps.k_iMpc, pps.P_t_RST, c=plt.cm.tab20(2), label="numeric tensor PPS")
     ax.set_xlim(pps.k_iMpc[0], pps.k_iMpc[-1])
     ax.set_ylim(1e-12, 1e-8)
-    ax.set_ylabel("$\mathcal{P}(k)$")
-    ax.set_xlabel("$k\ /\ \mathrm{Mpc^{-1}}$")
+    ax.set_ylabel(r"$\mathcal{P}(k)$")
+    ax.set_xlabel(r"$k\ /\ \mathrm{Mpc^{-1}}$")
     ax.legend(bbox_to_anchor=(1, 1), loc='lower right', ncol=2)
     fig.tight_layout()

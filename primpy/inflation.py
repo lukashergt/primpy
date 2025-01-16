@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.inflation`: general setup for equations for cosmic inflation."""
+"""General setup for equations for cosmic inflation."""
 from warnings import warn
 from abc import ABC
 import numpy as np
@@ -107,8 +106,8 @@ class InflationEquations(Equations, ABC):
         def calibrate_scale_factor(
                 calibration_method='N_star' if self.K == 0 else 'Omega_K0',
                 Omega_K0=None, h=None,                                   # for curved universes
-                N_star=None, logaH_star=None,                            # for flat universes
-                delta_reh=None, w_reh=None, rho_reh_GeV=None, g_th=1e2  # for reheating
+                N_star=None, background=None,                            # for flat universes
+                delta_reh=None, w_reh=None, rho_reh_GeV=None, g_th=1e2,  # for reheating
         ):
             """Calibrate the scale factor `a` for flat or curved universes or from reheating.
 
@@ -138,12 +137,6 @@ class InflationEquations(Equations, ABC):
                 Number of e-folds of inflation after horizon crossing of pivot scale `K_STAR`.
                 Required for ``calibration_method='N_star'``.
 
-            logaH_star : float, optional
-                Optional calibration factor for flat universes to match `aH` to `k` that
-                circumvents the full computation of the calibration. This is needed e.g. when
-                integrating backwards in time where `_N_end` and `_N_cross` are not available.
-                When provided, all other input parameters are ignored.
-
             delta_reh : float, optional
                 Number of e-folds during reheating, used for a general reheating scenario with
                 ``calibration_method='reheating'``. By default, this is assumed to be zero,
@@ -164,6 +157,14 @@ class InflationEquations(Equations, ABC):
                 Number of relativistic degrees of freedom at the end of reheating, used in
                 reheating calculations making use of entropy conservation.
 
+            background : :class:`scipy.integrate._ivp.ivp.OdeResult`, optional
+                Optionally circumvent the calibration procedure by supplying a
+                previously computed background solution to copy the calibration
+                from, e.g. when splitting the computation into separate forward
+                and backward integrations where you can provide the solution
+                from the forward integration as calibrator for the backward
+                integration.
+
             """
             if self.K == 0:  # flat universe
                 if Omega_K0 is not None and Omega_K0 != 0.0:
@@ -173,7 +174,7 @@ class InflationEquations(Equations, ABC):
                 sol.N0 = 0
                 sol.Omega_K0 = 0
 
-                if logaH_star is None:
+                if background is None:
                     if calibration_method == 'N_star':  # derive _N_cross from N_star
                         if N_star is None or N_star <= 0:
                             raise ValueError(f"For calibration_method='N_star' N_star>0 must be "
@@ -261,13 +262,19 @@ class InflationEquations(Equations, ABC):
                         )
 
                 else:  # allows manual override, e.g. when integrating backwards without _N_cross
-                    if N_star is None or N_star <= 0:
-                        raise ValueError(f"To circumvent the calibration by providing logaH_star, "
-                                         f"you nonetheless need to provide N_star>0, but got "
-                                         f"N_star={N_star}.")
-                    sol.N_star = N_star
-                    sol._N_cross = sol._N_end - sol.N_star
-                    sol._logaH_star = logaH_star
+                    if N_star is None or N_star <= 0 or N_star != background.N_star:
+                        raise ValueError(f"To circumvent the calibration by providing a "
+                                         f"previously computed background solution, you "
+                                         f"nonetheless need to provide a matching N_star>0, but "
+                                         f"got N_star={N_star} and "
+                                         f"background.Nstar={background.N_star}.")
+                    sol.delta_N_calib = background.delta_N_calib
+                    sol._logaH_star = background._logaH_star
+                    sol._N_cross = background._N_cross
+                    sol._N_reh = background._N_reh
+                    sol._N_end = background._N_end
+                    sol.N_star = background.N_star
+
                 sol.a0_Mpc = np.exp(sol._logaH_star) / K_STAR
                 sol.logk = sol._logaH[sol.inflation_mask] + np.log(K_STAR) - sol._logaH_star
 
@@ -376,7 +383,8 @@ class InflationEquations(Equations, ABC):
             sol.cHH_end_Mpc = sol.a0 / (np.exp(sol.N_end) * sol.H_end) * lp_m / Mpc_m
 
             # derive approximate primordial power spectra
-            derive_approx_power()
+            if background is None:  # only derive if not copied from background
+                derive_approx_power()
 
         sol.calibrate_scale_factor = calibrate_scale_factor
 

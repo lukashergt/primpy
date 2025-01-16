@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.bigbang`: general setup for equations for standard Big Bang cosmology."""
+"""General setup for equations for standard Big Bang cosmology."""
 import warnings
 import numpy as np
 from scipy import integrate
@@ -71,28 +70,30 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h, units='planck'):
 
     Parameters
     ----------
-        N : float, np.ndarray
-            e-folds of the scale factor N=ln(a) during standard Big Bang
-            evolution, where the scale factor would be given in reduced Planck
-            units (same as output from primpy).
-        Omega_m0 : float
-            matter density parameter today
-        Omega_K0 : float
-            curvature density parameter today
-        h : float
-            dimensionless Hubble parameter today, "little h"
-        units : str
-            Output units, can be any of {'planck', 'H0', 'SI'} returning
-            units of `1/tp`, `km/s/Mpc` or `1/s` respectively.
+    N : float, np.ndarray
+        e-folds of the scale factor N=ln(a) during standard Big Bang
+        evolution, where the scale factor would be given in reduced Planck
+        units (same as output from primpy).
+    Omega_m0 : float
+        matter density parameter today
+    Omega_K0 : float
+        curvature density parameter today
+    h : float
+        dimensionless Hubble parameter today, "little h"
+    units : str
+        Output units, can be any of {'planck', 'H0', 'SI'} returning
+        units of `1/tp`, `km/s/Mpc` or `1/s` respectively.
 
+    Notes
+    -----
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
 
     Returns
     -------
-        H : float
-            Hubble parameter during standard Big Bang evolution of the Universe.
-            In reduced Planck units [tp^-1].
+    H : float
+        Hubble parameter during standard Big Bang evolution of the Universe.
+        In reduced Planck units [tp^-1].
 
     """
     H0 = get_H0(h=h, units=units)
@@ -117,15 +118,15 @@ def no_Big_Bang_line(Omega_m0):
 
     Parameters
     ----------
-        Omega_m0 : float
-            matter density parameter today
+    Omega_m0 : float
+        matter density parameter today
 
     Returns
     -------
-        Omega_L0 : float
-            Density parameter of cosmological constant `Lambda` along the
-            dividing line between a Big Bang evolution (for smaller `Omega_L0`)
-            and universes without a Big Bang (for larger `Omega_L0`).
+    Omega_L0 : float
+        Density parameter of cosmological constant `Lambda` along the
+        dividing line between a Big Bang evolution (for smaller `Omega_L0`)
+        and universes without a Big Bang (for larger `Omega_L0`).
 
     """
     if Omega_m0 == 0:
@@ -143,15 +144,15 @@ def expand_recollapse_line(Omega_m0):
 
     Parameters
     ----------
-        Omega_m0 : float
-            matter density parameter today
+    Omega_m0 : float
+        matter density parameter today
 
     Returns
     -------
-        Omega_L0 : float
-            Density parameter of cosmological constant `Lambda` along the
-            dividing line between expanding (for larger `Omega_L0`) and
-            recollapsing (for smaller `Omega_L0`) universes.
+    Omega_L0 : float
+        Density parameter of cosmological constant `Lambda` along the
+        dividing line between expanding (for larger `Omega_L0`) and
+        recollapsing (for smaller `Omega_L0`) universes.
 
     """
     if 0 <= Omega_m0 < 1:
@@ -167,27 +168,29 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
 
     Parameters
     ----------
-        N : float, np.ndarray
-            e-folds of the scale factor `N=ln(a)` during standard Big Bang
-            evolution, where the scale factor would be given in reduced Planck
-            units (same as output from primpy).
-        Omega_m0 : float
-            matter density parameter today
-        Omega_K0 : float
-            curvature density parameter today
-        h : float
-            dimensionless Hubble parameter today, "little h"
-        units : str
-            Output units, can be any of {'planck', 'Mpc', 'SI'} returning
-            units of `lp`, `Mpc`, or `m` respectively.
+    N : float, np.ndarray
+        e-folds of the scale factor `N=ln(a)` during standard Big Bang
+        evolution, where the scale factor would be given in reduced Planck
+        units (same as output from primpy).
+    Omega_m0 : float
+        matter density parameter today
+    Omega_K0 : float
+        curvature density parameter today
+    h : float
+        dimensionless Hubble parameter today, "little h"
+    units : str
+        Output units, can be any of {'planck', 'Mpc', 'SI'} returning
+        units of `lp`, `Mpc`, or `m` respectively.
 
+    Notes
+    -----
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
 
     Returns
     -------
-        cHH : float
-            Comoving Hubble horizon during standard Big Bang evolution of the Universe.
+    cHH : float
+        Comoving Hubble horizon during standard Big Bang evolution of the Universe.
 
     """
     a0 = get_a0(h=h, Omega_K0=Omega_K0, units='planck')
@@ -207,29 +210,31 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
 
     Parameters
     ----------
-        N_start : float
-            e-folds of the scale factor `N=ln(a)` during standard Big Bang
-            evolution at lower integration limit (e.g. at end of inflation),
-            where the scale factor would be given in reduced Planck units
-            (same as output from primpy).
-        N : float, np.ndarray
-            e-folds of the scale factor `N=ln(a)` during standard Big Bang
-            evolution at upper integration limit (e.g. at end of inflation),
-            where the scale factor would be given in reduced Planck units
-            (same as output from primpy).
-        Omega_m0 : float
-            matter density parameter today
-        Omega_K0 : float
-            curvature density parameter today
-        h : float
-            dimensionless Hubble parameter today, "little h"
+    N_start : float
+        e-folds of the scale factor `N=ln(a)` during standard Big Bang
+        evolution at lower integration limit (e.g. at end of inflation),
+        where the scale factor would be given in reduced Planck units
+        (same as output from primpy).
+    N : float, np.ndarray
+        e-folds of the scale factor `N=ln(a)` during standard Big Bang
+        evolution at upper integration limit (e.g. at end of inflation),
+        where the scale factor would be given in reduced Planck units
+        (same as output from primpy).
+    Omega_m0 : float
+        matter density parameter today
+    Omega_K0 : float
+        curvature density parameter today
+    h : float
+        dimensionless Hubble parameter today, "little h"
 
+    Notes
+    -----
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
 
     Returns
     -------
-        eta : float, np.ndarray
+    eta : float, np.ndarray
             conformal time passing between `a_start` and `a`
             during standard Big Bang evolution of the Universe.
             Same shape as `N`.
@@ -253,27 +258,26 @@ def conformal_time_ratio(Omega_m0, Omega_K0, h, b_forward, b_backward=None):
 
     Parameters
     ----------
-        Omega_m0 : float
-            matter density parameter today
-        Omega_K0 : float
-            curvature density parameter today
-        h : float
-            dimensionless Hubble parameter today, "little h"
-        b_forward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
-            Solution returned by :func:`primpy.solver.solve`. Needs to have been run
-            with `track_eta=True`.
-        b_backward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
-            Additional solution returned by :func:`primpy.solver.solve`. This second
-            solution is assumed to be an integration from inflation start
-            backwards in time.
-            optional, default : None
+    Omega_m0 : float
+        matter density parameter today
+    Omega_K0 : float
+        curvature density parameter today
+    h : float
+        dimensionless Hubble parameter today, "little h"
+    b_forward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`
+        Solution returned by :func:`primpy.solver.solve`. Needs to have been run
+        with `track_eta=True`.
+    b_backward : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`, default: None
+        Additional solution returned by :func:`primpy.solver.solve`. This second
+        solution is assumed to be an integration from inflation start
+        backwards in time.
 
     Returns
     -------
-        ratio : float
-            Ratio of conformal time before (during and before inflation) to
-            after (from the end of inflation until today). Needs to be >1 in
-            order to solve the horizon problem.
+    ratio : float
+        Ratio of conformal time before (during and before inflation) to
+        after (from the end of inflation until today). Needs to be >1 in
+        order to solve the horizon problem.
 
     """
     # before (during and before inflation)

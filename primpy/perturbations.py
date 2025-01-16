@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.time.perturbations`: comoving curvature perturbations w.r.t. time `t`."""
+"""Comoving curvature perturbations w.r.t. time `t`."""
 from abc import ABC, abstractmethod
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -38,10 +37,10 @@ class Perturbation(ABC):
 
         Parameters
         ----------
-            oscode_sol : list
-                List [scalar_1, scalar_2, tensor_1, tensor_2] of two independent solutions each
-                for both scalar and tensor modes, where each element is a dictionary returned by
-                :func:`pyoscode.solve`.
+        oscode_sol : list
+            List [scalar_1, scalar_2, tensor_1, tensor_2] of two independent solutions each
+            for both scalar and tensor modes, where each element is a dictionary returned by
+            :func:`pyoscode.solve`.
 
         """
         for m, mode in enumerate([self.scalar, self.tensor]):

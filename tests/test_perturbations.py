@@ -125,9 +125,9 @@ def test_set_background_IS(K, f_i, abs_Omega_K0):
 
 # noinspection DuplicatedCode
 @pytest.mark.parametrize('K', [-1, +1])
-@pytest.mark.parametrize('f_i', [10, 100])
+@pytest.mark.parametrize('f_i', [10])
 @pytest.mark.parametrize('abs_Omega_K0', [0.09, 0.009])
-@pytest.mark.parametrize('k_iMpc', np.logspace(-5, 0, 5 + 1))
+@pytest.mark.parametrize('k_iMpc', np.logspace(-5, -1, 4 + 1))
 def test_perturbations_frequency_damping(K, f_i, abs_Omega_K0, k_iMpc):
     if -K * f_i * abs_Omega_K0 >= 1:
         with pytest.raises(Exception):

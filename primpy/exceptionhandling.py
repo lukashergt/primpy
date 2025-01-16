@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-""":mod:`primpy.exceptions`: Custom exceptions and warnings."""
+"""Custom exceptions and warnings."""
 
 
 class PrimpyError(Exception):
@@ -9,17 +8,16 @@ class PrimpyError(Exception):
 class InflationStartError(PrimpyError):
     """Exception when the inflation start condition for open or closed universes is violated.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the error.
+    message : str
+        Explanation of the error.
 
-    kwargs
-    ------
-        geometry : str
-            Should be either 'open' or 'closed' to relate to the respective
-            condition at inflation start.
-            default : "all types of"
+    Other Parameters
+    ----------------
+    geometry : str, default: "all types of"
+        Should be either 'open' or 'closed' to relate to the respective
+        condition at inflation start.
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -32,10 +30,10 @@ class InflationStartError(PrimpyError):
 class StepSizeError(PrimpyError):
     """Warning when the scipy integrator failed because of a too small step size.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
@@ -46,10 +44,10 @@ class StepSizeError(PrimpyError):
 class InsufficientInflationError(PrimpyError):
     """Exception when there are insufficient number of e-folds for inflation.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the error.
+    message : str
+        Explanation of the error.
     """
 
     def __init__(self, message, *args):
@@ -60,10 +58,10 @@ class InsufficientInflationError(PrimpyError):
 class BigBangError(PrimpyError):
     """Exceptions for the standard Big Bang evolution.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the error.
+    message : str
+        Explanation of the error.
     """
 
     def __init__(self, message, *args):
@@ -78,10 +76,10 @@ class PrimpyWarning(UserWarning):
 class InflationWarning(PrimpyWarning):
     """Warnings for the inflationary background evolution.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
@@ -92,10 +90,10 @@ class InflationWarning(PrimpyWarning):
 class CollapseWarning(InflationWarning):
     """Warning when the Universe has collapsed.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
@@ -107,16 +105,15 @@ class CollapseWarning(InflationWarning):
 class InflationStartWarning(InflationWarning):
     """Warnings when the start of inflation could not be determined.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
 
-    kwargs
-    ------
-        events : dict
-            Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
-            default : None
+    Other Parameters
+    ----------------
+    events : dict, default: None
+        Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -138,18 +135,17 @@ class InflationStartWarning(InflationWarning):
 class InflationEndWarning(InflationWarning):
     """Warnings when the end of inflation could not be determined.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
 
-    kwargs
-    ------
-        events : dict
-            Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
-            default : None
-        sol : Bunch object returned by :func:`primpy.solver.solve`
-            default : None
+    Other Parameters
+    ----------------
+    events : dict, default: None
+        Dictionary of events captured. Can be any of `N_events`, `t_events`, `phi_events`.
+    sol : Bunch object same as returned by :func:`scipy.integrate.solve_ivp`, default: None
+        Bunch object returned by :func:`primpy.solver.solve`.
     """
 
     def __init__(self, message, *args, **kwargs):
@@ -178,10 +174,10 @@ class InflationEndWarning(InflationWarning):
 class BigBangWarning(PrimpyWarning):
     """Warnings for the standard Big Bang evolution.
 
-    Attributes
+    Parameters
     ----------
-        message : str
-            Explanation of the warning.
+    message : str
+        Explanation of the warning.
     """
 
     def __init__(self, message, *args):
