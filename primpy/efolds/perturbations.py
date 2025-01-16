@@ -40,7 +40,7 @@ class ScalarModeN(ScalarMode):
 
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         comoving curvature perturbations `R` w.r.t. e-folds `_N`, where the e.o.m. is
-        written as `ddR + 2 * damping * dR + frequency**2 R = 0`.
+        written as `ddR + 2 * damping * dR + frequency**2 * R = 0`.
 
         """
         K = self.background.K
@@ -88,7 +88,7 @@ class TensorModeN(TensorMode):
 
         Frequency and damping term of the Mukhanov-Sasaki equations for the
         tensor perturbations `h` w.r.t. e-folds `_N`, where the e.o.m. is
-        written as `ddh + 2 * damping * dh + frequency**2 h = 0`.
+        written as `ddh + 2 * damping * dh + frequency**2 * h = 0`.
 
         """
         K = self.background.K

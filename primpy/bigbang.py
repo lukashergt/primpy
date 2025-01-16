@@ -84,6 +84,8 @@ def Hubble_parameter(N, Omega_m0, Omega_K0, h, units='planck'):
         Output units, can be any of {'planck', 'H0', 'SI'} returning
         units of `1/tp`, `km/s/Mpc` or `1/s` respectively.
 
+    Notes
+    -----
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
 
@@ -180,6 +182,8 @@ def comoving_Hubble_horizon(N, Omega_m0, Omega_K0, h, units='planck'):
         Output units, can be any of {'planck', 'Mpc', 'SI'} returning
         units of `lp`, `Mpc`, or `m` respectively.
 
+    Notes
+    -----
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
 
@@ -223,6 +227,8 @@ def conformal_time(N_start, N, Omega_m0, Omega_K0, h):
     h : float
         dimensionless Hubble parameter today, "little h"
 
+    Notes
+    -----
     `Omega_r0` is derived from the Hubble parameter using Planck's law.
     `Omega_L0` is derived from the other density parameters to sum to one.
 
