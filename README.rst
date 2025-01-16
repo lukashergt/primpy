@@ -3,12 +3,12 @@ primpy: calculations for the primordial Universe
 ================================================
 :primpy: calculations for the primordial Universe
 :Author: Lukas Hergt
-:Version: 2.9.3
+:Version: 2.9.4
 :Homepage: https://github.com/lukashergt/primpy
 :Documentation: https://primpy.readthedocs.io
 
-.. image:: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml/badge.svg?branch=master
-    :target: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml
+.. image:: https://github.com/lukashergt/primpy/actions/workflows/CI.yaml/badge.svg?branch=master
+    :target: https://github.com/lukashergt/primpy/actions/workflows/CI.yaml
     :alt: Build Status
 .. image:: https://codecov.io/gh/lukashergt/primpy/branch/master/graph/badge.svg?token=USS4K53PY0
     :target: https://codecov.io/gh/lukashergt/primpy
@@ -16,7 +16,7 @@ primpy: calculations for the primordial Universe
 .. image:: https://readthedocs.org/projects/primpy/badge/?version=latest
     :target: https://primpy.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
-.. image:: https://badge.fury.io/py/primpy.svg
+.. image:: https://badge.fury.io/py/primpy.svg?
     :target: https://badge.fury.io/py/primpy
     :alt: PyPi version
 
