@@ -383,7 +383,7 @@ class InflationEquations(Equations, ABC):
             sol.cHH_end_Mpc = sol.a0 / (np.exp(sol.N_end) * sol.H_end) * lp_m / Mpc_m
 
             # derive approximate primordial power spectra
-            if background is None: # only derive if not copied from background
+            if background is None:  # only derive if not copied from background
                 derive_approx_power()
 
         sol.calibrate_scale_factor = calibrate_scale_factor
