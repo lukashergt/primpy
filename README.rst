@@ -7,8 +7,8 @@ primpy: calculations for the primordial Universe
 :Homepage: https://github.com/lukashergt/primpy
 :Documentation: https://primpy.readthedocs.io
 
-.. image:: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml/badge.svg?branch=master
-    :target: https://github.com/lukashergt/primpy/actions/workflows/pythonpackage.yml
+.. image:: https://github.com/lukashergt/primpy/actions/workflows/CI.yaml/badge.svg?branch=master
+    :target: https://github.com/lukashergt/primpy/actions/workflows/CI.yaml
     :alt: Build Status
 .. image:: https://codecov.io/gh/lukashergt/primpy/branch/master/graph/badge.svg?token=USS4K53PY0
     :target: https://codecov.io/gh/lukashergt/primpy
