@@ -61,3 +61,10 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           repository-url: https://upload.pypi.org/legacy/
+
+  purge-image-cache:
+    name: Purge image cache from badges in README
+    needs: build-n-publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: kevincobain2000/action-camo-purge@v1
