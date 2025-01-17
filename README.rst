@@ -17,7 +17,7 @@ primpy: calculations for the primordial Universe
     :target: https://primpy.readthedocs.io/en/latest
     :alt: Documentation Status
 .. image:: https://img.shields.io/pypi/v/primpy?cacheSeconds=86400
-    :target: https://img.shields.io/pypi/v/primpy
+    :target: https://pypi.org/project/primpy
     :alt: PyPI - Version
 
 
