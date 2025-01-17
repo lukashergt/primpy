@@ -14,9 +14,10 @@ primpy: calculations for the primordial Universe
     :target: https://codecov.io/gh/lukashergt/primpy
     :alt: Test Coverage
 .. image:: https://readthedocs.org/projects/primpy/badge/?version=latest
-    :target: https://primpy.readthedocs.io/en/latest/?badge=latest
+    :target: https://primpy.readthedocs.io/en/latest
     :alt: Documentation Status
 .. image:: https://img.shields.io/pypi/v/primpy?cacheSeconds=86400
+    :target: https://img.shields.io/pypi/v/primpy
     :alt: PyPI - Version
 
 
