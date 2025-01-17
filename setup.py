@@ -13,7 +13,7 @@ setup(
     long_description=open('README.rst').read(),
     keywords="PPS, cosmic inflation, initial conditions for inflation, kinetic dominance",
     author="Lukas Hergt",
-    author_email="lh561@mrao.cam.ac.uk",
+    author_email="lukas.hergt@ijclab.in2p3.fr",
     packages=find_packages(),
     install_requires=[
         'numpy',
@@ -26,14 +26,15 @@ setup(
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Science/Research",
-        "Natural Language :: English",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.7",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Scientific/Engineering :: Astronomy",
-        "Operating System :: OS Independent",
     ],
 )
