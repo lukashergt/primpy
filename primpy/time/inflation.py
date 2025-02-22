@@ -31,24 +31,64 @@ class InflationEquationsT(InflationEquations):
     def __call__(self, x, y):
         """System of coupled ODEs for underlying variables."""
         N = self._N(x, y)
-        H = self.H(x, y)
+        H2 = self.H2(x, y)
+        H = np.sqrt(H2)
         dphidt = self.dphidt(x, y)
         dVdphi = self.dVdphi(x, y)
 
         dy = np.zeros_like(y)
         dy[self.idx['phi']] = dphidt
-        dy[self.idx['dphidt']] = -3 * H * dphidt - dVdphi
+        dy[self.idx['dphidt']] = self.get_d2phi(H2=H2, dH_H=None, dphi=dphidt, dV=dVdphi)
         dy[self.idx['_N']] = H
         if self.track_eta:
             dy[self.idx['eta']] = np.exp(-N)
         return dy
 
+    @staticmethod
+    def get_H2(N, dphi, V, K):
+        return (dphi**2 / 2 + V) / 3 - K * np.exp(-2 * N)
+
+    @staticmethod
+    def get_dH(N, H, dphi, K):
+        # here: dH/dt
+        return -dphi**2 / 2 + K * np.exp(-2 * N)
+
+    @staticmethod
+    def get_dH_H(N, H2, dphi, K):
+        # here: dH/dt
+        H = np.sqrt(H2)
+        return -dphi**2 / (2 * H) + K * np.exp(-2 * N) / H
+
+    @staticmethod
+    def get_d2H(N, H, dH, dphi, d2phi, K):
+        # here: d2H/dt2
+        return -d2phi * dphi - 2 * K * H * np.exp(-2 * N)
+
+    @staticmethod
+    def get_d3H(N, H, dH, d2H, dphi, d2phi, d3phi, K):
+        # here: d3H/dt3
+        return - d3phi * dphi - d2phi**2 + 2 * K * (2 * H**2 - dH) * np.exp(-2 * N)
+
+    @staticmethod
+    def get_d2phi(H2, dH_H, dphi, dV):
+        # here: d2phi/dt2
+        H = np.sqrt(H2)
+        return -3 * H * dphi - dV
+
+    @staticmethod
+    def get_d3phi(H, dH, d2H, dphi, d2phi, dV, d2V):
+        return -3 * H * d2phi - d2V * dphi + 3 * dphi**3 / 2
+
+    @staticmethod
+    def get_d4phi(H, dH, d2H, d3H, dphi, d2phi, d3phi, dV, d2V, d3V):
+        return -3 * H * d3phi - d2V * d2phi - d3V * dphi**2 - 3 * d2H * dphi - 6 * d2phi * dH
+
     def H2(self, x, y):
         """Compute the square of the Hubble parameter using the Friedmann equation."""
-        N = self._N(x, y)
+        _N = self._N(x, y)
         V = self.V(x, y)
         dphidt = self.dphidt(x, y)
-        return (dphidt**2 / 2 + V) / 3 - self.K * np.exp(-2 * N)
+        return self.get_H2(N=_N, dphi=dphidt, V=V, K=self.K)
 
     def w(self, x, y):
         """Compute the equation of state parameter."""
@@ -63,6 +103,6 @@ class InflationEquationsT(InflationEquations):
         return self.V(x, y) - self.dphidt(x, y)**2
 
     def sol(self, sol, **kwargs):
-        """Post-processing of `solve_ivp` solution."""
+        """Post-processing of :func:`scipy.integrate.solve_ivp` solution."""
         sol = super(InflationEquationsT, self).sol(sol, **kwargs)
         return sol
