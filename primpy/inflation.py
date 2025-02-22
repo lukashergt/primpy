@@ -23,63 +23,334 @@ class InflationEquations(Equations, ABC):
     def get_H2(N, dphi, V, K):
         """Get the Hubble parameter squared from the background equations.
 
+        Parameters
+        ----------
+        N : float or array_like
+            Number of e-folds `N=ln(a)`.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        V : float or array_like
+            Inflation potential at `phi`.
+        K : int
+            Curvature parameter.
+
         Returns
         -------
         H2 : float or array_like
+            Hubble parameter squared.
         """
 
     @staticmethod
     def get_dH(N, H, dphi, K):
         """Get the 1st time derivative of the Hubble parameter from the background equations.
 
+        Parameters
+        ----------
+        N : float or array_like
+            Number of e-folds `N=ln(a)`.
+        H : float or array_like
+            Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        K : int
+            Curvature parameter.
+
         Returns
         -------
         dH : float or array_like
+            1st derivative of Hubble parameter.
         """
 
     @staticmethod
     def get_d2H(N, H, dH, dphi, d2phi, K):
         """Get the 2nd time derivative of the Hubble parameter from the background equations.
 
+        Parameters
+        ----------
+        N : float or array_like
+            Number of e-folds `N=ln(a)`.
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        d2phi : float or array_like
+            2nd derivative of inflaton field.
+        K : int
+            Curvature parameter.
+
         Returns
         -------
         d2H : float or array_like
+            2nd derivative of Hubble parameter.
         """
 
     @staticmethod
     def get_d3H(N, H, dH, d2H, dphi, d2phi, d3phi, K):
         """Get the 3rd time derivative of the Hubble parameter from the background equations.
 
+        Parameters
+        ----------
+        N : float or array_like
+            Number of e-folds `N=ln(a)`.
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        d2H : float or array_like
+            2nd derivative of Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        d2phi : float or array_like
+            2nd derivative of inflaton field.
+        d3phi : float or array_like
+            3rd derivative of inflaton field.
+        K : int
+            Curvature parameter.
+
         Returns
         -------
         d3H : float or array_like
+            3rd derivative of Hubble parameter.
         """
 
     @staticmethod
     def get_d2phi(H2, dH_H, dphi, dV):
         """Get the 2nd time derivative of the inflaton field from the background equations.
 
+        Parameters
+        ----------
+        H2 : float or array_like
+            Hubble parameter squared.
+        dH_H : float or array_like
+            1st derivative of Hubble parameter normalised by Hubble parameter `dH/H`.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        dV : float or array_like
+            1st derivative of inflation potential at `phi`.
+
         Returns
         -------
         d2phi : float or array_like
+            2nd derivative of inflaton field.
         """
 
     @staticmethod
     def get_d3phi(H, dH, d2H, dphi, d2phi, dV, d2V):
         """Get the 3rd time derivative of the inflaton field from the background equations.
 
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        d2H : float or array_like
+            2nd derivative of Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        d2phi : float or array_like
+            2nd derivative of inflaton field.
+        dV : float or array_like
+            1st derivative of inflation potential at `phi`.
+        d2V : float or array_like
+            2nd derivative of inflation potential at `phi`.
+
         Returns
         -------
         d3phi : float or array_like
+            3rd derivative of inflaton field.
         """
 
     @staticmethod
     def get_d4phi(H, dH, d2H, d3H, dphi, d2phi, d3phi, dV, d2V, d3V):
         """Get the 4th time derivative of the inflaton field from the background equations.
 
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        d2H : float or array_like
+            2nd derivative of Hubble parameter.
+        d3H : float or array_like
+            3rd derivative of Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        d2phi : float or array_like
+            2nd derivative of inflaton field.
+        d3phi : float or array_like
+            3rd derivative of inflaton field.
+        dV : float or array_like
+            1st derivative of inflation potential at `phi`.
+        d2V : float or array_like
+            2nd derivative of inflation potential at `phi`.
+        d3V : float or array_like
+            3rd derivative of inflation potential at `phi`.
+
         Returns
         -------
         d4phi : float or array_like
+            4th derivative of inflaton field.
+        """
+
+    @staticmethod
+    def get_epsilon_1H(H, dH):
+        """Get the 1st Hubble flow parameter.
+
+        This definition of the 1st Hubble flow parameter was suggested e.g. by
+        Stewart & Lyth (1993) in eq. (23).
+        https://arxiv.org/abs/gr-qc/9302019
+
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+
+        Returns
+        -------
+        epsilon_1H : float or array_like
+            1st Hubble flow parameter.
+        """
+
+    @staticmethod
+    def get_epsilon_2H(H, dH, d2H, epsilon_1H):
+        """Get the 2nd Hubble flow parameter.
+
+        This definition of the 2nd Hubble flow parameter was suggested e.g. by
+        Leach, Liddle, Martin & Schwarz (2003) in eq. (15).
+        https://arxiv.org/abs/astro-ph/0202094
+
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        d2H : float or array_like
+            2nd derivative of Hubble parameter.
+        epsilon_1H : float or array_like
+            1st Hubble flow parameter.
+
+        Returns
+        -------
+        epsilon_2H : float or array_like
+            2nd Hubble flow parameter.
+        """
+
+    @staticmethod
+    def get_epsilon_3H(H, dH, d2H, d3H, epsilon_2H):
+        """Get the 3rd Hubble flow parameter.
+
+        This definition of the 3rd Hubble flow parameter was suggested e.g. by
+        Leach, Liddle, Martin & Schwarz (2003) in eq. (15).
+        https://arxiv.org/abs/astro-ph/0202094
+
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        d2H : float or array_like
+            2nd derivative of Hubble parameter.
+        d3H : float or array_like
+            3rd derivative of Hubble parameter.
+        epsilon_2H : float or array_like
+            2nd Hubble flow parameter.
+
+        Returns
+        -------
+        epsilon_3H : float or array_like
+            3rd Hubble flow parameter.
+        """
+
+    @staticmethod
+    def get_delta_1(H, dH, dphi, d2phi):
+        """Get the 2nd slow-roll parameter for n=1.
+
+        This definition of the 2nd slow roll parameter was suggested e.g. by
+        Stewart & Lyth (1993) in eq. (23).
+        https://arxiv.org/abs/gr-qc/9302019
+
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        d2phi : float or array_like
+            2nd derivative of inflaton field.
+
+        Returns
+        -------
+        delta_1 : float or array_like
+        """
+
+    @staticmethod
+    def get_delta_2(H, dH, d2H, dphi, d2phi, d3phi):
+        """Get the 2nd slow-roll parameter for n=2.
+
+        This definition of higher orders of the 2nd slow roll parameter was suggested e.g. by
+        Stewart & Gong (2001) in eq. (22).
+        https://arxiv.org/abs/astro-ph/0101225
+
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        d2H : float or array_like
+            2nd derivative of Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        d2phi : float or array_like
+            2nd derivative of inflaton field.
+        d3phi : float or array_like
+            3rd derivative of inflaton field.
+
+        Returns
+        -------
+        delta_2 : float or array_like
+        """
+
+    @staticmethod
+    def get_delta_3(H, dH, d2H, d3H, dphi, d2phi, d3phi, d4phi):
+        """Get the 2nd slow-roll parameter for n=3.
+
+        This definition of higher orders of the 2nd slow roll parameter was suggested e.g. by
+        Stewart & Gong (2001) in eq. (22).
+        https://arxiv.org/abs/astro-ph/0101225
+
+        Parameters
+        ----------
+        H : float or array_like
+            Hubble parameter.
+        dH : float or array_like
+            1st derivative of Hubble parameter.
+        d2H : float or array_like
+            2nd derivative of Hubble parameter.
+        d3H : float or array_like
+            3rd derivative of Hubble parameter.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        d2phi : float or array_like
+            2nd derivative of inflaton field.
+        d3phi : float or array_like
+            3rd derivative of inflaton field.
+        d4phi : float or array_like
+            4th derivative of inflaton field.
+
+        Returns
+        -------
+        delta_3 : float or array_like
         """
 
     def H(self, x, y):
