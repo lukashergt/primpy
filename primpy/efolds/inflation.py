@@ -71,7 +71,7 @@ class InflationEquationsN(InflationEquations):
     @staticmethod
     def get_d3H(N, H, dH, d2H, dphi, d2phi, d3phi, K):
         # here: d3H/dN3
-        d3H = (-d3phi*dphi*H - d2phi**2*H - dphi**2*d2H/2 - 2*d2phi*dphi*dH 
+        d3H = (-d3phi*dphi*H - d2phi**2*H - dphi**2*d2H/2 - 2*d2phi*dphi*dH
                + K*np.exp(-2*N) * (4*H-d2H+4*dH+2*dH**2/H) / H**2)
         return d3H
 
@@ -87,9 +87,9 @@ class InflationEquationsN(InflationEquations):
 
     @staticmethod
     def get_d4phi(H, dH, d2H, d3H, dphi, d2phi, d3phi, dV, d2V, d3V):
-        return ((-3 - dH/H)*d3phi 
-                + (-2*d2H/H - d2V/H**2 + 2*dH**2/H**2)*d2phi 
-                + (-d3H/H - d3V*dphi/H**2 + 3*d2H*dH/H**2 + 4*d2V*dH/H**3 - 2*dH**3/H**3)*dphi 
+        return ((-3 - dH/H)*d3phi
+                + (-2*d2H/H - d2V/H**2 + 2*dH**2/H**2)*d2phi
+                + (-d3H/H - d3V*dphi/H**2 + 3*d2H*dH/H**2 + 4*d2V*dH/H**3 - 2*dH**3/H**3)*dphi
                 + 2*(d2H/H - 3*dH**2/H**2)*dV/H**2)
 
     def H2(self, x, y):

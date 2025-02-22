@@ -100,7 +100,7 @@ class ScalarModeN(ScalarMode):
         z_i = a_i * dphi_i
         dz_z_i = d2phi_i / dphi_i + 1
         d2z_z_i = d3phi_i / dphi_i + 2 * d2phi_i / dphi_i + 1
-        
+
         wk_i = a_i * H_i * np.sqrt(self.k**2/(a_i*H_i)**2 - (1+dH_i/H_i) * dz_z_i - d2z_z_i)
 
         Rk_i = 1 / np.sqrt(2 * wk_i) / z_i
