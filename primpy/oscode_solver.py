@@ -109,7 +109,7 @@ def solve_oscode(background, k, **kwargs):
                                                  x0=y0[2*num]*ki,
                                                  dx0=y0[2*num+1]*ki**2,
                                                  rtol=rtol, even_grid=even_grid))
-        p.oscode_postprocessing(oscode_sol=oscode_sol)
+        p.oscode_postprocessing(oscode_sol=oscode_sol, **kwargs)
         if ki < 1 and b.K == +1 and drop_closed_large_scales:
             p.scalar.P_s_RST = 1e-30
         for vac in vacuum:
