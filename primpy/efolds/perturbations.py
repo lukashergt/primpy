@@ -46,9 +46,8 @@ class ScalarModeN(ScalarMode):
         """
         K = self.background.K
         a2 = np.exp(2 * self.background._N[self.idx_beg:self.idx_end+1])
-        H = self.background.H[self.idx_beg:self.idx_end+1]
         dphidN = self.background.dphidN[self.idx_beg:self.idx_end+1]
-        H2 = H**2
+        H = self.background.H[self.idx_beg:self.idx_end+1]
         dV = self.background.potential.dV(self.background.phi[self.idx_beg:self.idx_end+1])
         Omega_K = self.background.Omega_K[self.idx_beg:self.idx_end+1]
 
@@ -56,8 +55,8 @@ class ScalarModeN(ScalarMode):
         epsilon = dphidN**2 / 2
         xi = Omega_K + epsilon - 3
 
-        damping2 = 2 * kappa2 / (kappa2 + K * epsilon) * (xi - dV / (H2 * dphidN)) - xi
-        frequency2 = kappa2 / (a2 * H2) + (damping2 + xi + 1) * Omega_K
+        damping2 = 2 * kappa2 / (kappa2 + K * epsilon) * (xi - dV / (H**2 * dphidN)) - xi
+        frequency2 = kappa2 / (a2 * H**2) + (damping2 + xi + 1) * Omega_K
         if np.all(frequency2 > 0):
             return np.sqrt(frequency2), damping2 / 2
         else:
@@ -110,8 +109,9 @@ class ScalarModeN(ScalarMode):
     def get_vacuum_ic_RST(self):
         """Get initial conditions for scalar modes for RST vacuum w.r.t. e-folds `_N`."""
         a_i = np.exp(self.background._N[self.idx_beg])
+        dphi_i = self.background.dphidN[self.idx_beg]
         H_i = self.background.H[self.idx_beg]
-        z_i = a_i * self.background.dphidN[self.idx_beg]
+        z_i = a_i * dphi_i
         Rk_i = 1 / np.sqrt(2 * self.k) / z_i
         dRk_i = -1j * self.k / (a_i * H_i) * Rk_i
         return Rk_i, dRk_i

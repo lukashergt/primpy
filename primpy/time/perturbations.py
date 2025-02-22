@@ -66,10 +66,10 @@ class ScalarModeT(ScalarMode):
         a_i = np.exp(N_i)
         H_i = self.background.H[self.idx_beg]
         phi_i = self.background.phi[self.idx_beg]
+        dV_i = self.background.potential.dV(phi_i)
         dphi_i = self.background.dphidt[self.idx_beg]
         dH_H_i = Eq.get_dH_H(N=N_i, H2=H_i**2, dphi=dphi_i, K=self.background.K)
-        d2phi_i = Eq.get_d2phi(H2=H_i**2, dH_H=dH_H_i, dphi=dphi_i,
-                               dV=self.background.potential.dV(phi_i))
+        d2phi_i = Eq.get_d2phi(H2=H_i**2, dH_H=dH_H_i, dphi=dphi_i, dV=dV_i)
 
         z_i = a_i * dphi_i / H_i
         dz_z_i = H_i + d2phi_i / dphi_i - dH_H_i
@@ -89,8 +89,7 @@ class ScalarModeT(ScalarMode):
         dphi_i = self.background.dphidt[self.idx_beg]
         dH_i = Eq.get_dH(N=N_i, H=H_i, dphi=dphi_i, K=self.background.K)
         dH_H_i = Eq.get_dH_H(N=N_i, H2=H_i**2, dphi=dphi_i, K=self.background.K)
-        d2phi_i = Eq.get_d2phi(H2=H_i**2, dH_H=dH_H_i, dphi=dphi_i,
-                               dV=self.background.potential.dV(phi_i))
+        d2phi_i = Eq.get_d2phi(H2=H_i**2, dH_H=dH_H_i, dphi=dphi_i, dV=dV_i)
         d2H_i = Eq.get_d2H(N=N_i, H=H_i, dH=dH_i, dphi=dphi_i, d2phi=d2phi_i, K=self.background.K)
         d3phi_i = Eq.get_d3phi(H=H_i, dH=dH_i, d2H=d2H_i, dphi=dphi_i, d2phi=d2phi_i,
                                dV=dV_i, d2V=d2V_i)
