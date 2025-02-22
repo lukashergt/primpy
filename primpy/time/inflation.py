@@ -84,10 +84,7 @@ class InflationEquationsT(InflationEquations):
         return -3 * H * d3phi - d2V * d2phi - d3V * dphi**2 - 3 * d2H * dphi - 6 * d2phi * dH
 
     def H2(self, x, y):  # noqa: D102
-        _N = self._N(x, y)
-        V = self.V(x, y)
-        dphi = self.dphidt(x, y)
-        return self.get_H2(N=_N, dphi=dphi, V=V, K=self.K)
+        return self.get_H2(N=self._N(x, y), dphi=self.dphidt(x, y), V=self.V(x, y), K=self.K)
 
     def w(self, x, y):  # noqa: D102
         V = self.V(x, y)
