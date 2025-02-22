@@ -16,6 +16,7 @@ class InflationEquationsT(InflationEquations):
         * ``_N``: number of e-folds
         * ``phi``: inflaton field
         * ``dphidt``: `d(phi)/dt`
+        * ``eta``: conformal time (optional)
 
     """
 
