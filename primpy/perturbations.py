@@ -14,7 +14,7 @@ class PrimordialPowerSpectrum(object):
         self.background = background
         self.k = k
         self.k_iMpc = k * K_STAR / np.exp(background._logaH_star)
-        vacuum = kwargs.pop('vacuum', ('RST',))
+        vacuum = kwargs.pop('vacuum', ('k', 'RST'))
         for vac in vacuum:
             setattr(self, 'P_s_%s' % vac, np.full_like(k, np.nan, dtype=float))
             setattr(self, 'P_t_%s' % vac, np.full_like(k, np.nan, dtype=float))
@@ -53,7 +53,7 @@ class Perturbation(ABC):
         self._combine_solutions(**kwargs)
 
     def _combine_solutions(self, **kwargs):
-        vacuum = kwargs.pop('vacuum', ['RST'])
+        vacuum = kwargs.pop('vacuum', ('k', 'RST'))
         for mode in [self.scalar, self.tensor]:
             y1 = getattr(mode.one, '%s' % mode.var)
             y2 = getattr(mode.two, '%s' % mode.var)
@@ -108,7 +108,7 @@ class ScalarMode(Mode, ABC):
         self.tag = 's'
         self.pps_norm = self.k**3 / (2 * pi**2)
         self.add_variable('Rk', 'dRk')
-        vacuum = kwargs.pop('vacuum', ('RST',))
+        vacuum = kwargs.pop('vacuum', ('k', 'RST'))
         for vac in vacuum:
             setattr(self, 'P_s_%s' % vac, np.nan)
 
@@ -122,6 +122,6 @@ class TensorMode(Mode, ABC):
         self.tag = 't'
         self.pps_norm = self.k**3 / (2 * pi**2) * 2
         self.add_variable('hk', 'dhk')
-        vacuum = kwargs.pop('vacuum', ('RST',))
+        vacuum = kwargs.pop('vacuum', ('k', 'RST'))
         for vac in vacuum:
             setattr(self, 'P_t_%s' % vac, np.nan)

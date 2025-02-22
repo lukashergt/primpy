@@ -16,7 +16,7 @@ def run(*args):
 
 current_version = run("cat", vfile)
 current_version = current_version.split("=")[-1].strip().strip("'")
-escaped_version = current_version.replace(".", "\.")
+escaped_version = current_version.replace(".", r"\.")
 current_version = version.parse(current_version)
 
 if len(sys.argv) > 1:

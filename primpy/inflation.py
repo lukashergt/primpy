@@ -19,6 +19,69 @@ class InflationEquations(Equations, ABC):
         self.K = K
         self.potential = potential
 
+    @staticmethod
+    def get_H2(N, dphi, V, K):
+        """Get the Hubble parameter squared from the background equations.
+
+        Returns
+        -------
+        H2 : float or array_like
+        """
+
+    @staticmethod
+    def get_dH(N, H, dphi, K):
+        """Get the 1st time derivative of the Hubble parameter from the background equations.
+
+        Returns
+        -------
+        dH : float or array_like
+        """
+
+    @staticmethod
+    def get_d2H(N, H, dH, dphi, d2phi, K):
+        """Get the 2nd time derivative of the Hubble parameter from the background equations.
+
+        Returns
+        -------
+        d2H : float or array_like
+        """
+
+    @staticmethod
+    def get_d3H(N, H, dH, d2H, dphi, d2phi, d3phi, K):
+        """Get the 3rd time derivative of the Hubble parameter from the background equations.
+
+        Returns
+        -------
+        d3H : float or array_like
+        """
+
+    @staticmethod
+    def get_d2phi(H2, dH_H, dphi, dV):
+        """Get the 2nd time derivative of the inflaton field from the background equations.
+
+        Returns
+        -------
+        d2phi : float or array_like
+        """
+
+    @staticmethod
+    def get_d3phi(H, dH, d2H, dphi, d2phi, dV, d2V):
+        """Get the 3rd time derivative of the inflaton field from the background equations.
+
+        Returns
+        -------
+        d3phi : float or array_like
+        """
+
+    @staticmethod
+    def get_d4phi(H, dH, d2H, d3H, dphi, d2phi, d3phi, dV, d2V, d3V):
+        """Get the 4th time derivative of the inflaton field from the background equations.
+
+        Returns
+        -------
+        d4phi : float or array_like
+        """
+
     def H(self, x, y):
         """Hubble parameter."""
         return np.sqrt(self.H2(x, y))

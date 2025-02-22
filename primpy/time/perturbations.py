@@ -1,5 +1,6 @@
 """Curvature perturbations with respect to time `t`."""
 import numpy as np
+from primpy.time.inflation import InflationEquationsT as Eq
 from primpy.perturbations import Perturbation, ScalarMode, TensorMode
 
 
@@ -59,12 +60,56 @@ class ScalarModeT(ScalarMode):
         else:
             return np.sqrt(frequency2 + 0j), damping
 
+    def get_vacuum_ic_k(self):
+        """Get initial conditions for scalar modes for HD approximation w.r.t. cosmic time `t`."""
+        N_i = self.background._N[self.idx_beg]
+        a_i = np.exp(N_i)
+        H_i = self.background.H[self.idx_beg]
+        phi_i = self.background.phi[self.idx_beg]
+        dV_i = self.background.potential.dV(phi_i)
+        dphi_i = self.background.dphidt[self.idx_beg]
+        dH_H_i = Eq.get_dH_H(N=N_i, H2=H_i**2, dphi=dphi_i, K=self.background.K)
+        d2phi_i = Eq.get_d2phi(H2=H_i**2, dH_H=dH_H_i, dphi=dphi_i, dV=dV_i)
+
+        z_i = a_i * dphi_i / H_i
+        dz_z_i = H_i + d2phi_i / dphi_i - dH_H_i
+
+        Rk_i = 1 / np.sqrt(2 * self.k) / z_i
+        dRk_i = (-1j * self.k / a_i - dz_z_i) * Rk_i
+        return Rk_i, dRk_i
+
+    def get_vacuum_ic_HD(self):
+        """Get initial conditions for scalar modes for HD vacuum w.r.t. cosmic time `t`."""
+        N_i = self.background._N[self.idx_beg]
+        a_i = np.exp(N_i)
+        H_i = self.background.H[self.idx_beg]
+        phi_i = self.background.phi[self.idx_beg]
+        dV_i = self.background.potential.dV(phi_i)
+        d2V_i = self.background.potential.d2V(phi_i)
+        dphi_i = self.background.dphidt[self.idx_beg]
+        dH_i = Eq.get_dH(N=N_i, H=H_i, dphi=dphi_i, K=self.background.K)
+        dH_H_i = Eq.get_dH_H(N=N_i, H2=H_i**2, dphi=dphi_i, K=self.background.K)
+        d2phi_i = Eq.get_d2phi(H2=H_i**2, dH_H=dH_H_i, dphi=dphi_i, dV=dV_i)
+        d2H_i = Eq.get_d2H(N=N_i, H=H_i, dH=dH_i, dphi=dphi_i, d2phi=d2phi_i, K=self.background.K)
+        d3phi_i = Eq.get_d3phi(H=H_i, dH=dH_i, d2H=d2H_i, dphi=dphi_i, d2phi=d2phi_i,
+                               dV=dV_i, d2V=d2V_i)
+
+        z_i = a_i * dphi_i / H_i
+        dz_z_i = H_i + d2phi_i / dphi_i - dH_H_i
+        d2z_z_i = (H_i**2 + 2 * H_i * d2phi_i / dphi_i + d3phi_i / dphi_i - dH_i
+                   - d2H_i / H_i - 2 * d2phi_i * dH_H_i / dphi_i + 2 * dH_H_i**2)
+        wk_i = a_i * np.sqrt(self.k**2/a_i**2 - H_i * dz_z_i - d2z_z_i)
+
+        Rk_i = 1 / np.sqrt(2 * wk_i) / z_i
+        dRk_i = (-1j * wk_i / a_i - dz_z_i) * Rk_i
+        return Rk_i, dRk_i
+
     def get_vacuum_ic_RST(self):
         """Get initial conditions for scalar modes for RST vacuum w.r.t. cosmic time `t`."""
         a_i = np.exp(self.background._N[self.idx_beg])
-        dphidt_i = self.background.dphidt[self.idx_beg]
+        dphi_i = self.background.dphidt[self.idx_beg]
         H_i = self.background.H[self.idx_beg]
-        z_i = a_i * dphidt_i / H_i
+        z_i = a_i * dphi_i / H_i
         Rk_i = 1 / np.sqrt(2 * self.k) / z_i
         dRk_i = -1j * self.k / a_i * Rk_i
         return Rk_i, dRk_i
@@ -97,6 +142,26 @@ class TensorModeT(TensorMode):
             return np.sqrt(frequency2), damping2 / 2
         else:
             return np.sqrt(frequency2 + 0j), damping2 / 2
+
+    def get_vacuum_ic_k(self):
+        """Get initial conditions for tensor modes for HD approximation w.r.t. cosmic time `t`."""
+        a_i = np.exp(self.background._N[self.idx_beg])
+        H_i = self.background.H[self.idx_beg]
+        hk_i = 2 / np.sqrt(2 * self.k) / a_i
+        dhk_i = (-1j * self.k / a_i - H_i) * hk_i
+        return hk_i, dhk_i
+
+    def get_vacuum_ic_HD(self):
+        """Get initial conditions for tensor modes for HD vacuum w.r.t. cosmic time `t`."""
+        N_i = self.background._N[self.idx_beg]
+        a_i = np.exp(N_i)
+        H_i = self.background.H[self.idx_beg]
+        dphi_i = self.background.dphidt[self.idx_beg]
+        dH_i = Eq.get_dH(N=N_i, H=H_i, dphi=dphi_i, K=self.background.K)
+        wk_i = a_i * np.sqrt(self.k**2/a_i**2 - 2 * H_i**2 - dH_i)
+        hk_i = 2 / np.sqrt(2 * wk_i) / a_i
+        dhk_i = (-1j * wk_i / a_i - H_i) * hk_i
+        return hk_i, dhk_i
 
     def get_vacuum_ic_RST(self):
         """Get initial conditions for tensor modes for RST vacuum w.r.t. cosmic time `t`."""
