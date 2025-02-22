@@ -55,17 +55,34 @@ def test_perturbations_SR():
     bsrt, bsrn = set_background_SR()
     ks_iMpc = np.logspace(np.log10(5e-4), np.log10(5e0), 4 * 10 + 1)
     logk_iMpc = np.log(ks_iMpc)
-    ks_cont = ks_iMpc * bsrt.a0_Mpc
-    pps_t = solve_oscode(background=bsrt, k=ks_cont, fac_beg=100, rtol=5e-5)
-    pps_n = solve_oscode(background=bsrn, k=ks_cont, fac_beg=100, rtol=5e-5, even_grid=True)
+    ks = ks_iMpc * bsrt.a0_Mpc
+    v = ('k', 'HD', 'RST')
+    pps_t = solve_oscode(background=bsrt, k=ks, vacuum=v, fac_beg=100)
+    pps_n = solve_oscode(background=bsrn, k=ks, vacuum=v, fac_beg=100, even_grid=True)
+    assert np.isfinite(pps_t.P_s_k).all()
+    assert np.isfinite(pps_t.P_t_k).all()
+    assert np.isfinite(pps_n.P_s_k).all()
+    assert np.isfinite(pps_n.P_t_k).all()
+    assert np.isfinite(pps_t.P_s_HD).all()
+    assert np.isfinite(pps_t.P_t_HD).all()
+    assert np.isfinite(pps_n.P_s_HD).all()
+    assert np.isfinite(pps_n.P_t_HD).all()
     assert np.isfinite(pps_t.P_s_RST).all()
     assert np.isfinite(pps_t.P_t_RST).all()
     assert np.isfinite(pps_n.P_s_RST).all()
     assert np.isfinite(pps_n.P_t_RST).all()
 
     # time vs efolds
+    assert_allclose(pps_t.P_s_k * 1e9, pps_n.P_s_k * 1e9, rtol=1e-3, atol=1e-6)
+    assert_allclose(pps_t.P_t_k * 1e9, pps_n.P_t_k * 1e9, rtol=1e-3, atol=1e-6)
+    assert_allclose(pps_t.P_s_HD * 1e9, pps_n.P_s_HD * 1e9, rtol=1e-3, atol=1e-6)
+    assert_allclose(pps_t.P_t_HD * 1e9, pps_n.P_t_HD * 1e9, rtol=1e-3, atol=1e-6)
     assert_allclose(pps_t.P_s_RST * 1e9, pps_n.P_s_RST * 1e9, rtol=1e-3, atol=1e-6)
     assert_allclose(pps_t.P_t_RST * 1e9, pps_n.P_t_RST * 1e9, rtol=1e-3, atol=1e-6)
+
+    # k vs HD vs RST
+    assert_allclose(pps_t.P_s_k * 1e9, pps_t.P_s_HD * 1e9, rtol=1e-3, atol=1e-6)
+    assert_allclose(pps_t.P_s_k * 1e9, pps_t.P_s_RST * 1e9, rtol=1e-2, atol=1e-4)
 
     # oscode vs background
     As_t_oscode = pps_t.P_s_RST[ks_iMpc.size//2]
