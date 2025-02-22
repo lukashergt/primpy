@@ -86,14 +86,14 @@ class InflationEquationsT(InflationEquations):
     def H2(self, x, y):  # noqa: D102
         _N = self._N(x, y)
         V = self.V(x, y)
-        dphidt = self.dphidt(x, y)
-        return self.get_H2(N=_N, dphi=dphidt, V=V, K=self.K)
+        dphi = self.dphidt(x, y)
+        return self.get_H2(N=_N, dphi=dphi, V=V, K=self.K)
 
     def w(self, x, y):  # noqa: D102
         V = self.V(x, y)
-        dphidt = self.dphidt(x, y)
-        p = dphidt**2 / 2 - V
-        rho = dphidt**2 / 2 + V
+        dphidt_2 = self.dphidt(x, y)**2
+        p = dphidt_2 / 2 - V
+        rho = dphidt_2 / 2 + V
         return p / rho
 
     def inflating(self, x, y):  # noqa: D102
