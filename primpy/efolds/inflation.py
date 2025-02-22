@@ -92,31 +92,31 @@ class InflationEquationsN(InflationEquations):
                 + 2*(d2H/H - 3*dH**2/H**2)*dV/H**2)
 
     @staticmethod
-    def get_epsilon_1H(H, dH):
+    def get_epsilon_1H(H, dH):  # noqa: D102
         # e_1H = -d(ln H)/dN = -dH/dN / H
         return -dH / H
 
     @staticmethod
-    def get_epsilon_2H(H, dH, d2H, epsilon_1H):
+    def get_epsilon_2H(H, dH, d2H, epsilon_1H):  # noqa: D102
         # e_2H = d(ln e_1H)/dN
         return d2H / dH - dH / H
 
     @staticmethod
-    def get_epsilon_3H(H, dH, d2H, d3H, epsilon_2H):
+    def get_epsilon_3H(H, dH, d2H, d3H, epsilon_2H):  # noqa: D102
         # e_3H = d(ln e_2H)/dN
         de2 = d3H/dH - d2H**2/dH**2 - d2H/H + dH**2/H**2
         return de2 / epsilon_2H
 
     @staticmethod
-    def get_delta_1H(H, dH, dphi, d2phi):
+    def get_delta_1H(H, dH, dphi, d2phi):  # noqa: D102
         return d2phi/dphi + dH/H
 
     @staticmethod
-    def get_delta_2H(H, dH, d2H, dphi, d2phi, d3phi):
+    def get_delta_2H(H, dH, d2H, dphi, d2phi, d3phi):  # noqa: D102
         return d3phi/dphi + 3 * d2phi/dphi * dH/H + d2H/H + dH**2 / H**2
 
     @staticmethod
-    def get_delta_3H(H, dH, d2H, d3H, dphi, d2phi, d3phi, d4phi):
+    def get_delta_3H(H, dH, d2H, d3H, dphi, d2phi, d3phi, d4phi):  # noqa: D102
         return (d4phi/dphi
                 + 6 * dH/H * d3phi/dphi
                 + (4 * d2H/H + 7 * dH**2/H**2) * d2phi/dphi
