@@ -73,7 +73,7 @@ def solve_oscode(background, k, **kwargs):
     fac_beg = kwargs.pop('fac_beg', 0)
     fac_end = kwargs.pop('fac_end', 100)
     even_grid = kwargs.pop('even_grid', False)
-    vacuum = kwargs.get('vacuum', ('RST',))
+    vacuum = kwargs.get('vacuum', ('k', 'RST'))
     drop_closed_large_scales = kwargs.pop('drop_closed_large_scales', True)
     b = background
     if isinstance(k, int) or isinstance(k, float):
