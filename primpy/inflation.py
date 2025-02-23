@@ -946,7 +946,7 @@ class InflationEquations(Equations, ABC):
             extrapolate = interp1d_kwargs.pop('ext', 'const')
 
             K = sol.K
-            _N = sol._N
+            _N = sol._N[sol.inflation_mask]
             H = sol.H[sol.inflation_mask]
             phi = sol.phi[sol.inflation_mask]
             dV = sol.potential.dV(phi)
@@ -1006,8 +1006,75 @@ class InflationEquations(Equations, ABC):
             sol.P_s_approx_LLMS = lambda k: np.exp(logk2logP_s(np.log(k)))
             sol.P_t_approx_LLMS = lambda k: np.exp(logk2logP_t(np.log(k)))
 
+        def derive_approx_power_STE(**interp1d_kwargs):
+            """Slow-roll approximation by Schwarz and Terrero-Escalante (2004)
+
+            https://arxiv.org/pdf/hep-ph/0403129
+            """
+            spline_order = interp1d_kwargs.pop('k', 3)
+            extrapolate = interp1d_kwargs.pop('ext', 'const')
+
+            K = sol.K
+            _N = sol._N[sol.inflation_mask]
+            H = sol.H[sol.inflation_mask]
+            phi = sol.phi[sol.inflation_mask]
+            dV = sol.potential.dV(phi)
+            d2V = sol.potential.d2V(phi)
+            if hasattr(sol, 'dphidt'):
+                dphi = sol.dphidt[sol.inflation_mask]
+            else:
+                dphi = sol.dphidN[sol.inflation_mask]
+            dH = self.get_dH(N=_N, H=H, dphi=dphi, K=K)
+            dH_H = self.get_dH_H(N=_N, H2=H**2, dphi=dphi, K=K)
+            d2phi = self.get_d2phi(H2=H**2, dH_H=dH_H, dphi=dphi, dV=dV)
+            d2H = self.get_d2H(N=_N, H=H, dH=dH, dphi=dphi, d2phi=d2phi, K=K)
+            d3phi = self.get_d3phi(H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, dV=dV, d2V=d2V)
+            d3H = self.get_d3H(N=_N, H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, d3phi=d3phi, K=K)
+
+            # Schwarz and Terrero-Escalante (2004), eq. (3)
+            e1 = self.get_epsilon_1H(H=H, dH=dH)
+            e2 = self.get_epsilon_2H(H=H, dH=dH, d2H=d2H)
+            e3 = self.get_epsilon_3H(H=H, dH=dH, d2H=d2H, d3H=d3H)
+
+            # Schwarz and Terrero-Escalante (2004), eqs. (13) and (14)
+            Ps0 = H**2 / (8 * pi**2 * e1)
+            Pt0 = 2 * (H / pi)**2
+
+            # Schwarz and Terrero-Escalante (2004), eqs. (19) and (20)
+            C = np.euler_gamma + np.log(2) - 2
+            as0 = (
+                1 - 2 * (C + 1) * e1 - C * e2
+                + (2 * C**2 + 2 * C + pi**2 / 2 - 5) * e1**2
+                + (C**2 / 2 + pi**2 / 8 - 1) * e2**2
+                + (C**2 - C + 7/12 * pi**2 - 7) * e1 * e2
+                + (-C**2 / 2 + pi**2 / 24) * e2 * e3
+            )
+            at0 = (
+                1 - 2 * (C + 1) * e1
+                + (2 * C**2 + 2 * C + pi**2 / 2 - 5) * e1**2
+                + (-C**2 - 2 * C + pi**2 / 12 - 2) * e1 * e2
+            )
+
+            P_s = Ps0 * as0
+            P_t = Pt0 * at0
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
+            logk2logP_s_STE = InterpolatedUnivariateSpline(
+                logk, logP_s[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_STE = InterpolatedUnivariateSpline(
+                logk, logP_t[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_STE = lambda k: np.exp(logk2logP_s_STE(np.log(k)))
+            sol.P_t_approx_STE = lambda k: np.exp(logk2logP_t_STE(np.log(k)))
+
         sol.derive_approx_power_CGS = derive_approx_power_CGS
         sol.derive_approx_power_LLMS = derive_approx_power_LLMS
+        sol.derive_approx_power_STE = derive_approx_power_STE
 
         def P_s_approx(k, method='CGS', order=3, **interp_kwargs):
             """Slow-roll approximation for the primordial power spectrum for scalar modes.
@@ -1021,6 +1088,7 @@ class InflationEquations(Equations, ABC):
                 Choice of approximation:
                 * `CGS`: Choe, Gong & Stewart (2004)
                 * `LLMS`: Leach, Liddle, Martin & Schwarz (2003)
+                * `STE`: Schwarz and Terrero-Escalante (2004)
 
             order : int, default=3
                 The `CGS` method is implemented in different orders or approximation.
@@ -1045,6 +1113,8 @@ class InflationEquations(Equations, ABC):
                     return sol.P_s_approx_CGS2(k)
             elif method == 'LLMS':
                 return sol.P_s_approx_LLMS(k)
+            elif method == 'STE':
+                return sol.P_s_approx_STE(k)
 
             return np.exp(sol.logk2logP_s(np.log(k)))
 
@@ -1060,6 +1130,7 @@ class InflationEquations(Equations, ABC):
                 Choice of approximation:
                 * `CGS`: Gong (2004)
                 * `LLMS`: Leach, Liddle, Martin & Schwarz (2003)
+                * `STE`: Schwarz and Terrero-Escalante (2004)
 
             order : int, default=3
                 The `CGS` method is implemented in different orders or approximation.
@@ -1084,6 +1155,8 @@ class InflationEquations(Equations, ABC):
                     return sol.P_t_approx_CGS2(k)
             elif method == 'LLMS':
                 return sol.P_t_approx_LLMS(k)
+            elif method == 'STE':
+                return sol.P_t_approx_STE(k)
 
             return np.exp(sol.logk2logP_t(np.log(k)))
 
