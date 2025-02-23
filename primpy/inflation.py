@@ -2,6 +2,7 @@
 from warnings import warn
 from abc import ABC
 import numpy as np
+from scipy.special import zeta
 from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
 from primpy.exceptionhandling import InsufficientInflationError
@@ -59,6 +60,26 @@ class InflationEquations(Equations, ABC):
         -------
         dH : float or array_like
             1st derivative of Hubble parameter.
+        """
+
+    def get_dH_H(N, H2, dphi, K):  # noqa: D102
+        """Get the 1st time derivative of the Hubble parameter normalised by the Hubble parameter..
+
+        Parameters
+        ----------
+        N : float or array_like
+            Number of e-folds `N=ln(a)`.
+        H2 : float or array_like
+            Hubble parameter squared.
+        dphi : float or array_like
+            1st derivative of inflaton field.
+        K : int
+            Curvature parameter.
+
+        Returns
+        -------
+        dH_H : float or array_like
+            1st derivative of Hubble parameter normalised by Hubble parameter: `dH/H`.
         """
 
     @staticmethod
@@ -218,7 +239,7 @@ class InflationEquations(Equations, ABC):
         """
 
     @staticmethod
-    def get_epsilon_2H(H, dH, d2H, epsilon_1H):
+    def get_epsilon_2H(H, dH, d2H, kind=None):
         """Get the 2nd Hubble flow parameter.
 
         This definition of the 2nd Hubble flow parameter was suggested e.g. by
@@ -233,8 +254,8 @@ class InflationEquations(Equations, ABC):
             1st derivative of Hubble parameter.
         d2H : float or array_like
             2nd derivative of Hubble parameter.
-        epsilon_1H : float or array_like
-            1st Hubble flow parameter.
+        kind : str or None, default=None
+            Switch to alternative formulation given by Gong (2004).
 
         Returns
         -------
@@ -243,7 +264,7 @@ class InflationEquations(Equations, ABC):
         """
 
     @staticmethod
-    def get_epsilon_3H(H, dH, d2H, d3H, epsilon_2H):
+    def get_epsilon_3H(H, dH, d2H, d3H, kind=None):
         """Get the 3rd Hubble flow parameter.
 
         This definition of the 3rd Hubble flow parameter was suggested e.g. by
@@ -260,8 +281,8 @@ class InflationEquations(Equations, ABC):
             2nd derivative of Hubble parameter.
         d3H : float or array_like
             3rd derivative of Hubble parameter.
-        epsilon_2H : float or array_like
-            2nd Hubble flow parameter.
+        kind : str or None, default=None
+            Switch to alternative formulation given by Gong (2004).
 
         Returns
         -------
@@ -754,12 +775,239 @@ class InflationEquations(Equations, ABC):
             sol.n_t = dlogPdlogk_t[1]
             sol.r = sol.A_t / sol.A_s
 
-        def P_s_approx(k):
-            """Slow-roll approximation for the primordial power spectrum for scalar modes."""
+        def derive_approx_power_CGS(**interp1d_kwargs):
+            """Slow-roll approximation by Choe, Gong, and Stewart.
+
+            Relevant papers
+            ---------------
+            * Stewart & Gong (2001)
+              http://arxiv.org/abs/astro-ph/0101225
+
+            * Choe, Gong & Stewart (2004)
+              https://arxiv.org/pdf/hep-ph/0405155
+
+            * Gong (2004)
+              https://arxiv.org/pdf/gr-qc/0408039
+
+            """
+            spline_order = interp1d_kwargs.pop('k', 3)
+            extrapolate = interp1d_kwargs.pop('ext', 'const')
+
+            K = sol.K
+            N = sol._N
+            H = sol.H[sol.inflation_mask]
+            phi = sol.phi[sol.inflation_mask]
+            dV = sol.potential.dV(phi)
+            d2V = sol.potential.d2V(phi)
+            d3V = sol.potential.d3V(phi)
+            if hasattr(sol, 'dphidt'):
+                dphi = sol.dphidt[sol.inflation_mask]
+            else:
+                dphi = sol.dphidN[sol.inflation_mask]
+            dH = self.get_dH(N=N, H=H, dphi=dphi, K=K)
+            dH_H = self.get_dH_H(N=N, H2=H**2, dphi=dphi, K=K)
+            d2phi = self.get_d2phi(H2=H**2, dH_H=dH_H, dphi=dphi, dV=dV)
+            d2H = self.get_d2H(N=N, H=H, dH=dH, dphi=dphi, d2phi=d2phi, K=K)
+            d3phi = self.get_d3phi(H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, dV=dV, d2V=d2V)
+            d3H = self.get_d3H(N=N, H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, d3phi=d3phi, K=K)
+            d4phi = self.get_d4phi(H=H, dH=dH, d2H=d2H, d3H=d3H,
+                                   dphi=dphi, d2phi=d2phi, d3phi=d3phi,
+                                   dV=dV, d2V=d2V, d3V=d3V)
+
+            # Stewart and Gong (2001), eq. (6) and (22) and
+            # Choe, Gong & Stewart (2004), eq. (57)
+            e1 = self.get_epsilon_1H(H=H, dH=dH)
+            d1 = self.get_delta_1(H=H, dH=dH, dphi=dphi, d2phi=d2phi)
+            d2 = self.get_delta_2(H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, d3phi=d3phi)
+            d3 = self.get_delta_3(H=H, dH=dH, d2H=d2H, d3H=d3H,
+                                  dphi=dphi, d2phi=d2phi, d3phi=d3phi, d4phi=d4phi)
+
+            # Stewart and Gong (2001), eq. (41)
+            # Choe, Gong & Stewart (2004), eq. (60)
+            Ps0 = H**2 / (8 * pi**2 * e1)
+            alpha = 2 - np.log(2) - np.euler_gamma
+            astar = alpha - e1  # from Choe, Gong & Stewart (2004) just after eq. (60)
+            order1_s = (1 + (4 * astar - 2) * e1 + 2 * astar * d1 + (-astar**2 + pi**2 / 12) * d2
+                        + (1 / 3 * astar**3 - pi**2 / 12 * astar + 4 / 3 - 2 / 3 * zeta(3)) * d3)
+            # (slight differences between SG and CGS in 2nd order numeric coefficients)
+            order2_s = (
+                    # + (4 * alpha**2 - 23 + 7 * pi**2 / 3) * e1**2
+                    + (4 * astar**2 - 19 + 7 * pi**2 / 3) * e1**2
+                    # + (3 * alpha**2 + 2 * alpha - 22 + 29 * pi**2 / 12) * e1 * d1
+                    + (3 * astar**2 + 2 * astar - 20 + 29 * pi**2 / 12) * e1 * d1
+                    + (3 * astar**2 - 4 + 5 * pi**2 / 12) * d1**2
+                    + (-5/3 * astar**3 - 2 * astar**2 + 20 * astar - 9/4 * pi**2 * astar
+                       + 16/3 + pi**2 / 6 - 14/3 * zeta(3)) * e1 * d2
+                    + (-3*astar**3 + 8*astar - 7/12 * pi**2 * astar - 4 + 2 * zeta(3)) * d1 * d2
+            )
+            order3_s = (
+                + (4 * astar**2 + 8 * astar + 16 + 5 * pi**2 - 48 * zeta(3)) * e1**3
+                + (-5 / 3 * astar**3 + 4 * astar**2 + 32 * astar - 9 / 4 * pi**2 * astar
+                   + 88 / 3 + 23 / 3 * pi**2 - 230 / 3 * zeta(3)) * e1**2 * d1
+                + (3 * astar**3 + 4 * astar**2 - 24 * astar + 13 / 4 * pi**2 * astar
+                   + 16 + 7 / 3 * pi**2 - 30 * zeta(3)) * e1 * d1**2
+                + (4 * astar**3 - 16 * astar + 5 / 3 * pi**2 * astar + 8 - 6 * zeta(3)) * d1**3
+            )
+
+            # Gong (2004), eq. (23)
+            e2 = self.get_epsilon_2H(H=H, dH=dH, d2H=d2H, kind='Gong')
+            e3 = self.get_epsilon_3H(H=H, dH=dH, d2H=d2H, d3H=d3H, kind='Gong')
+
+            # Gong (2004), eq. (25)
+            Pt0 = 2 * (H / pi)**2
+            order1_t = (
+                1 + 2 * (astar - 1) * e1
+                + (-astar**2 + 2 * astar - 2 + pi**2/12) * e2
+                + (astar**3/3 - astar**2 + (2-pi**2/12)*astar + pi**2/12 - 2/3 - 2/3*zeta(3)) * e3
+            )
+            order2_t = (
+                + (2 * astar**2 - 2 * astar - 3 + pi**2/2) * e1**2
+                + (-5/3 * astar**3 + 2 * astar**2 + (8 - 11/12 * pi**2) * astar + 7/6 * pi**2
+                   - 26/3 - 2/3 * zeta(3)) * e1 * e2
+            )
+            order3_t = (4/3 * astar**3 - 8 * astar + pi**2 * astar + 16/3 - 14/3 * zeta(3)) * e1**3
+
+            # order 0
+            logk, indices = np.unique(sol.logk, return_index=True)
+            mask_s = Ps0 > 0
+            mask_t = Pt0 > 0
+            logP_s = np.log(Ps0[mask_s])
+            logP_t = np.log(Pt0[mask_t])
+            logk2logP_s_0 = InterpolatedUnivariateSpline(
+                logk[mask_s], logP_s,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_0 = InterpolatedUnivariateSpline(
+                logk[mask_t], logP_t,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_CGS0 = lambda k: np.exp(logk2logP_s_0(np.log(k)))
+            sol.P_t_approx_CGS0 = lambda k: np.exp(logk2logP_t_0(np.log(k)))
+
+            # order 1
+            P_s = Ps0 * order1_s
+            P_t = Pt0 * order1_t
+            mask_s = P_s > 0
+            mask_t = P_t > 0
+            logP_s = np.log(P_s[mask_s])
+            logP_t = np.log(P_t[mask_t])
+            logk2logP_s_1 = InterpolatedUnivariateSpline(
+                logk[mask_s], logP_s,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_1 = InterpolatedUnivariateSpline(
+                logk[mask_t], logP_t,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_CGS1 = lambda k: np.exp(logk2logP_s_1(np.log(k)))
+            sol.P_t_approx_CGS1 = lambda k: np.exp(logk2logP_t_1(np.log(k)))
+
+            # order 2
+            P_s = Ps0 * (order1_s + order2_s)
+            P_t = Pt0 * (order1_t + order2_t)
+            mask_s = P_s > 0
+            mask_t = P_t > 0
+            logP_s = np.log(P_s[mask_s])
+            logP_t = np.log(P_t[mask_t])
+            logk2logP_s_2 = InterpolatedUnivariateSpline(
+                logk[mask_s], logP_s,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_2 = InterpolatedUnivariateSpline(
+                logk[mask_t], logP_t,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_CGS2 = lambda k: np.exp(logk2logP_s_2(np.log(k)))
+            sol.P_t_approx_CGS2 = lambda k: np.exp(logk2logP_t_2(np.log(k)))
+
+            # order 3
+            P_s = Ps0 * (order1_s + order2_s + order3_s)
+            P_t = Pt0 * (order1_t + order2_t + order3_t)
+            mask_s = P_s > 0
+            mask_t = P_t > 0
+            logP_s = np.log(P_s[mask_s])
+            logP_t = np.log(P_t[mask_t])
+            logk2logP_s_3 = InterpolatedUnivariateSpline(
+                logk[mask_s], logP_s,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_3 = InterpolatedUnivariateSpline(
+                logk[mask_t], logP_t,
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_CGS3 = lambda k: np.exp(logk2logP_s_3(np.log(k)))
+            sol.P_t_approx_CGS3 = lambda k: np.exp(logk2logP_t_3(np.log(k)))
+
+        sol.derive_approx_power_CGS = derive_approx_power_CGS
+
+        def P_s_approx(k, method='CGS', order=3, **interp_kwargs):
+            """Slow-roll approximation for the primordial power spectrum for scalar modes.
+
+            Parameters
+            ----------
+            k : array_like
+                Wavenumber in Mpc^-1.
+
+            method : str, default='CGS'
+                Choice of approximation:
+                * `CGS`: Choe, Gong & Stewart (2004)
+
+            order : int, default=3
+                The `CGS` method is implemented in different orders or approximation.
+
+            Returns
+            -------
+            P_s : array_like
+                Primordial power spectrum of scalar modes.
+
+            """
+            if method == 'CGS':
+                if not hasattr(sol, "P_s_approx_CGS0"):
+                    derive_approx_power_CGS(**interp_kwargs)
+                if order == 3:
+                    return sol.P_s_approx_CGS3(k)
+                elif order == 0:
+                    return sol.P_s_approx_CGS0(k)
+                elif order == 1:
+                    return sol.P_s_approx_CGS1(k)
+                elif order == 2:
+                    return sol.P_s_approx_CGS2(k)
+
             return np.exp(sol.logk2logP_s(np.log(k)))
 
-        def P_t_approx(k):
-            """Slow-roll approximation for the primordial power spectrum for tensor modes."""
+        def P_t_approx(k, method='CGS', order=None, **interp_kwargs):
+            """Slow-roll approximation for the primordial power spectrum for tensor modes.
+
+            Parameters
+            ----------
+            k : array_like
+                Wavenumber in Mpc^-1.
+
+            method : str, default='CGS'
+                Choice of approximation:
+                * `CGS`: Gong (2004)
+
+            order : int, default=3
+                The `CGS` method is implemented in different orders or approximation.
+
+            Returns
+            -------
+            P_t : array_like
+                Primordial power spectrum of tensor modes.
+
+            """
+            if method == 'CGS':
+                if not hasattr(sol, "P_t_approx_CGS0"):
+                    derive_approx_power_CGS(**interp_kwargs)
+                if order is None or order == 3:
+                    return sol.P_t_approx_CGS3(k)
+                elif order == 0:
+                    return sol.P_t_approx_CGS0(k)
+                elif order == 1:
+                    return sol.P_t_approx_CGS1(k)
+                elif order == 2:
+                    return sol.P_t_approx_CGS2(k)
+
             return np.exp(sol.logk2logP_t(np.log(k)))
 
         sol.P_s_approx = P_s_approx
