@@ -72,11 +72,11 @@ class InflationEquationsT(InflationEquations):
     @staticmethod
     def get_d2phi(H2, dH_H, dphi, dV):  # noqa: D102
         # here: d2phi/dt2
-        H = np.sqrt(H2)
-        return -3 * H * dphi - dV
+        return -3 * np.sqrt(H2) * dphi - dV
 
     @staticmethod
     def get_d3phi(H, dH, d2H, dphi, d2phi, dV, d2V):  # noqa: D102
+        # here: d3phi/dt3
         return -3 * H * d2phi - d2V * dphi + 3 * dphi**3 / 2
 
     @staticmethod
@@ -89,26 +89,32 @@ class InflationEquationsT(InflationEquations):
         return -dH / H**2
 
     @staticmethod
-    def get_epsilon_2H(H, dH, d2H, epsilon_1H):  # noqa: D102
+    def get_epsilon_2H(H, dH, d2H, kind=None):  # noqa: D102
+        if kind == 'Gong':
+            # e_2 = de1/dt / H
+            return -d2H / H**3 + 2 * dH**2 / H**4
         # e_2H = d(ln e_1H)/dN
-        return d2H / (dH * H) + 2 * epsilon_1H
+        return d2H / (H * dH) - 2 * dH / H**2
 
     @staticmethod
-    def get_epsilon_3H(H, dH, d2H, d3H, epsilon_2H):  # noqa: D102
+    def get_epsilon_3H(H, dH, d2H, d3H, kind=None):  # noqa: D102
+        if kind == 'Gong':
+            # e_2 = d2e1/dt2 / H**2
+            return -d3H / H**4 + 6 * dH * d2H / H**5 - 6 * dH**3 / H**6
         # e_3H = d(ln e_2H)/dN
-        e2e3 = -d3H / (dH * H**2) + d2H**2 / (dH**2 * H**2) + 3 * d2H / H**3 - 4 * dH**2 / H**4
-        return e2e3 / epsilon_2H
+        return (((-3*H*d2H + 4*dH**2)*dH**2 + (dH*d3H - d2H**2)*H**2) * (H*d2H - 2*dH**2)
+                / (H**2 * (H*d2H - 2*dH**2)**2 * dH))
 
     @staticmethod
-    def get_delta_1H(H, dH, dphi, d2phi):  # noqa: D102
+    def get_delta_1(H, dH, dphi, d2phi):  # noqa: D102
         return d2phi / (H * dphi)
 
     @staticmethod
-    def get_delta_2H(H, dH, d2H, dphi, d2phi, d3phi):  # noqa: D102
+    def get_delta_2(H, dH, d2H, dphi, d2phi, d3phi):  # noqa: D102
         return d3phi / (H**2 * dphi)
 
     @staticmethod
-    def get_delta_3H(H, dH, d2H, d3H, dphi, d2phi, d3phi, d4phi):  # noqa: D102
+    def get_delta_3(H, dH, d2H, d3H, dphi, d2phi, d3phi, d4phi):  # noqa: D102
         return d4phi / (H**3 * dphi)
 
     def H2(self, x, y):  # noqa: D102

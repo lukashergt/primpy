@@ -72,7 +72,7 @@ class InflationEquationsN(InflationEquations):
     def get_d3H(N, H, dH, d2H, dphi, d2phi, d3phi, K):  # noqa: D102
         # here: d3H/dN3
         return (-d3phi*dphi*H - d2phi**2*H - dphi**2*d2H/2 - 2*d2phi*dphi*dH
-                + K*np.exp(-2*N) * (4*H-d2H+4*dH+2*dH**2/H) / H**2)
+                + K*np.exp(-2*N) * (4*H - d2H + 4*dH + 2*dH**2/H) / H**2)
 
     @staticmethod
     def get_d2phi(H2, dH_H, dphi, dV):  # noqa: D102
@@ -82,7 +82,7 @@ class InflationEquationsN(InflationEquations):
     @staticmethod
     def get_d3phi(H, dH, d2H, dphi, d2phi, dV, d2V):  # noqa: D102
         # here: d3phi/dN3
-        return (-3-dH/H)*d2phi + (-d2H/H - d2V/H**2 + dH**2/H**2)*dphi + 2*dV*dH/H**3
+        return (-3-dH/H) * d2phi + (-d2H/H - d2V/H**2 + dH**2/H**2) * dphi + 2*dV*dH/H**3
 
     @staticmethod
     def get_d4phi(H, dH, d2H, d3H, dphi, d2phi, d3phi, dV, d2V, d3V):  # noqa: D102
@@ -97,29 +97,33 @@ class InflationEquationsN(InflationEquations):
         return -dH / H
 
     @staticmethod
-    def get_epsilon_2H(H, dH, d2H, epsilon_1H):  # noqa: D102
+    def get_epsilon_2H(H, dH, d2H, kind=None):  # noqa: D102
+        if kind == 'Gong':
+            # e_2 = de1/dt / H
+            return -d2H/H + dH**2/H**2
         # e_2H = d(ln e_1H)/dN
         return d2H / dH - dH / H
 
     @staticmethod
-    def get_epsilon_3H(H, dH, d2H, d3H, epsilon_2H):  # noqa: D102
+    def get_epsilon_3H(H, dH, d2H, d3H, kind=None):  # noqa: D102
+        if kind == 'Gong':
+            # e_3 = d2e1/dt2 / H**2
+            return -d3H/H + 2*dH*d2H/H**2 - dH**3/H**3
         # e_3H = d(ln e_2H)/dN
-        de2 = d3H/dH - d2H**2/dH**2 - d2H/H + dH**2/H**2
-        return de2 / epsilon_2H
+        return (((H**2*d2H*d3H - H*dH**2*d3H + 2*dH**3*d2H)*H*dH - H**3*d2H**3 - dH**6)
+                / (H * np.abs(H**2*d2H**2 - 2*H*dH**2*d2H + dH**4) * dH))
 
     @staticmethod
-    def get_delta_1H(H, dH, dphi, d2phi):  # noqa: D102
+    def get_delta_1(H, dH, dphi, d2phi):  # noqa: D102
         return d2phi/dphi + dH/H
 
     @staticmethod
-    def get_delta_2H(H, dH, d2H, dphi, d2phi, d3phi):  # noqa: D102
+    def get_delta_2(H, dH, d2H, dphi, d2phi, d3phi):  # noqa: D102
         return d3phi/dphi + 3 * d2phi/dphi * dH/H + d2H/H + dH**2 / H**2
 
     @staticmethod
-    def get_delta_3H(H, dH, d2H, d3H, dphi, d2phi, d3phi, d4phi):  # noqa: D102
-        return (d4phi/dphi
-                + 6 * dH/H * d3phi/dphi
-                + (4 * d2H/H + 7 * dH**2/H**2) * d2phi/dphi
+    def get_delta_3(H, dH, d2H, d3H, dphi, d2phi, d3phi, d4phi):  # noqa: D102
+        return (d4phi/dphi + 6*dH/H*d3phi/dphi + (4*d2H/H + 7*dH**2/H**2) * d2phi/dphi
                 + d3H/H + 4*dH*d2H/H**2 + dH**3/H**3)
 
     def H2(self, x, y):  # noqa: D102
