@@ -91,7 +91,6 @@ def test_helper_methods_time_efolds():
     N_i = 10
     phi_i = 6
     t_i = 7e4
-    k = np.logspace(-3, 1, 4 * 10 + 1)
     Lambda = 0.003
     pot = StarobinskyPotential(Lambda=Lambda)
 
@@ -221,14 +220,15 @@ def test_helper_methods_time_efolds():
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
 def test_sol_time_efolds(K):
+    Omega_K0 = -K * 0.001
+    h = 0.7
+    N_star = 55
     pot = QuadraticPotential(Lambda=0.0025)
     N_i = 10
     phi_i = 17
     t_i = 7e4
     eta_i = 0
-    h = 0.7
-    k = np.logspace(-3, 1, 4 * 10 + 1)
-    Omega_K0 = -K * 0.001
+    k = np.logspace(-2, 1, 4 * 10 + 1)
 
     eq_t = InflationEquationsT(K=K, potential=pot, track_eta=True)
     eq_N = InflationEquationsN(K=K, potential=pot, track_eta=True, track_time=True)
@@ -250,8 +250,8 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.H[1:-1], N2H(bist._N[1:-1]), rtol=1e-4)
 
     # using Omega_K0 or N_star
-    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
-    bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
+    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None)
+    bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None)
     assert bist.K == K
     assert bisn.K == K
     assert bist.Omega_K0 == Omega_K0
@@ -273,6 +273,22 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)), rtol=1e-6)
     assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
     assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
+
+    bist.derive_approx_power_CGS()
+    bisn.derive_approx_power_CGS()
+    bist.derive_approx_power_LLMS()
+    bisn.derive_approx_power_LLMS()
+
+    assert_allclose(bist.P_s_approx_CGS0(k) * 1e9, bisn.P_s_approx_CGS0(k) * 1e9, rtol=1e-5)
+    assert_allclose(bist.P_s_approx_CGS1(k) * 1e9, bisn.P_s_approx_CGS1(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_s_approx_CGS2(k) * 1e9, bisn.P_s_approx_CGS2(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_s_approx_CGS3(k) * 1e9, bisn.P_s_approx_CGS3(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_s_approx_LLMS(k) * 1e9, bisn.P_s_approx_LLMS(k) * 1e9, rtol=5e-3)
+
+    assert_allclose(bist.P_s_approx_CGS0(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-2)
+    assert_allclose(bist.P_s_approx_CGS1(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-2)
+    assert_allclose(bist.P_s_approx_CGS2(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-2)
+    assert_allclose(bist.P_s_approx_LLMS(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=5e-2)
 
     # reheating
     bist.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=2, w_reh=0)
