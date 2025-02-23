@@ -794,7 +794,7 @@ class InflationEquations(Equations, ABC):
             extrapolate = interp1d_kwargs.pop('ext', 'const')
 
             K = sol.K
-            N = sol._N
+            _N = sol._N[sol.inflation_mask]
             H = sol.H[sol.inflation_mask]
             phi = sol.phi[sol.inflation_mask]
             dV = sol.potential.dV(phi)
@@ -804,12 +804,12 @@ class InflationEquations(Equations, ABC):
                 dphi = sol.dphidt[sol.inflation_mask]
             else:
                 dphi = sol.dphidN[sol.inflation_mask]
-            dH = self.get_dH(N=N, H=H, dphi=dphi, K=K)
-            dH_H = self.get_dH_H(N=N, H2=H**2, dphi=dphi, K=K)
+            dH = self.get_dH(N=_N, H=H, dphi=dphi, K=K)
+            dH_H = self.get_dH_H(N=_N, H2=H**2, dphi=dphi, K=K)
             d2phi = self.get_d2phi(H2=H**2, dH_H=dH_H, dphi=dphi, dV=dV)
-            d2H = self.get_d2H(N=N, H=H, dH=dH, dphi=dphi, d2phi=d2phi, K=K)
+            d2H = self.get_d2H(N=_N, H=H, dH=dH, dphi=dphi, d2phi=d2phi, K=K)
             d3phi = self.get_d3phi(H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, dV=dV, d2V=d2V)
-            d3H = self.get_d3H(N=N, H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, d3phi=d3phi, K=K)
+            d3H = self.get_d3H(N=_N, H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, d3phi=d3phi, K=K)
             d4phi = self.get_d4phi(H=H, dH=dH, d2H=d2H, d3H=d3H,
                                    dphi=dphi, d2phi=d2phi, d3phi=d3phi,
                                    dV=dV, d2V=d2V, d3V=d3V)
@@ -868,17 +868,16 @@ class InflationEquations(Equations, ABC):
             order3_t = (4/3 * astar**3 - 8 * astar + pi**2 * astar + 16/3 - 14/3 * zeta(3)) * e1**3
 
             # order 0
-            logk, indices = np.unique(sol.logk, return_index=True)
-            mask_s = Ps0 > 0
-            mask_t = Pt0 > 0
-            logP_s = np.log(Ps0[mask_s])
-            logP_t = np.log(Pt0[mask_t])
+            mask = (Ps0 > 0) & (Pt0 > 0)
+            logP_s = np.log(Ps0[mask])
+            logP_t = np.log(Pt0[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)
             logk2logP_s_0 = InterpolatedUnivariateSpline(
-                logk[mask_s], logP_s,
+                logk, logP_s[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_0 = InterpolatedUnivariateSpline(
-                logk[mask_t], logP_t,
+                logk, logP_t[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_CGS0 = lambda k: np.exp(logk2logP_s_0(np.log(k)))
@@ -887,16 +886,16 @@ class InflationEquations(Equations, ABC):
             # order 1
             P_s = Ps0 * order1_s
             P_t = Pt0 * order1_t
-            mask_s = P_s > 0
-            mask_t = P_t > 0
-            logP_s = np.log(P_s[mask_s])
-            logP_t = np.log(P_t[mask_t])
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)
             logk2logP_s_1 = InterpolatedUnivariateSpline(
-                logk[mask_s], logP_s,
+                logk, logP_s[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_1 = InterpolatedUnivariateSpline(
-                logk[mask_t], logP_t,
+                logk, logP_t[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_CGS1 = lambda k: np.exp(logk2logP_s_1(np.log(k)))
@@ -905,16 +904,16 @@ class InflationEquations(Equations, ABC):
             # order 2
             P_s = Ps0 * (order1_s + order2_s)
             P_t = Pt0 * (order1_t + order2_t)
-            mask_s = P_s > 0
-            mask_t = P_t > 0
-            logP_s = np.log(P_s[mask_s])
-            logP_t = np.log(P_t[mask_t])
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)
             logk2logP_s_2 = InterpolatedUnivariateSpline(
-                logk[mask_s], logP_s,
+                logk, logP_s[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_2 = InterpolatedUnivariateSpline(
-                logk[mask_t], logP_t,
+                logk, logP_t[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_CGS2 = lambda k: np.exp(logk2logP_s_2(np.log(k)))
@@ -923,22 +922,92 @@ class InflationEquations(Equations, ABC):
             # order 3
             P_s = Ps0 * (order1_s + order2_s + order3_s)
             P_t = Pt0 * (order1_t + order2_t + order3_t)
-            mask_s = P_s > 0
-            mask_t = P_t > 0
-            logP_s = np.log(P_s[mask_s])
-            logP_t = np.log(P_t[mask_t])
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)
             logk2logP_s_3 = InterpolatedUnivariateSpline(
-                logk[mask_s], logP_s,
+                logk, logP_s[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_3 = InterpolatedUnivariateSpline(
-                logk[mask_t], logP_t,
+                logk, logP_t[indices],
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_CGS3 = lambda k: np.exp(logk2logP_s_3(np.log(k)))
             sol.P_t_approx_CGS3 = lambda k: np.exp(logk2logP_t_3(np.log(k)))
 
+        def derive_approx_power_LLMS(**interp1d_kwargs):
+            """Slow-roll approximation by Leach, Liddle, Martin, and Schwarz (2002)
+
+            http://arxiv.org/abs/astro-ph/0101225v2
+            """
+            spline_order = interp1d_kwargs.pop('k', 3)
+            extrapolate = interp1d_kwargs.pop('ext', 'const')
+
+            K = sol.K
+            _N = sol._N
+            H = sol.H[sol.inflation_mask]
+            phi = sol.phi[sol.inflation_mask]
+            dV = sol.potential.dV(phi)
+            d2V = sol.potential.d2V(phi)
+            if hasattr(sol, 'dphidt'):
+                dphi = sol.dphidt[sol.inflation_mask]
+            else:
+                dphi = sol.dphidN[sol.inflation_mask]
+            dH = self.get_dH(N=_N, H=H, dphi=dphi, K=K)
+            dH_H = self.get_dH_H(N=_N, H2=H**2, dphi=dphi, K=K)
+            d2phi = self.get_d2phi(H2=H**2, dH_H=dH_H, dphi=dphi, dV=dV)
+            d2H = self.get_d2H(N=_N, H=H, dH=dH, dphi=dphi, d2phi=d2phi, K=K)
+            d3phi = self.get_d3phi(H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, dV=dV, d2V=d2V)
+            d3H = self.get_d3H(N=_N, H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, d3phi=d3phi, K=K)
+
+            # Leach, Liddle, Martin, and Schwarz (2002), eq. (15)
+            e1 = self.get_epsilon_1H(H=H, dH=dH)
+            e2 = self.get_epsilon_2H(H=H, dH=dH, d2H=d2H)
+            e3 = self.get_epsilon_3H(H=H, dH=dH, d2H=d2H, d3H=d3H)
+
+            # Leach, Liddle, Martin, and Schwarz (2002), eqs. (24), (25)
+            # Note that they use m_Pl**2=8pi, while I use m_Pl=1
+            N2H = interp1d(_N, H)
+            H_star = N2H(sol._N_cross)
+            N2e1 = interp1d(_N, e1)
+            e1_star = N2e1(sol._N_cross)
+            Ps0 = H_star**2 / (8 * pi**2 * e1_star)
+            Pt0 = 2 * (H_star / pi)**2
+
+            # Leach, Liddle, Martin, and Schwarz (2002), eqs. (15), (34)-(41)
+            C = np.euler_gamma + np.log(2) - 2
+            bs0 = (-2 * (C + 1) * e1 - C * e2
+                   + (-2 * C + pi**2 / 2 - 7) * e1**2
+                   + (-C**2 - 3 * C + 7 * pi**2 / 12 - 7) * e1 * e2
+                   + (pi**2 / 8 - 1) * e2**2
+                   + (-C**2 / 2 + pi**2 / 24) * e2 * e3)
+            n_s = 1 - 2 * e1 - e2 - 2 * e1**2 - (2 * C + 3) * e1 * e2 - C * e2 * e3
+            n_s_run = -2 * e1 * e2 - e2 * e3
+            bt0 = (-2 * (C + 1) * e1
+                   + (-2 * C + pi**2 / 2 - 7) * e1**2
+                   + (-C**2 - 2 * C + pi**2 / 12 - 2) * e1 * e2)
+            n_t = -2 * e1 - 2 * e1**2 - 2 * (C + 1) * e1 * e2
+            n_t_run = -2 * e1 * e2
+
+            logk, indices = np.unique(sol.logk, return_index=True)  # now in iMpc
+            log_k_kstar = sol.logk - np.log(K_STAR)
+            logP_s = np.log(Ps0) + bs0 + (n_s - 1) * log_k_kstar + n_s_run / 2 * log_k_kstar**2
+            logP_t = np.log(Pt0) + bt0 + n_t * log_k_kstar + n_t_run / 2 * log_k_kstar**2
+            logk2logP_s = InterpolatedUnivariateSpline(
+                logk, logP_s[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t = InterpolatedUnivariateSpline(
+                logk, logP_t[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_LLMS = lambda k: np.exp(logk2logP_s(np.log(k)))
+            sol.P_t_approx_LLMS = lambda k: np.exp(logk2logP_t(np.log(k)))
+
         sol.derive_approx_power_CGS = derive_approx_power_CGS
+        sol.derive_approx_power_LLMS = derive_approx_power_LLMS
 
         def P_s_approx(k, method='CGS', order=3, **interp_kwargs):
             """Slow-roll approximation for the primordial power spectrum for scalar modes.
@@ -951,9 +1020,11 @@ class InflationEquations(Equations, ABC):
             method : str, default='CGS'
                 Choice of approximation:
                 * `CGS`: Choe, Gong & Stewart (2004)
+                * `LLMS`: Leach, Liddle, Martin & Schwarz (2003)
 
             order : int, default=3
                 The `CGS` method is implemented in different orders or approximation.
+                Ignored for other methods.
 
             Returns
             -------
@@ -972,6 +1043,8 @@ class InflationEquations(Equations, ABC):
                     return sol.P_s_approx_CGS1(k)
                 elif order == 2:
                     return sol.P_s_approx_CGS2(k)
+            elif method == 'LLMS':
+                return sol.P_s_approx_LLMS(k)
 
             return np.exp(sol.logk2logP_s(np.log(k)))
 
@@ -986,9 +1059,11 @@ class InflationEquations(Equations, ABC):
             method : str, default='CGS'
                 Choice of approximation:
                 * `CGS`: Gong (2004)
+                * `LLMS`: Leach, Liddle, Martin & Schwarz (2003)
 
             order : int, default=3
                 The `CGS` method is implemented in different orders or approximation.
+                Ignored for other methods.
 
             Returns
             -------
@@ -1007,6 +1082,8 @@ class InflationEquations(Equations, ABC):
                     return sol.P_t_approx_CGS1(k)
                 elif order == 2:
                     return sol.P_t_approx_CGS2(k)
+            elif method == 'LLMS':
+                return sol.P_t_approx_LLMS(k)
 
             return np.exp(sol.logk2logP_t(np.log(k)))
 
