@@ -456,7 +456,7 @@ class InflationEquations(Equations, ABC):
         sol.Omega_K = -sol.K * np.exp(-2 * sol._logaH)
         sol.N_tot = sol._N_end - sol._N_beg
         if np.isfinite(sol._N_beg) and np.isfinite(sol._N_end):
-            sol.inflation_mask = (sol._N_beg <= sol._N) & (sol._N <= sol._N_end)
+            sol.inflation_mask = (sol._N_beg < sol._N) & (sol._N < sol._N_end)
 
         def calibrate_scale_factor(
                 calibration_method='N_star' if self.K == 0 else 'Omega_K0',
