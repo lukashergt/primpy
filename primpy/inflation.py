@@ -784,10 +784,10 @@ class InflationEquations(Equations, ABC):
               http://arxiv.org/abs/astro-ph/0101225
 
             * Choe, Gong & Stewart (2004)
-              https://arxiv.org/pdf/hep-ph/0405155
+              https://arxiv.org/abs/hep-ph/0405155
 
             * Gong (2004)
-              https://arxiv.org/pdf/gr-qc/0408039
+              https://arxiv.org/abs/gr-qc/0408039
 
             """
             spline_order = interp1d_kwargs.pop('k', 3)
@@ -941,6 +941,7 @@ class InflationEquations(Equations, ABC):
             """Slow-roll approximation by Leach, Liddle, Martin, and Schwarz (2002)
 
             http://arxiv.org/abs/astro-ph/0101225v2
+
             """
             spline_order = interp1d_kwargs.pop('k', 3)
             extrapolate = interp1d_kwargs.pop('ext', 'const')
@@ -1009,7 +1010,8 @@ class InflationEquations(Equations, ABC):
         def derive_approx_power_STE(**interp1d_kwargs):
             """Slow-roll approximation by Schwarz and Terrero-Escalante (2004)
 
-            https://arxiv.org/pdf/hep-ph/0403129
+            https://arxiv.org/abs/hep-ph/0403129
+
             """
             spline_order = interp1d_kwargs.pop('k', 3)
             extrapolate = interp1d_kwargs.pop('ext', 'const')
@@ -1072,9 +1074,202 @@ class InflationEquations(Equations, ABC):
             sol.P_s_approx_STE = lambda k: np.exp(logk2logP_s_STE(np.log(k)))
             sol.P_t_approx_STE = lambda k: np.exp(logk2logP_t_STE(np.log(k)))
 
+        def derive_approx_power_ARBDS(**interp1d_kwargs):
+            """Slow-roll approximation
+
+            Slow-roll approximation by
+            Auclair & Ringeval (2022)
+            https://arxiv.org/abs/2205.12608
+
+            and
+
+            Ballardini, Davoli, and Sirletti (2025).
+            https://arxiv.org/abs/2408.05210
+
+            """
+            spline_order = interp1d_kwargs.pop('k', 3)
+            extrapolate = interp1d_kwargs.pop('ext', 'const')
+
+            K = sol.K
+            _N = sol._N[sol.inflation_mask]
+            H = sol.H[sol.inflation_mask]
+            phi = sol.phi[sol.inflation_mask]
+            dV = sol.potential.dV(phi)
+            d2V = sol.potential.d2V(phi)
+            if hasattr(sol, 'dphidt'):
+                dphi = sol.dphidt[sol.inflation_mask]
+            else:
+                dphi = sol.dphidN[sol.inflation_mask]
+            dH = self.get_dH(N=_N, H=H, dphi=dphi, K=K)
+            dH_H = self.get_dH_H(N=_N, H2=H**2, dphi=dphi, K=K)
+            d2phi = self.get_d2phi(H2=H**2, dH_H=dH_H, dphi=dphi, dV=dV)
+            d2H = self.get_d2H(N=_N, H=H, dH=dH, dphi=dphi, d2phi=d2phi, K=K)
+            d3phi = self.get_d3phi(H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, dV=dV, d2V=d2V)
+            d3H = self.get_d3H(N=_N, H=H, dH=dH, d2H=d2H, dphi=dphi, d2phi=d2phi, d3phi=d3phi, K=K)
+
+            # Auclair & Ringeval (2022), eqs. (1)
+            # Ballardini, Davoli, and Sirletti (2025), eqs. (2)
+            e1 = self.get_epsilon_1H(H=H, dH=dH)
+            e2 = self.get_epsilon_2H(H=H, dH=dH, d2H=d2H)
+            e3 = self.get_epsilon_3H(H=H, dH=dH, d2H=d2H, d3H=d3H)
+            e4 = 0  # TODO
+            alpha = 2 - np.log(2) - np.euler_gamma
+            Z = zeta(3) / 3 * 7  # factor 7 matches Auclair & Ringeval (2022) and matches LLMS
+
+            N2H = interp1d(sol._N[sol.inflation_mask], H)
+            H_star = N2H(sol._N_cross)
+            N2e1 = interp1d(sol._N[sol.inflation_mask], e1)
+            e1_star = N2e1(sol._N_cross)
+
+            # Auclair & Ringeval (2022), eq. (54)
+            # Ballardini, Davoli, and Sirletti (2025), eq. (45) or eq. (C.2)
+            Ps0 = H_star**2 / (8 * pi**2 * e1_star)
+            Pt0 = 2 * (H_star / pi)**2
+
+            # Auclair & Ringeval (2022), eq. (54)
+            # Ballardini, Davoli, and Sirletti (2025), eq. (45) or eqs. (C.3) to (C.6)
+            as0_1 = (
+                1 - 2 * (1-alpha) * e1 + alpha * e2
+            )
+            as0_2 = (
+                + (-3 - 2 * alpha + 2 * alpha**2 + pi**2/2) * e1**2
+                + (-6 + alpha + alpha**2 + 7 * pi**2 / 12) * e1 * e2
+                + (-8 + 4 * alpha**2 + pi**2) / 8 * e2**2
+                + (-12 * alpha**2 + pi**2) / 24 * e2 * e3
+            )
+            as0_3 = (
+                - (-16 + 24 * alpha - 4*alpha**3 - 3*alpha*pi**2 + 6*Z) / 24 * (8 * e1**3 + e2**3)
+                + (-72*alpha + 36*alpha**2 + 13*pi**2 + 8*alpha*pi**2 - 36*Z) / 12 * e1**2 * e2
+                - (16+24*alpha-12*alpha**2-8*alpha**3-15*pi**2-6*alpha*pi**2+84*Z) / 24 * e1*e2**2
+                + (16 + 4*alpha**3 - alpha*pi**2 - 24*Z) / 24 * (e2*e3**2 + e2 * e3 * e4)
+                + (48*alpha - 12*alpha**3 - 5*alpha*pi**2) / 24 * e2**2 * e3
+                + (-8+72*alpha-12*alpha**2-8*alpha**3+pi**2-6*alpha*pi**2-24*Z) / 12 * e1 * e2 * e3
+            )
+            as1_1 = (
+                -2 * e1 - e2
+            )
+            as1_2 = (
+                + 2 * (-2 * alpha + 1) * e1**2
+                + (-2 * alpha - 1) * e1 * e2
+                - alpha * e2**2
+                + alpha * e2 * e3
+            )
+            as1_3 = (
+                - (-8 + 4*alpha**2 + pi**2) / 8 * (8 * e1**3 + e2**3)
+                - 2/3 * (-9 + 9*alpha + pi**2) * e1**2 * e2
+                - (-4 + 4*alpha + 4*alpha**2 + pi**2) / 4 * e1 * e2**2
+                + (-12 + 4*alpha + 4*alpha**2 + pi**2) / 2 * e1 * e2 * e3
+                + (-12*alpha**2 + pi**2) / 24 * (e2 * e3**2 + e2 * e3 * e4)
+                + (-48 + 36*alpha**2 + 5*pi**2) / 24 * e2**2 * e3
+            )
+            as2_2 = 1 / 2 * (
+                4 * e1**2 + 2 * e1 * e2 + e2**2 - e2 * e3
+            )
+            as2_3 = 1 / 2 * (
+                + 6 * e1**2 * e2 + (1 + 2*alpha) * (e1 * e2**2 - 2 * e1 * e2 * e3)
+                + alpha * (8 * e1**3 + e2**3 - 3 * e2**2 * e3 + e2 * e3**2 + e2 * e3 * e4)
+            )
+            as3_3 = 1 / 6 * (
+                    - 8 * e1**3 - 2 * e1 * e2**2 - e2**3 + 4 * e1 * e2 * e3
+                    + 3 * e2**2 * e3 - e2 * e3**2 - e2 * e3 * e4
+            )
+
+            # Auclair & Ringeval (2022), eq. (44)
+            # Ballardini, Davoli, and Sirletti (2025), eq. (55) or eqs. (C.7) to (C.10)
+            at0_1 = 1 + 2 * (-1 + alpha) * e1
+            at0_2 = (
+                + (-3 - 2 * alpha + 2 * alpha**2 + pi**2 / 2) * e1**2
+                + (-2 + 2 * alpha - alpha**2 + pi**2 / 12) * e1 * e2
+            )
+            at0_3 = (
+                # -1/3 * (-16 + 24*alpha - 4*alpha**3 - 3*alpha*pi**2 + 6*Z) * e1**3
+                -1/3 * (-16 + 24*alpha - 4*alpha**3 - 3*alpha*pi**2 + 6*Z) * e1**3
+                +1/12 * (-96+72*alpha+36*alpha**2-24*alpha**3+13*pi**2-10*alpha*pi**2) * e1**2*e2
+                -1/12 * (8 - 24 * alpha + 12 * alpha**2 - 4 * alpha**3 - pi**2
+                         + alpha * pi**2 + 24 * Z) * (e1 * e2**2 + e1 * e2 * e3)
+            )
+            at1_1 = -2 * e1
+            at1_2 = 2 * (-2 * alpha + 1) * e1**2 + (-2 + 2 * alpha) * e1 * e2
+            at1_3 = (
+                - (-8 + 4 * alpha**2 + pi**2) * e1**3
+                + 6 * (-1 - alpha + alpha**2 + 5 * pi**2 / 36) * e1**2 * e2
+                + (-2 + 2 * alpha - alpha**2 + pi**2 / 12) * (e1 * e2**2 + e1 * e2 * e3)
+            )
+            at2_2 = 1/2 * (4 * e1**2 - 2 * e1 * e2)
+            at2_3 = 1/2 * (
+                + 8 * alpha * e1**3
+                + 2 * (3 - 6 * alpha) * e1**2 * e2
+                - 2 * (1 - alpha) * (e1 * e2**2 + e1 * e2 * e3)
+            )
+            at3_3 = 1/6 * (-8 * e1**3 + 12 * e1**2 * e2 - 2 * e1 * e2**2 - 2 * e1 * e2 * e3)
+
+            # order 1
+            log_k_kstar = sol.logk - np.log(K_STAR)
+            P_s = Ps0 * (as0_1 + as1_1 * log_k_kstar)
+            P_t = Pt0 * (at0_1 + at1_1 * log_k_kstar)
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
+            logk2logP_s_ARBDS1 = InterpolatedUnivariateSpline(
+                logk, logP_s[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_ARBDS1 = InterpolatedUnivariateSpline(
+                logk, logP_t[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_ARBDS1 = lambda k: np.exp(logk2logP_s_ARBDS1(np.log(k)))
+            sol.P_t_approx_ARBDS1 = lambda k: np.exp(logk2logP_t_ARBDS1(np.log(k)))
+
+            # order 2
+            P_s = Ps0 * (as0_1 + as0_2 + (as1_1 + as1_2) * log_k_kstar + as2_2 * log_k_kstar**2)
+            P_t = Pt0 * (at0_1 + at0_2 + (at1_1 + at1_2) * log_k_kstar + at2_2 * log_k_kstar**2)
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
+            logk2logP_s_ARBDS2 = InterpolatedUnivariateSpline(
+                logk, logP_s[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_ARBDS2 = InterpolatedUnivariateSpline(
+                logk, logP_t[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_ARBDS2 = lambda k: np.exp(logk2logP_s_ARBDS2(np.log(k)))
+            sol.P_t_approx_ARBDS2 = lambda k: np.exp(logk2logP_t_ARBDS2(np.log(k)))
+
+            # order 3
+            as0 = as0_1 + as0_2 + as0_3
+            at0 = at0_1 + at0_2 + at0_3
+            as1 = as1_1 + as1_2 + as1_3
+            at1 = at1_1 + at1_2 + at1_3
+            as2 = as2_2 + as2_3
+            at2 = at2_2 + at2_3
+            as3 = as3_3
+            at3 = at3_3
+            P_s = Ps0 * (as0 + as1 * log_k_kstar + as2 * log_k_kstar**2 + as3 * log_k_kstar**3)
+            P_t = Pt0 * (at0 + at1 * log_k_kstar + at2 * log_k_kstar**2 + at3 * log_k_kstar**3)
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
+            logk2logP_s_ARBDS3 = InterpolatedUnivariateSpline(
+                logk, logP_s[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            logk2logP_t_ARBDS3 = InterpolatedUnivariateSpline(
+                logk, logP_t[indices],
+                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            )
+            sol.P_s_approx_ARBDS3 = lambda k: np.exp(logk2logP_s_ARBDS3(np.log(k)))
+            sol.P_t_approx_ARBDS3 = lambda k: np.exp(logk2logP_t_ARBDS3(np.log(k)))
+
         sol.derive_approx_power_CGS = derive_approx_power_CGS
         sol.derive_approx_power_LLMS = derive_approx_power_LLMS
         sol.derive_approx_power_STE = derive_approx_power_STE
+        sol.derive_approx_power_ARBDS = derive_approx_power_ARBDS
 
         def P_s_approx(k, method='CGS', order=3, **interp_kwargs):
             """Slow-roll approximation for the primordial power spectrum for scalar modes.
@@ -1089,9 +1284,10 @@ class InflationEquations(Equations, ABC):
                 * `CGS`: Choe, Gong & Stewart (2004)
                 * `LLMS`: Leach, Liddle, Martin & Schwarz (2003)
                 * `STE`: Schwarz and Terrero-Escalante (2004)
+                * `ARBDS`: Auclair & Ringeval (2022) and Ballardini, Davoli & Sirletti (2025)
 
             order : int, default=3
-                The `CGS` method is implemented in different orders or approximation.
+                The `CGS` and `ARBDS` methods are implemented in different orders or approximation.
                 Ignored for other methods.
 
             Returns
@@ -1115,10 +1311,17 @@ class InflationEquations(Equations, ABC):
                 return sol.P_s_approx_LLMS(k)
             elif method == 'STE':
                 return sol.P_s_approx_STE(k)
+            elif method == 'ARBDS':
+                if order == 3:
+                    return sol.P_s_approx_ARBDS3(k)
+                elif order == 1:
+                    return sol.P_s_approx_ARBDS1(k)
+                elif order == 2:
+                    return sol.P_s_approx_ARBDS2(k)
 
             return np.exp(sol.logk2logP_s(np.log(k)))
 
-        def P_t_approx(k, method='CGS', order=None, **interp_kwargs):
+        def P_t_approx(k, method='CGS', order=3, **interp_kwargs):
             """Slow-roll approximation for the primordial power spectrum for tensor modes.
 
             Parameters
@@ -1131,9 +1334,10 @@ class InflationEquations(Equations, ABC):
                 * `CGS`: Gong (2004)
                 * `LLMS`: Leach, Liddle, Martin & Schwarz (2003)
                 * `STE`: Schwarz and Terrero-Escalante (2004)
+                * `ARBDS`: Auclair & Ringeval (2022) and Ballardini, Davoli & Sirletti (2025)
 
             order : int, default=3
-                The `CGS` method is implemented in different orders or approximation.
+                The `CGS` and `ARBDS` methods are implemented in different orders or approximation.
                 Ignored for other methods.
 
             Returns
@@ -1157,6 +1361,13 @@ class InflationEquations(Equations, ABC):
                 return sol.P_t_approx_LLMS(k)
             elif method == 'STE':
                 return sol.P_t_approx_STE(k)
+            elif method == 'ARBDS':
+                if order == 3:
+                    return sol.P_t_approx_ARBDS3(k)
+                elif order == 1:
+                    return sol.P_t_approx_ARBDS1(k)
+                elif order == 2:
+                    return sol.P_t_approx_ARBDS2(k)
 
             return np.exp(sol.logk2logP_t(np.log(k)))
 
