@@ -265,7 +265,7 @@ def test_sol_time_efolds(K):
     assert bist.A_s == approx(bisn.A_s, rel=1e-8)
     assert bist.n_s == approx(bisn.n_s, rel=1e-5)
     assert bist.n_run == approx(bisn.n_run, rel=1e-3)
-    assert bist.n_runrun == approx(bisn.n_runrun, rel=1e-2)#, abs=1e-6)
+    assert bist.n_runrun == approx(bisn.n_runrun, rel=1e-2)  # , abs=1e-6)
     assert bist.A_t == approx(bisn.A_t, rel=1e-8)
     assert bist.r == approx(bisn.r, rel=1e-5)
     assert bist.n_t == approx(bisn.n_t, rel=1e-5)

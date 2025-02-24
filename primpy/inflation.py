@@ -1190,10 +1190,10 @@ class InflationEquations(Equations, ABC):
             )
             at0_3 = (
                 # -1/3 * (-16 + 24*alpha - 4*alpha**3 - 3*alpha*pi**2 + 6*Z) * e1**3
-                -1/3 * (-16 + 24*alpha - 4*alpha**3 - 3*alpha*pi**2 + 6*Z) * e1**3
-                +1/12 * (-96+72*alpha+36*alpha**2-24*alpha**3+13*pi**2-10*alpha*pi**2) * e1**2*e2
-                -1/12 * (8 - 24 * alpha + 12 * alpha**2 - 4 * alpha**3 - pi**2
-                         + alpha * pi**2 + 24 * Z) * (e1 * e2**2 + e1 * e2 * e3)
+                - 1/3 * (-16 + 24*alpha - 4*alpha**3 - 3*alpha*pi**2 + 6*Z) * e1**3
+                + 1/12 * (-96+72*alpha+36*alpha**2-24*alpha**3+13*pi**2-10*alpha*pi**2) * e1**2*e2
+                - 1/12 * (8 - 24 * alpha + 12 * alpha**2 - 4 * alpha**3 - pi**2
+                          + alpha * pi**2 + 24 * Z) * (e1 * e2**2 + e1 * e2 * e3)
             )
             at1_1 = -2 * e1
             at1_2 = 2 * (-2 * alpha + 1) * e1**2 + (-2 + 2 * alpha) * e1 * e2
