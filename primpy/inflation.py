@@ -938,7 +938,7 @@ class InflationEquations(Equations, ABC):
             sol.P_t_approx_CGS3 = lambda k: np.exp(logk2logP_t_3(np.log(k)))
 
         def derive_approx_power_LLMS(**interp1d_kwargs):
-            """Slow-roll approximation by Leach, Liddle, Martin, and Schwarz (2002)
+            """Slow-roll approximation by Leach, Liddle, Martin, and Schwarz (2002).
 
             http://arxiv.org/abs/astro-ph/0101225v2
 
@@ -1012,7 +1012,7 @@ class InflationEquations(Equations, ABC):
             sol.P_t_approx_LLMS = lambda k: np.exp(logk2logP_t(np.log(k)))
 
         def derive_approx_power_STE(**interp1d_kwargs):
-            """Slow-roll approximation by Schwarz and Terrero-Escalante (2004)
+            """Slow-roll approximation by Schwarz and Terrero-Escalante (2004).
 
             https://arxiv.org/abs/hep-ph/0403129
 
@@ -1079,7 +1079,7 @@ class InflationEquations(Equations, ABC):
             sol.P_t_approx_STE = lambda k: np.exp(logk2logP_t_STE(np.log(k)))
 
         def derive_approx_power_ARBDS(**interp1d_kwargs):
-            """Slow-roll approximation
+            """Slow-roll approximation up to third order (N3LO).
 
             Slow-roll approximation by
             Auclair & Ringeval (2022)
