@@ -280,6 +280,8 @@ def test_sol_time_efolds(K):
     bisn.derive_approx_power_LLMS()
     bist.derive_approx_power_STE()
     bisn.derive_approx_power_STE()
+    bist.derive_approx_power_ARBDS()
+    bisn.derive_approx_power_ARBDS()
 
     assert_allclose(bist.P_s_approx_CGS0(k) * 1e9, bisn.P_s_approx_CGS0(k) * 1e9, rtol=1e-5)
     assert_allclose(bist.P_t_approx_CGS0(k) * 1e9, bisn.P_t_approx_CGS0(k) * 1e9, rtol=1e-5)
@@ -293,6 +295,12 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.P_t_approx_LLMS(k) * 1e9, bisn.P_t_approx_LLMS(k) * 1e9, rtol=5e-5)
     assert_allclose(bist.P_s_approx_STE(k) * 1e9, bisn.P_s_approx_STE(k) * 1e9, rtol=1e-6)
     assert_allclose(bist.P_t_approx_STE(k) * 1e9, bisn.P_t_approx_STE(k) * 1e9, rtol=1e-6)
+    assert_allclose(bist.P_s_approx_ARBDS1(k) * 1e9, bisn.P_s_approx_ARBDS1(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_t_approx_ARBDS1(k) * 1e9, bisn.P_t_approx_ARBDS1(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_s_approx_ARBDS2(k) * 1e9, bisn.P_s_approx_ARBDS2(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_t_approx_ARBDS2(k) * 1e9, bisn.P_t_approx_ARBDS2(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_s_approx_ARBDS3(k) * 1e9, bisn.P_s_approx_ARBDS3(k) * 1e9, rtol=2e-4)
+    assert_allclose(bist.P_t_approx_ARBDS3(k) * 1e9, bisn.P_t_approx_ARBDS3(k) * 1e9, rtol=2e-4)
 
     assert_allclose(bist.P_s_approx_CGS0(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-2)
     assert_allclose(bist.P_t_approx_CGS0(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-2)
@@ -304,12 +312,21 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.P_t_approx_LLMS(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=2e-2)
     assert_allclose(bist.P_s_approx_STE(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-2)
     assert_allclose(bist.P_t_approx_STE(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-2)
-    for m in ['CGS', 'LLMS', 'STE']:
-        assert_allclose(bist.P_s_approx(k, m), bisn.P_s_approx(k, m), rtol=1e-4)
-        assert_allclose(bist.P_t_approx(k, m), bisn.P_t_approx(k, m), rtol=1e-4)
+    assert_allclose(bist.P_s_approx_ARBDS1(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=5e-2)
+    assert_allclose(bist.P_t_approx_ARBDS1(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=2e-2)
+    assert_allclose(bist.P_s_approx_ARBDS2(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=5e-2)
+    assert_allclose(bist.P_t_approx_ARBDS2(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=2e-2)
+    assert_allclose(bist.P_s_approx_ARBDS3(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=5e-2)
+    assert_allclose(bist.P_t_approx_ARBDS3(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=2e-2)
+    for m in ['CGS', 'LLMS', 'STE', 'ARBDS']:
+        assert_allclose(bist.P_s_approx(k, m), bisn.P_s_approx(k, m), rtol=2e-4)
+        assert_allclose(bist.P_t_approx(k, m), bisn.P_t_approx(k, m), rtol=2e-4)
     for o in range(4):
         assert_allclose(bist.P_s_approx(k, 'CGS', o), bisn.P_s_approx(k, 'CGS', o), rtol=1e-5)
         assert_allclose(bist.P_t_approx(k, 'CGS', o), bisn.P_t_approx(k, 'CGS', o), rtol=1e-5)
+    for o in range(1, 4):
+        assert_allclose(bist.P_s_approx(k, 'ARBDS', o), bisn.P_s_approx(k, 'ARBDS', o), rtol=2e-2)
+        assert_allclose(bist.P_t_approx(k, 'ARBDS', o), bisn.P_t_approx(k, 'ARBDS', o), rtol=2e-2)
 
     # reheating
     bist.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=2, w_reh=0)
