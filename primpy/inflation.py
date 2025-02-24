@@ -967,14 +967,18 @@ class InflationEquations(Equations, ABC):
             e1 = self.get_epsilon_1H(H=H, dH=dH)
             e2 = self.get_epsilon_2H(H=H, dH=dH, d2H=d2H)
             e3 = self.get_epsilon_3H(H=H, dH=dH, d2H=d2H, d3H=d3H)
-
-            # Leach, Liddle, Martin, and Schwarz (2002), eqs. (24), (25)
-            # Note that they use m_Pl**2=8pi, while I use m_Pl=1
             N2H = interp1d(_N, H)
             H_star = N2H(sol._N_cross)
             N2e1 = interp1d(_N, e1)
-            e1_star = N2e1(sol._N_cross)
-            Ps0 = H_star**2 / (8 * pi**2 * e1_star)
+            e1 = N2e1(sol._N_cross)
+            N2e2 = interp1d(_N, e2)
+            e2 = N2e2(sol._N_cross)
+            N2e3 = interp1d(_N, e3)
+            e3 = N2e3(sol._N_cross)
+
+            # Leach, Liddle, Martin, and Schwarz (2002), eqs. (24), (25)
+            # Note that they use m_Pl**2=8pi, while I use m_Pl=1
+            Ps0 = H_star**2 / (8 * pi**2 * e1)
             Pt0 = 2 * (H_star / pi)**2
 
             # Leach, Liddle, Martin, and Schwarz (2002), eqs. (15), (34)-(41)
@@ -1113,17 +1117,20 @@ class InflationEquations(Equations, ABC):
             e2 = self.get_epsilon_2H(H=H, dH=dH, d2H=d2H)
             e3 = self.get_epsilon_3H(H=H, dH=dH, d2H=d2H, d3H=d3H)
             e4 = 0  # TODO
+            N2H = interp1d(_N, H)
+            H_star = N2H(sol._N_cross)
+            N2e1 = interp1d(_N, e1)
+            e1 = N2e1(sol._N_cross)
+            N2e2 = interp1d(_N, e2)
+            e2 = N2e2(sol._N_cross)
+            N2e3 = interp1d(_N, e3)
+            e3 = N2e3(sol._N_cross)
             alpha = 2 - np.log(2) - np.euler_gamma
             Z = zeta(3) / 3 * 7  # factor 7 matches Auclair & Ringeval (2022) and matches LLMS
 
-            N2H = interp1d(sol._N[sol.inflation_mask], H)
-            H_star = N2H(sol._N_cross)
-            N2e1 = interp1d(sol._N[sol.inflation_mask], e1)
-            e1_star = N2e1(sol._N_cross)
-
             # Auclair & Ringeval (2022), eq. (54)
             # Ballardini, Davoli, and Sirletti (2025), eq. (45) or eq. (C.2)
-            Ps0 = H_star**2 / (8 * pi**2 * e1_star)
+            Ps0 = H_star**2 / (8 * pi**2 * e1)
             Pt0 = 2 * (H_star / pi)**2
 
             # Auclair & Ringeval (2022), eq. (54)
