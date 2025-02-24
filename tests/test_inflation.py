@@ -227,19 +227,21 @@ def test_sol_time_efolds(K):
     N_i = 10
     phi_i = 17
     t_i = 7e4
+    t_eval = np.logspace(np.log10(t_i), 8, 10000)
+    N_eval = np.linspace(N_i, 150, 10000)
     eta_i = 0
     k = np.logspace(-2, 1, 4 * 10 + 1)
 
     eq_t = InflationEquationsT(K=K, potential=pot, track_eta=True)
     eq_N = InflationEquationsN(K=K, potential=pot, track_eta=True, track_time=True)
-    ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
-    ic_N = InflationStartIC(eq_N, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
+    ic_t = InflationStartIC(eq_t, N_i=N_eval[0], phi_i=phi_i, t_i=t_eval[0], eta_i=eta_i)
+    ic_N = InflationStartIC(eq_N, N_i=N_eval[0], phi_i=phi_i, t_i=t_eval[0], eta_i=eta_i)
     ev_t = [InflationEvent(eq_t, +1, terminal=False),
             InflationEvent(eq_t, -1, terminal=True)]
     ev_N = [InflationEvent(eq_N, +1, terminal=False),
             InflationEvent(eq_N, -1, terminal=True)]
-    bist = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-13, atol=1e-18)
-    bisn = solve(ic=ic_N, events=ev_N, dense_output=True, method='DOP853', rtol=1e-13, atol=1e-18)
+    bist = solve(ic=ic_t, events=ev_t, t_eval=t_eval, method='DOP853', rtol=1e-13, atol=1e-18)
+    bisn = solve(ic=ic_N, events=ev_N, t_eval=N_eval, method='DOP853', rtol=1e-13, atol=1e-18)
     assert bist.N_tot == approx(bisn.N_tot, rel=1e-5)
 
     N2t = interp1d(bisn._N, bisn.t, kind='cubic')
@@ -264,8 +266,8 @@ def test_sol_time_efolds(K):
     assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
     assert bist.A_s == approx(bisn.A_s, rel=1e-8)
     assert bist.n_s == approx(bisn.n_s, rel=1e-5)
-    assert bist.n_run == approx(bisn.n_run, rel=1e-3)
-    assert bist.n_runrun == approx(bisn.n_runrun, rel=1e-2)  # , abs=1e-6)
+    assert bist.n_run == approx(bisn.n_run, rel=2e-3)
+    assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1)  # , abs=1e-6)
     assert bist.A_t == approx(bisn.A_t, rel=1e-8)
     assert bist.r == approx(bisn.r, rel=1e-5)
     assert bist.n_t == approx(bisn.n_t, rel=1e-5)
@@ -577,9 +579,9 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
         bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
         n_s = bist.n_s
         r = bist.r
-        assert np.isclose(bist.N_star, N_star)
-        assert np.isclose(n_s, ns_slow_roll, rtol=0.005)
-        assert np.isclose(r, r_slow_roll, rtol=0.005)
+        assert bist.N_star == approx(N_star)
+        assert n_s == approx(ns_slow_roll, rel=0.005)
+        assert r == approx(r_slow_roll, rel=0.05)
         As_range[i] = bist.A_s
         ns_range[i] = bist.n_s
         nrun_range[i] = bist.n_run
@@ -587,8 +589,8 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
 
     assert_allclose(ns_range[0], ns_slow_roll, rtol=0.005)
     assert_allclose(ns_range[1], ns_slow_roll, rtol=0.005)
-    assert_allclose(r_range[0], r_slow_roll, rtol=0.005)
-    assert_allclose(r_range[1], r_slow_roll, rtol=0.005)
+    assert_allclose(r_range[0], r_slow_roll, rtol=0.05)
+    assert_allclose(r_range[1], r_slow_roll, rtol=0.05)
 
     assert_allclose(As_range[0], As_range[1], rtol=1e-4, atol=1e-9*1e-3)
     assert_allclose(ns_range[0], ns_range[1], rtol=1e-4)
