@@ -631,7 +631,10 @@ class InflationEquations(Equations, ABC):
                     sol.N_star = background.N_star
 
                 sol.a0_Mpc = np.exp(sol._logaH_star) / K_STAR
-                sol.logk = sol._logaH[sol.inflation_mask] + np.log(K_STAR) - sol._logaH_star
+                logk = sol._logaH + np.log(K_STAR) - sol._logaH_star
+                _, indices = np.unique(logk, return_index=True)
+                sol.inflation_mask = sol.inflation_mask & np.isin(np.arange(sol._N.size), indices)
+                sol.logk = logk[sol.inflation_mask]
 
             else:  # curved universe
                 if h is None or h <= 0:
@@ -709,7 +712,10 @@ class InflationEquations(Equations, ABC):
                                               f"choose from 'Omega_K0' or 'reheating' for curved "
                                               f"universes.")
 
-                sol.logk = sol._logaH[sol.inflation_mask] - np.log(sol.a0_Mpc)
+                logk = sol._logaH - np.log(sol.a0_Mpc)
+                _, indices = np.unique(logk, return_index=True)
+                sol.inflation_mask = sol.inflation_mask & np.isin(np.arange(sol._N.size), indices)
+                sol.logk = logk[sol.inflation_mask]
                 sol._logaH_star = np.log(K_STAR * sol.a0_Mpc)
                 if np.log(K_STAR) < np.min(sol.logk) or np.log(K_STAR) > np.max(sol.logk):
                     raise InsufficientInflationError(
@@ -718,8 +724,7 @@ class InflationEquations(Equations, ABC):
                         f"logk_min={np.min(sol.logk)}, logk_max={np.max(sol.logk)}."
                     )
                 else:
-                    logk, indices = np.unique(sol.logk, return_index=True)
-                    logk2N = interp1d(logk, sol._N[sol.inflation_mask][indices])
+                    logk2N = interp1d(sol.logk, sol._N[sol.inflation_mask])
                     sol._N_cross = logk2N(np.log(K_STAR))
                 sol.N_star = sol._N_end - sol._N_cross
 
@@ -743,9 +748,16 @@ class InflationEquations(Equations, ABC):
 
         sol.calibrate_scale_factor = calibrate_scale_factor
 
-        def derive_approx_power(**interp1d_kwargs):
+        def derive_approx_power(method='CGS', order=3, **interp1d_kwargs):
             """Derive the approximate primordial power spectra for scalar and tensor modes."""
-            derive_approx_power_CGS(**interp1d_kwargs)
+            if method == 'CGS':
+                derive_approx_power_CGS(order=order, **interp1d_kwargs)
+            elif method == 'LLMS':
+                derive_approx_power_LLMS(**interp1d_kwargs)
+            elif method == 'STE':
+                derive_approx_power_STE(**interp1d_kwargs)
+            elif method == 'ARBDS':
+                derive_approx_power_ARBDS(order=order, **interp1d_kwargs)
 
             dlogPdlogk_s = sol.logk2logP_s.derivatives(np.log(K_STAR))
             dlogPdlogk_t = sol.logk2logP_t.derivatives(np.log(K_STAR))
@@ -757,7 +769,7 @@ class InflationEquations(Equations, ABC):
             sol.n_t = dlogPdlogk_t[1]
             sol.r = sol.A_t / sol.A_s
 
-        def derive_approx_power_CGS(**interp1d_kwargs):
+        def derive_approx_power_CGS(order=3, **interp1d_kwargs):
             """Slow-roll approximation by Choe, Gong, and Stewart.
 
             Relevant papers
@@ -853,13 +865,15 @@ class InflationEquations(Equations, ABC):
             mask = (Ps0 > 0) & (Pt0 > 0)
             logP_s = np.log(Ps0[mask])
             logP_t = np.log(Pt0[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)
+            if order == 0:
+                sol.P_scalar_approx = Ps0
+                sol.P_tensor_approx = Pt0
             logk2logP_s_0 = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_0 = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_CGS0 = lambda k: np.exp(logk2logP_s_0(np.log(k)))
@@ -871,13 +885,15 @@ class InflationEquations(Equations, ABC):
             mask = (P_s > 0) & (P_t > 0)
             logP_s = np.log(P_s[mask])
             logP_t = np.log(P_t[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)
+            if order == 1:
+                sol.P_scalar_approx = P_s
+                sol.P_tensor_approx = P_t
             logk2logP_s_1 = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_1 = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_CGS1 = lambda k: np.exp(logk2logP_s_1(np.log(k)))
@@ -889,35 +905,51 @@ class InflationEquations(Equations, ABC):
             mask = (P_s > 0) & (P_t > 0)
             logP_s = np.log(P_s[mask])
             logP_t = np.log(P_t[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)
+            if order == 2:
+                sol.P_scalar_approx = P_s
+                sol.P_tensor_approx = P_t
             logk2logP_s_2 = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_2 = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_CGS2 = lambda k: np.exp(logk2logP_s_2(np.log(k)))
             sol.P_t_approx_CGS2 = lambda k: np.exp(logk2logP_t_2(np.log(k)))
 
             # order 3
-            sol.P_scalar_approx = Ps0 * (order1_s + order2_s + order3_s)
-            sol.P_tensor_approx = Pt0 * (order1_t + order2_t + order3_t)
-            mask = (sol.P_scalar_approx > 0) & (sol.P_tensor_approx > 0)
-            logP_s = np.log(sol.P_scalar_approx[mask])
-            logP_t = np.log(sol.P_tensor_approx[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)
-            sol.logk2logP_s = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+            P_s = Ps0 * (order1_s + order2_s + order3_s)
+            P_t = Pt0 * (order1_t + order2_t + order3_t)
+            mask = (P_s > 0) & (P_t > 0)
+            logP_s = np.log(P_s[mask])
+            logP_t = np.log(P_t[mask])
+            if order == 3:
+                sol.P_scalar_approx = P_s
+                sol.P_tensor_approx = P_t
+            logk2logP_s_3 = InterpolatedUnivariateSpline(
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
-            sol.logk2logP_t = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+            logk2logP_t_3 = InterpolatedUnivariateSpline(
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
-            sol.P_s_approx_CGS3 = lambda k: np.exp(sol.logk2logP_s(np.log(k)))
-            sol.P_t_approx_CGS3 = lambda k: np.exp(sol.logk2logP_t(np.log(k)))
+            sol.P_s_approx_CGS3 = lambda k: np.exp(logk2logP_s_3(np.log(k)))
+            sol.P_t_approx_CGS3 = lambda k: np.exp(logk2logP_t_3(np.log(k)))
+            if order == 0:
+                sol.logk2logP_s = logk2logP_s_0
+                sol.logk2logP_t = logk2logP_t_0
+            elif order == 1:
+                sol.logk2logP_s = logk2logP_s_1
+                sol.logk2logP_t = logk2logP_t_1
+            elif order == 2:
+                sol.logk2logP_s = logk2logP_s_2
+                sol.logk2logP_t = logk2logP_t_2
+            elif order == 3:
+                sol.logk2logP_s = logk2logP_s_3
+                sol.logk2logP_t = logk2logP_t_3
 
         def derive_approx_power_LLMS(**interp1d_kwargs):
             """Slow-roll approximation by Leach, Liddle, Martin, and Schwarz (2002).
@@ -978,20 +1010,23 @@ class InflationEquations(Equations, ABC):
             n_t = -2 * e1 - 2 * e1**2 - 2 * (C + 1) * e1 * e2
             n_t_run = -2 * e1 * e2
 
-            logk, indices = np.unique(sol.logk, return_index=True)  # now in iMpc
             log_k_kstar = sol.logk - np.log(K_STAR)
             logP_s = np.log(Ps0) + bs0 + (n_s - 1) * log_k_kstar + n_s_run / 2 * log_k_kstar**2
             logP_t = np.log(Pt0) + bt0 + n_t * log_k_kstar + n_t_run / 2 * log_k_kstar**2
             logk2logP_s_LLMS = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk, logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_LLMS = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk, logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_LLMS = lambda k: np.exp(logk2logP_s_LLMS(np.log(k)))
             sol.P_t_approx_LLMS = lambda k: np.exp(logk2logP_t_LLMS(np.log(k)))
+            sol.P_scalar_approx = np.exp(logP_s)
+            sol.P_tensor_approx = np.exp(logP_t)
+            sol.logk2logP_s = logk2logP_s_LLMS
+            sol.logk2logP_t = logk2logP_t_LLMS
 
         def derive_approx_power_STE(**interp1d_kwargs):
             """Slow-roll approximation by Schwarz and Terrero-Escalante (2004).
@@ -1048,19 +1083,22 @@ class InflationEquations(Equations, ABC):
             mask = (P_s > 0) & (P_t > 0)
             logP_s = np.log(P_s[mask])
             logP_t = np.log(P_t[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
             logk2logP_s_STE = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_STE = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             sol.P_s_approx_STE = lambda k: np.exp(logk2logP_s_STE(np.log(k)))
             sol.P_t_approx_STE = lambda k: np.exp(logk2logP_t_STE(np.log(k)))
+            sol.P_scalar_approx = P_s
+            sol.P_tensor_approx = P_t
+            sol.logk2logP_s = logk2logP_s_STE
+            sol.logk2logP_t = logk2logP_t_STE
 
-        def derive_approx_power_ARBDS(**interp1d_kwargs):
+        def derive_approx_power_ARBDS(order=3, **interp1d_kwargs):
             """Slow-roll approximation up to third order (N3LO).
 
             Slow-roll approximation by
@@ -1199,15 +1237,17 @@ class InflationEquations(Equations, ABC):
             mask = (P_s > 0) & (P_t > 0)
             logP_s = np.log(P_s[mask])
             logP_t = np.log(P_t[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
             logk2logP_s_ARBDS1 = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_ARBDS1 = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
+            if order == 1:
+                sol.P_scalar_approx = P_s
+                sol.P_tensor_approx = P_t
             sol.P_s_approx_ARBDS1 = lambda k: np.exp(logk2logP_s_ARBDS1(np.log(k)))
             sol.P_t_approx_ARBDS1 = lambda k: np.exp(logk2logP_t_ARBDS1(np.log(k)))
 
@@ -1217,15 +1257,17 @@ class InflationEquations(Equations, ABC):
             mask = (P_s > 0) & (P_t > 0)
             logP_s = np.log(P_s[mask])
             logP_t = np.log(P_t[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
             logk2logP_s_ARBDS2 = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_ARBDS2 = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
+            if order == 2:
+                sol.P_scalar_approx = P_s
+                sol.P_tensor_approx = P_t
             sol.P_s_approx_ARBDS2 = lambda k: np.exp(logk2logP_s_ARBDS2(np.log(k)))
             sol.P_t_approx_ARBDS2 = lambda k: np.exp(logk2logP_t_ARBDS2(np.log(k)))
 
@@ -1243,22 +1285,30 @@ class InflationEquations(Equations, ABC):
             mask = (P_s > 0) & (P_t > 0)
             logP_s = np.log(P_s[mask])
             logP_t = np.log(P_t[mask])
-            logk, indices = np.unique(sol.logk[mask], return_index=True)  # now in iMpc
             logk2logP_s_ARBDS3 = InterpolatedUnivariateSpline(
-                logk, logP_s[indices],
+                sol.logk[mask], logP_s,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
             logk2logP_t_ARBDS3 = InterpolatedUnivariateSpline(
-                logk, logP_t[indices],
+                sol.logk[mask], logP_t,
                 k=spline_order, ext=extrapolate, **interp1d_kwargs
             )
+            if order == 3:
+                sol.P_scalar_approx = P_s
+                sol.P_tensor_approx = P_t
             sol.P_s_approx_ARBDS3 = lambda k: np.exp(logk2logP_s_ARBDS3(np.log(k)))
             sol.P_t_approx_ARBDS3 = lambda k: np.exp(logk2logP_t_ARBDS3(np.log(k)))
+            if order == 1:
+                sol.logk2logP_s = logk2logP_s_ARBDS1
+                sol.logk2logP_t = logk2logP_t_ARBDS1
+            elif order == 2:
+                sol.logk2logP_s = logk2logP_s_ARBDS2
+                sol.logk2logP_t = logk2logP_t_ARBDS2
+            elif order == 3:
+                sol.logk2logP_s = logk2logP_s_ARBDS3
+                sol.logk2logP_t = logk2logP_t_ARBDS3
 
-        sol.derive_approx_power_CGS = derive_approx_power_CGS
-        sol.derive_approx_power_LLMS = derive_approx_power_LLMS
-        sol.derive_approx_power_STE = derive_approx_power_STE
-        sol.derive_approx_power_ARBDS = derive_approx_power_ARBDS
+        sol.derive_approx_power = derive_approx_power
 
         def P_s_approx(k, method='CGS', order=3, **interp_kwargs):
             """Slow-roll approximation for the primordial power spectrum for scalar modes.
