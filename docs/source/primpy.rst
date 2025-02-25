@@ -3,8 +3,8 @@ primpy package
 
 .. automodule:: primpy
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 primpy subpackages
 ------------------
@@ -21,8 +21,8 @@ primpy.bigbang module
 
 .. automodule:: primpy.bigbang
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.equations module
@@ -30,8 +30,8 @@ primpy.equations module
 
 .. automodule:: primpy.equations
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.events module
@@ -39,8 +39,8 @@ primpy.events module
 
 .. automodule:: primpy.events
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.exceptionhandling module
@@ -48,8 +48,8 @@ primpy.exceptionhandling module
 
 .. automodule:: primpy.exceptionhandling
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.inflation module
@@ -57,8 +57,8 @@ primpy.inflation module
 
 .. automodule:: primpy.inflation
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.initialconditions module
@@ -66,8 +66,8 @@ primpy.initialconditions module
 
 .. automodule:: primpy.initialconditions
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.oscode\_solver module
@@ -75,8 +75,8 @@ primpy.oscode\_solver module
 
 .. automodule:: primpy.oscode_solver
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.parameters module
@@ -84,8 +84,8 @@ primpy.parameters module
 
 .. automodule:: primpy.parameters
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.perturbations module
@@ -93,8 +93,8 @@ primpy.perturbations module
 
 .. automodule:: primpy.perturbations
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.potentials module
@@ -102,8 +102,8 @@ primpy.potentials module
 
 .. automodule:: primpy.potentials
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.solver module
@@ -111,8 +111,8 @@ primpy.solver module
 
 .. automodule:: primpy.solver
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 primpy.units module
@@ -120,7 +120,7 @@ primpy.units module
 
 .. automodule:: primpy.units
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 

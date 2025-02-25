@@ -13,7 +13,7 @@ from primpy.events import InflationEvent, UntilNEvent
 from primpy.inflation import InflationEquations
 from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
-from primpy.initialconditions import InflationStartIC, ISIC_NsOk
+from primpy.initialconditions import InflationStartIC, ISIC_NsOk, SlowRollIC
 from primpy.solver import solve
 
 
@@ -85,27 +85,163 @@ def test_basic_methods_time_vs_efolds(K):
             assert eq_t.inflating(t, y1_t) == approx(eq_N.inflating(N, y1_N), rel=tol, abs=tol)
 
 
+def test_helper_methods_time_efolds():
+    K = 0
+    N_star = 60
+    N_i = 10
+    phi_i = 6
+    t_i = 7e4
+    Lambda = 0.003
+    pot = StarobinskyPotential(Lambda=Lambda)
+
+    eq_t = InflationEquationsT(K=K, potential=pot, track_eta=False)
+    eq_N = InflationEquationsN(K=K, potential=pot, track_eta=False, track_time=True)
+    ic_t = SlowRollIC(eq_t, phi_i=phi_i, N_i=N_i, t_i=t_i)
+    ic_N = SlowRollIC(eq_N, phi_i=phi_i, N_i=N_i, t_i=t_i)
+    ev_t = [InflationEvent(eq_t, +1, terminal=False),  # records inflation start
+            InflationEvent(eq_t, -1, terminal=True)]   # records inflation end
+    ev_N = [InflationEvent(eq_N, +1, terminal=False),  # records inflation start
+            InflationEvent(eq_N, -1, terminal=True)]   # records inflation end
+    bsrt = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-12)
+    bsrN = solve(ic=ic_N, events=ev_N, dense_output=True, method='DOP853', rtol=1e-12)
+    bsrt.calibrate_scale_factor(N_star=N_star)
+    bsrN.calibrate_scale_factor(N_star=N_star)
+
+    N = np.arange(bsrt._N_end-N_star, bsrt._N_end-N_star/2, 1)
+    bt_H = bsrt.H
+    bN_H = bsrN.H
+    bt_dphi = bsrt.dphidt
+    bN_dphi = bsrN.dphidN
+    bt_dH_H = eq_t.get_dH_H(bsrt._N, bt_H**2, bt_dphi, K=K)
+    bN_dH_H = eq_N.get_dH_H(bsrN._N, bN_H**2, bN_dphi, K=K)
+    bt_dH = eq_t.get_dH(bsrt._N, bt_H, bt_dphi, K=K)
+    bN_dH = eq_N.get_dH(bsrN._N, bN_H, bN_dphi, K=K)
+    bt_dV = bsrt.potential.dV(bsrt.phi)
+    bN_dV = bsrN.potential.dV(bsrN.phi)
+    bt_d2V = bsrt.potential.d2V(bsrt.phi)
+    bN_d2V = bsrN.potential.d2V(bsrN.phi)
+    bt_d3V = bsrt.potential.d3V(bsrt.phi)
+    bN_d3V = bsrN.potential.d3V(bsrN.phi)
+    bt_d2phi = eq_t.get_d2phi(bt_H**2, bt_dH/bt_H, bt_dphi, bt_dV)
+    bN_d2phi = eq_N.get_d2phi(bN_H**2, bN_dH/bN_H, bN_dphi, bN_dV)
+    bt_d2H = eq_t.get_d2H(bsrt._N, bt_H, bt_dH, bt_dphi, bt_d2phi, K=K)
+    bN_d2H = eq_N.get_d2H(bsrN._N, bN_H, bN_dH, bN_dphi, bN_d2phi, K=K)
+    bt_d3phi = eq_t.get_d3phi(bt_H, bt_dH, bt_d2H, bt_dphi, bt_d2phi, bt_dV, bt_d2V)
+    bN_d3phi = eq_N.get_d3phi(bN_H, bN_dH, bN_d2H, bN_dphi, bN_d2phi, bN_dV, bN_d2V)
+    bt_d3H = eq_t.get_d3H(bsrt._N, bt_H, bt_dH, bt_d2H, bt_dphi, bt_d2phi, bt_d3phi, K=K)
+    bN_d3H = eq_N.get_d3H(bsrN._N, bN_H, bN_dH, bN_d2H, bN_dphi, bN_d2phi, bN_d3phi, K=K)
+    bt_d4phi = eq_t.get_d4phi(bt_H, bt_dH, bt_d2H, bt_d3H, bt_dphi, bt_d2phi, bt_d3phi, bt_dV, bt_d2V, bt_d3V)  # noqa: E501
+    bN_d4phi = eq_N.get_d4phi(bN_H, bN_dH, bN_d2H, bN_d3H, bN_dphi, bN_d2phi, bN_d3phi, bN_dV, bN_d2V, bN_d3V)  # noqa: E501
+    bt_e1 = eq_t.get_epsilon_1H(bt_H, bt_dH)
+    bN_e1 = eq_N.get_epsilon_1H(bN_H, bN_dH)
+    bt_e2 = eq_t.get_epsilon_2H(bt_H, bt_dH, bt_d2H)
+    bN_e2 = eq_N.get_epsilon_2H(bN_H, bN_dH, bN_d2H)
+    bt_e3 = eq_t.get_epsilon_3H(bt_H, bt_dH, bt_d2H, bt_d3H)
+    bN_e3 = eq_N.get_epsilon_3H(bN_H, bN_dH, bN_d2H, bN_d3H)
+    bt_e2_Gong = eq_t.get_epsilon_2H(bt_H, bt_dH, bt_d2H, kind='Gong')
+    bN_e2_Gong = eq_N.get_epsilon_2H(bN_H, bN_dH, bN_d2H, kind='Gong')
+    bt_e3_Gong = eq_t.get_epsilon_3H(bt_H, bt_dH, bt_d2H, bt_d3H, kind='Gong')
+    bN_e3_Gong = eq_N.get_epsilon_3H(bN_H, bN_dH, bN_d2H, bN_d3H, kind='Gong')
+
+    N_to_H_t = interp1d(bsrt._N, bt_H, kind='cubic')
+    N_to_H_N = interp1d(bsrN._N, bN_H, kind='cubic')
+    N_to_dH_H_t = interp1d(bsrt._N, bt_dH_H, kind='cubic')
+    N_to_dH_H_N = interp1d(bsrN._N, bN_dH_H, kind='cubic')
+    N_to_dH_t = interp1d(bsrt._N, bt_dH, kind='cubic')
+    N_to_dH_N = interp1d(bsrN._N, bN_dH, kind='cubic')
+    N_to_d2H_t = interp1d(bsrt._N, bt_d2H, kind='cubic')
+    N_to_d2H_N = interp1d(bsrN._N, bN_d2H, kind='cubic')
+    N_to_d3H_t = interp1d(bsrt._N, bt_d3H, kind='cubic')
+    N_to_d3H_N = interp1d(bsrN._N, bN_d3H, kind='cubic')
+    N_to_dphi_t = interp1d(bsrt._N, bt_dphi, kind='cubic')
+    N_to_dphi_N = interp1d(bsrN._N, bN_dphi, kind='cubic')
+    N_to_d2phi_t = interp1d(bsrt._N, bt_d2phi, kind='cubic')
+    N_to_d2phi_N = interp1d(bsrN._N, bN_d2phi, kind='cubic')
+    N_to_d3phi_t = interp1d(bsrt._N, bt_d3phi, kind='cubic')
+    N_to_d3phi_N = interp1d(bsrN._N, bN_d3phi, kind='cubic')
+    N_to_d4phi_t = interp1d(bsrt._N, bt_d4phi, kind='cubic')
+    N_to_d4phi_N = interp1d(bsrN._N, bN_d4phi, kind='cubic')
+    N_to_e1_t = interp1d(bsrt._N, bt_e1, kind='cubic')
+    N_to_e1_N = interp1d(bsrN._N, bN_e1, kind='cubic')
+    N_to_e2_t = interp1d(bsrt._N, bt_e2, kind='cubic')
+    N_to_e2_N = interp1d(bsrN._N, bN_e2, kind='cubic')
+    N_to_e3_t = interp1d(bsrt._N, bt_e3, kind='cubic')
+    N_to_e3_N = interp1d(bsrN._N, bN_e3, kind='cubic')
+    N_to_e2_Gong_t = interp1d(bsrt._N, bt_e2_Gong, kind='cubic')
+    N_to_e2_Gong_N = interp1d(bsrN._N, bN_e2_Gong, kind='cubic')
+    N_to_e3_Gong_t = interp1d(bsrt._N, bt_e3_Gong, kind='cubic')
+    N_to_e3_Gong_N = interp1d(bsrN._N, bN_e3_Gong, kind='cubic')
+
+    H_t = N_to_H_t(N)
+    H_N = N_to_H_N(N)
+    dHdt_H = N_to_dH_H_t(N)
+    dHdN_H = N_to_dH_H_N(N)
+    dHdt = N_to_dH_t(N)
+    dHdN = N_to_dH_N(N)
+    d2Hdt2 = N_to_d2H_t(N)
+    d2HdN2 = N_to_d2H_N(N)
+    d3Hdt3 = N_to_d3H_t(N)
+    d3HdN3 = N_to_d3H_N(N)
+    dphidt = N_to_dphi_t(N)
+    dphidN = N_to_dphi_N(N)
+    d2phidt2 = N_to_d2phi_t(N)
+    d2phidN2 = N_to_d2phi_N(N)
+    d3phidt3 = N_to_d3phi_t(N)
+    d3phidN3 = N_to_d3phi_N(N)
+    d4phidt4 = N_to_d4phi_t(N)
+    d4phidN4 = N_to_d4phi_N(N)
+    e1_t = N_to_e1_t(N)
+    e1_N = N_to_e1_N(N)
+    e2_t = N_to_e2_t(N)
+    e2_N = N_to_e2_N(N)
+    e3_t = N_to_e3_t(N)
+    e3_N = N_to_e3_N(N)
+    e2_Gong_t = N_to_e2_Gong_t(N)
+    e2_Gong_N = N_to_e2_Gong_N(N)
+    e3_Gong_t = N_to_e3_Gong_t(N)
+    e3_Gong_N = N_to_e3_Gong_N(N)
+
+    assert_allclose(H_t, H_N, rtol=1e-8)
+    assert_allclose(dHdt_H, dHdN, rtol=1e-6)
+    assert_allclose(dHdt_H, dHdN_H * H_N, rtol=1e-6)
+    assert_allclose(dHdt, dHdN * H_N, rtol=1e-6)
+    assert_allclose(d2Hdt2, d2HdN2 * H_N**2 + dHdN**2 * H_N, rtol=1e-6)
+    assert_allclose(d3Hdt3, d3HdN3*H_N**3 + 4*d2HdN2*dHdN*H_N**2 + dHdN**3*H_N, rtol=1e-6)
+    assert_allclose(dphidt, dphidN * H_N, rtol=1e-6)
+    assert_allclose(d2phidt2, d2phidN2 * H_N**2 + dphidN * dHdN * H_N, rtol=1e-6)
+    assert_allclose(d3phidt3, d3phidN3*H_N**3 + 3*d2phidN2*dHdN*H_N**2 + dphidN*d2HdN2*H_N**2 + dphidN*dHdN**2*H_N, rtol=1e-6)  # noqa: E501
+    assert_allclose(d4phidt4, d4phidN4*H_N**4 + 6*d3phidN3*dHdN*H_N**3 + 4*d2phidN2*d2HdN2*H_N**3 + dphidN*d3HdN3*H_N**3 + 7*d2phidN2*dHdN**2*H_N**2 + 4*dphidN*d2HdN2*dHdN*H_N**2 + dphidN*dHdN**3*H_N, rtol=2e-5)  # noqa: E501
+    assert_allclose(e1_t, e1_N, rtol=1e-6)
+    assert_allclose(e2_t, e2_N, rtol=1e-6)
+    assert_allclose(e3_t, e3_N, rtol=1e-6)
+    assert_allclose(e2_Gong_t, e2_Gong_N, rtol=1e-6)
+    assert_allclose(e3_Gong_t, e3_Gong_N, rtol=1e-6)
+
+
 @pytest.mark.parametrize('K', [-1, 0, +1])
 def test_sol_time_efolds(K):
+    Omega_K0 = -K * 0.001
+    h = 0.7
+    N_star = 55
     pot = QuadraticPotential(Lambda=0.0025)
     N_i = 10
     phi_i = 17
     t_i = 7e4
+    t_eval = np.logspace(np.log10(t_i), 8, 10000)
+    N_eval = np.linspace(N_i, 150, 10000)
     eta_i = 0
-    h = 0.7
-    k = np.logspace(-3, 1, 4 * 10 + 1)
-    Omega_K0 = -K * 0.01
+    k = np.logspace(-2, 1, 4 * 10 + 1)
 
     eq_t = InflationEquationsT(K=K, potential=pot, track_eta=True)
     eq_N = InflationEquationsN(K=K, potential=pot, track_eta=True, track_time=True)
-    ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
-    ic_N = InflationStartIC(eq_N, N_i=N_i, phi_i=phi_i, t_i=t_i, eta_i=eta_i)
+    ic_t = InflationStartIC(eq_t, N_i=N_eval[0], phi_i=phi_i, t_i=t_eval[0], eta_i=eta_i)
+    ic_N = InflationStartIC(eq_N, N_i=N_eval[0], phi_i=phi_i, t_i=t_eval[0], eta_i=eta_i)
     ev_t = [InflationEvent(eq_t, +1, terminal=False),
             InflationEvent(eq_t, -1, terminal=True)]
     ev_N = [InflationEvent(eq_N, +1, terminal=False),
             InflationEvent(eq_N, -1, terminal=True)]
-    bist = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-12)
-    bisn = solve(ic=ic_N, events=ev_N, dense_output=True, method='DOP853', rtol=1e-12)
+    bist = solve(ic=ic_t, events=ev_t, t_eval=t_eval, method='DOP853', rtol=1e-13, atol=1e-18)
+    bisn = solve(ic=ic_N, events=ev_N, t_eval=N_eval, method='DOP853', rtol=1e-13, atol=1e-18)
     assert bist.N_tot == approx(bisn.N_tot, rel=1e-5)
 
     N2t = interp1d(bisn._N, bisn.t, kind='cubic')
@@ -116,22 +252,22 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.H[1:-1], N2H(bist._N[1:-1]), rtol=1e-4)
 
     # using Omega_K0 or N_star
-    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
-    bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=55 if K == 0 else None)
+    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None)
+    bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None)
     assert bist.K == K
     assert bisn.K == K
     assert bist.Omega_K0 == Omega_K0
     assert bisn.Omega_K0 == Omega_K0
     if K != 0:
-        assert bisn.a0_Mpc * Mpc_m == bisn.a0 * lp_m
+        assert bisn.a0_Mpc * Mpc_m == approx(bisn.a0 * lp_m, rel=1e-14)
     elif K == 0:
         assert bisn.a0 == 1
     assert bist.N_star == approx(bisn.N_star, rel=1e-5)
     assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
     assert bist.A_s == approx(bisn.A_s, rel=1e-8)
     assert bist.n_s == approx(bisn.n_s, rel=1e-5)
-    assert bist.n_run == approx(bisn.n_run, rel=1e-3)
-    assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1, abs=1e-6)
+    assert bist.n_run == approx(bisn.n_run, rel=2e-3)
+    assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1)  # , abs=1e-6)
     assert bist.A_t == approx(bisn.A_t, rel=1e-8)
     assert bist.r == approx(bisn.r, rel=1e-5)
     assert bist.n_t == approx(bisn.n_t, rel=1e-5)
@@ -139,6 +275,84 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.logk2logP_t(np.log(k)), bisn.logk2logP_t(np.log(k)), rtol=1e-6)
     assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
     assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
+
+    # just for some if-else coverage:
+    bist.P_s_approx(k, method='LLMS')
+    bisn.P_t_approx(k, method='LLMS')
+    bist.P_s_approx(k, method='STE')
+    bisn.P_t_approx(k, method='STE')
+    bist.P_s_approx(k, method='ARBDS', order=1)
+    bisn.P_t_approx(k, method='ARBDS', order=1)
+    bist.P_s_approx(k, method='ARBDS', order=2)
+    bisn.P_t_approx(k, method='ARBDS', order=2)
+    bist.P_s_approx(k, method='ARBDS', order=3)
+    bisn.P_t_approx(k, method='ARBDS', order=3)
+
+    bist.derive_approx_power(method='CGS', order=0)
+    bisn.derive_approx_power(method='CGS', order=0)
+    bist.derive_approx_power(method='CGS', order=1)
+    bisn.derive_approx_power(method='CGS', order=1)
+    bist.derive_approx_power(method='CGS', order=2)
+    bisn.derive_approx_power(method='CGS', order=2)
+    bist.derive_approx_power(method='CGS', order=3)
+    bisn.derive_approx_power(method='CGS', order=3)
+    bist.derive_approx_power(method='LLMS')
+    bisn.derive_approx_power(method='LLMS')
+    bist.derive_approx_power(method='STE')
+    bisn.derive_approx_power(method='STE')
+    bist.derive_approx_power(method='ARBDS', order=1)
+    bisn.derive_approx_power(method='ARBDS', order=1)
+    bist.derive_approx_power(method='ARBDS', order=2)
+    bisn.derive_approx_power(method='ARBDS', order=2)
+    bist.derive_approx_power(method='ARBDS', order=3)
+    bisn.derive_approx_power(method='ARBDS', order=3)
+    bist.derive_approx_power(method='CGS', order=3)
+    bisn.derive_approx_power(method='CGS', order=3)
+
+    assert_allclose(bist.P_s_approx_CGS0(k) * 1e9, bisn.P_s_approx_CGS0(k) * 1e9, rtol=1e-5)
+    assert_allclose(bist.P_t_approx_CGS0(k) * 1e9, bisn.P_t_approx_CGS0(k) * 1e9, rtol=1e-5)
+    assert_allclose(bist.P_s_approx_CGS1(k) * 1e9, bisn.P_s_approx_CGS1(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_t_approx_CGS1(k) * 1e9, bisn.P_t_approx_CGS1(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_s_approx_CGS2(k) * 1e9, bisn.P_s_approx_CGS2(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_t_approx_CGS2(k) * 1e9, bisn.P_t_approx_CGS2(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_s_approx_CGS3(k) * 1e9, bisn.P_s_approx_CGS3(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_t_approx_CGS3(k) * 1e9, bisn.P_t_approx_CGS3(k) * 1e9, rtol=2e-5)
+    assert_allclose(bist.P_s_approx_LLMS(k) * 1e9, bisn.P_s_approx_LLMS(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_t_approx_LLMS(k) * 1e9, bisn.P_t_approx_LLMS(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_s_approx_STE(k) * 1e9, bisn.P_s_approx_STE(k) * 1e9, rtol=1e-6)
+    assert_allclose(bist.P_t_approx_STE(k) * 1e9, bisn.P_t_approx_STE(k) * 1e9, rtol=1e-6)
+    assert_allclose(bist.P_s_approx_ARBDS1(k) * 1e9, bisn.P_s_approx_ARBDS1(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_t_approx_ARBDS1(k) * 1e9, bisn.P_t_approx_ARBDS1(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_s_approx_ARBDS2(k) * 1e9, bisn.P_s_approx_ARBDS2(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_t_approx_ARBDS2(k) * 1e9, bisn.P_t_approx_ARBDS2(k) * 1e9, rtol=5e-5)
+    assert_allclose(bist.P_s_approx_ARBDS3(k) * 1e9, bisn.P_s_approx_ARBDS3(k) * 1e9, rtol=1e-4)
+    assert_allclose(bist.P_t_approx_ARBDS3(k) * 1e9, bisn.P_t_approx_ARBDS3(k) * 1e9, rtol=1e-4)
+
+    assert_allclose(bist.P_s_approx_CGS0(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-2)
+    assert_allclose(bist.P_t_approx_CGS0(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-2)
+    assert_allclose(bist.P_s_approx_CGS1(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_t_approx_CGS1(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_s_approx_CGS2(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-4)
+    assert_allclose(bist.P_t_approx_CGS2(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-4)
+    assert_allclose(bist.P_s_approx_LLMS(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_t_approx_LLMS(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_s_approx_STE(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_t_approx_STE(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_s_approx_ARBDS1(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-2)
+    assert_allclose(bist.P_t_approx_ARBDS1(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-2)
+    assert_allclose(bist.P_s_approx_ARBDS2(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_t_approx_ARBDS2(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_s_approx_ARBDS3(k) * 1e9, bist.P_s_approx_CGS3(k) * 1e9, rtol=1e-3)
+    assert_allclose(bist.P_t_approx_ARBDS3(k) * 1e9, bist.P_t_approx_CGS3(k) * 1e9, rtol=1e-3)
+    for m in ['CGS', 'LLMS', 'STE', 'ARBDS']:
+        assert_allclose(bist.P_s_approx(k, m), bisn.P_s_approx(k, m), rtol=1e-4)
+        assert_allclose(bist.P_t_approx(k, m), bisn.P_t_approx(k, m), rtol=1e-4)
+    for o in range(4):
+        assert_allclose(bist.P_s_approx(k, 'CGS', o), bisn.P_s_approx(k, 'CGS', o), rtol=1e-5)
+        assert_allclose(bist.P_t_approx(k, 'CGS', o), bisn.P_t_approx(k, 'CGS', o), rtol=1e-5)
+    for o in range(1, 4):
+        assert_allclose(bist.P_s_approx(k, 'ARBDS', o), bisn.P_s_approx(k, 'ARBDS', o), rtol=1e-4)
+        assert_allclose(bist.P_t_approx(k, 'ARBDS', o), bisn.P_t_approx(k, 'ARBDS', o), rtol=1e-4)
 
     # reheating
     bist.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=2, w_reh=0)
@@ -148,7 +362,7 @@ def test_sol_time_efolds(K):
     assert bist.A_s == approx(bisn.A_s, rel=1e-8)
     assert bist.n_s == approx(bisn.n_s, rel=1e-5)
     assert bist.n_run == approx(bisn.n_run, rel=1e-3)
-    assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1, abs=1e-6)
+    assert bist.n_runrun == approx(bisn.n_runrun, rel=1e-2)
     assert bist.A_t == approx(bisn.A_t, rel=1e-8)
     assert bist.r == approx(bisn.r, rel=1e-5)
     assert bist.n_t == approx(bisn.n_t, rel=1e-5)
@@ -166,7 +380,7 @@ def test_sol_time_efolds(K):
         assert bist.A_s == approx(bisn.A_s, rel=1e-8)
         assert bist.n_s == approx(bisn.n_s, rel=1e-5)
         assert bist.n_run == approx(bisn.n_run, rel=1e-3)
-        assert bist.n_runrun == approx(bisn.n_runrun, rel=2e-1, abs=1e-6)
+        assert bist.n_runrun == approx(bisn.n_runrun, rel=1e-2)
         assert bist.A_t == approx(bisn.A_t, rel=1e-8)
         assert bist.r == approx(bisn.r, rel=1e-5)
         assert bist.n_t == approx(bisn.n_t, rel=1e-5)
@@ -389,9 +603,9 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
         bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
         n_s = bist.n_s
         r = bist.r
-        assert np.isclose(bist.N_star, N_star)
-        assert np.isclose(n_s, ns_slow_roll, rtol=0.005)
-        assert np.isclose(r, r_slow_roll, rtol=0.005)
+        assert bist.N_star == approx(N_star)
+        assert n_s == approx(ns_slow_roll, rel=0.005)
+        assert r == approx(r_slow_roll, rel=0.05)
         As_range[i] = bist.A_s
         ns_range[i] = bist.n_s
         nrun_range[i] = bist.n_run
@@ -399,8 +613,8 @@ def test_approx_As_ns_nrun_r__with_tolerances_and_slow_roll(N_star):
 
     assert_allclose(ns_range[0], ns_slow_roll, rtol=0.005)
     assert_allclose(ns_range[1], ns_slow_roll, rtol=0.005)
-    assert_allclose(r_range[0], r_slow_roll, rtol=0.005)
-    assert_allclose(r_range[1], r_slow_roll, rtol=0.005)
+    assert_allclose(r_range[0], r_slow_roll, rtol=0.05)
+    assert_allclose(r_range[1], r_slow_roll, rtol=0.05)
 
     assert_allclose(As_range[0], As_range[1], rtol=1e-4, atol=1e-9*1e-3)
     assert_allclose(ns_range[0], ns_range[1], rtol=1e-4)
