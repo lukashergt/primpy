@@ -276,6 +276,18 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.P_s_approx(k) * 1e9, bisn.P_s_approx(k) * 1e9, rtol=1e-4)
     assert_allclose(bist.P_t_approx(k) * 1e9, bisn.P_t_approx(k) * 1e9, rtol=1e-3)
 
+    # just for some if-else coverage:
+    bist.P_s_approx(k, method='LLMS')
+    bisn.P_t_approx(k, method='LLMS')
+    bist.P_s_approx(k, method='STE')
+    bisn.P_t_approx(k, method='STE')
+    bist.P_s_approx(k, method='ARBDS', order=1)
+    bisn.P_t_approx(k, method='ARBDS', order=1)
+    bist.P_s_approx(k, method='ARBDS', order=2)
+    bisn.P_t_approx(k, method='ARBDS', order=2)
+    bist.P_s_approx(k, method='ARBDS', order=3)
+    bisn.P_t_approx(k, method='ARBDS', order=3)
+
     bist.derive_approx_power(method='CGS', order=0)
     bisn.derive_approx_power(method='CGS', order=0)
     bist.derive_approx_power(method='CGS', order=1)

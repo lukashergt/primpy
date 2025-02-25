@@ -1336,8 +1336,6 @@ class InflationEquations(Equations, ABC):
 
             """
             if method == 'CGS':
-                if not hasattr(sol, "P_s_approx_CGS0"):
-                    derive_approx_power_CGS(**interp_kwargs)
                 if order == 3:
                     return sol.P_s_approx_CGS3(k)
                 elif order == 0:
@@ -1347,10 +1345,16 @@ class InflationEquations(Equations, ABC):
                 elif order == 2:
                     return sol.P_s_approx_CGS2(k)
             elif method == 'LLMS':
+                if not hasattr(sol, "P_s_approx_LLMS"):
+                    derive_approx_power_LLMS(**interp_kwargs)
                 return sol.P_s_approx_LLMS(k)
             elif method == 'STE':
+                if not hasattr(sol, "P_s_approx_STE"):
+                    derive_approx_power_STE(**interp_kwargs)
                 return sol.P_s_approx_STE(k)
             elif method == 'ARBDS':
+                if not hasattr(sol, "P_s_approx_ARBDS"):
+                    derive_approx_power_ARBDS(order=order, **interp_kwargs)
                 if order == 3:
                     return sol.P_s_approx_ARBDS3(k)
                 elif order == 1:
@@ -1386,8 +1390,6 @@ class InflationEquations(Equations, ABC):
 
             """
             if method == 'CGS':
-                if not hasattr(sol, "P_t_approx_CGS0"):
-                    derive_approx_power_CGS(**interp_kwargs)
                 if order is None or order == 3:
                     return sol.P_t_approx_CGS3(k)
                 elif order == 0:
@@ -1397,10 +1399,16 @@ class InflationEquations(Equations, ABC):
                 elif order == 2:
                     return sol.P_t_approx_CGS2(k)
             elif method == 'LLMS':
+                if not hasattr(sol, "P_t_approx_LLMS"):
+                    derive_approx_power_LLMS(**interp_kwargs)
                 return sol.P_t_approx_LLMS(k)
             elif method == 'STE':
+                if not hasattr(sol, "P_t_approx_STE"):
+                    derive_approx_power_STE(**interp_kwargs)
                 return sol.P_t_approx_STE(k)
             elif method == 'ARBDS':
+                if not hasattr(sol, "P_t_approx_ARBDS"):
+                    derive_approx_power_ARBDS(order=order, **interp_kwargs)
                 if order == 3:
                     return sol.P_t_approx_ARBDS3(k)
                 elif order == 1:
