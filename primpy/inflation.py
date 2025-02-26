@@ -463,7 +463,7 @@ class InflationEquations(Equations, ABC):
                 calibration_method='N_star' if self.K == 0 else 'Omega_K0',
                 Omega_K0=None, h=None,                                   # for curved universes
                 N_star=None, background=None,                            # for flat universes
-                delta_reh=None, w_reh=None, rho_reh_GeV=None, g_th=1e2,  # for reheating
+                DeltaN_reh=None, w_reh=None, rho_reh_GeV=None, g_th=1e2,  # for reheating
         ):
             """Calibrate the scale factor `a` for flat or curved universes or from reheating.
 
@@ -493,7 +493,7 @@ class InflationEquations(Equations, ABC):
                 Number of e-folds of inflation after horizon crossing of pivot scale `K_STAR`.
                 Required for ``calibration_method='N_star'``.
 
-            delta_reh : float, optional
+            DeltaN_reh : float, optional
                 Number of e-folds during reheating, used for a general reheating scenario with
                 ``calibration_method='reheating'``. By default, this is assumed to be zero,
                 corresponding to instant reheating.
@@ -551,7 +551,7 @@ class InflationEquations(Equations, ABC):
                             sol.rho_reh_GeV = np.nan
                             sol._N_reh = np.nan
                             sol.w_reh = np.nan
-                            sol.delta_reh = np.nan
+                            sol.DeltaN_reh = np.nan
                         else:
                             sol.rho_reh_GeV = rho_reh_GeV
                             sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
@@ -560,40 +560,40 @@ class InflationEquations(Equations, ABC):
                                          - np.log(g_th) / 12
                                          + np.log(3/2 * T_CMB_Tp**4 / sol.rho_reh_mp4) / 4)
                             sol._N_reh = sol.N_reh - sol.delta_N_calib
-                            sol.delta_reh = sol._N_reh - sol._N_end
-                            sol.w_reh = np.log(3/2*sol.V_end/sol.rho_reh_mp4)/(3*sol.delta_reh) - 1
+                            sol.DeltaN_reh = sol._N_reh - sol._N_end
+                            sol.w_reh = np.log(3/2*sol.V_end/sol.rho_reh_mp4)/(3*sol.DeltaN_reh)-1
 
                     elif calibration_method == 'reheating':  # derive _N_cross from reheating
                         sol.N_end = (sol.N0
                                      - np.log((45/pi**2)**(1/4) * g0**(-1/3))
                                      - np.log(g_th) / 12
                                      - np.log(sol.V_end/T_CMB_Tp**4)/4)
-                        if ((w_reh is None and delta_reh is None)
-                                or delta_reh == 0 or w_reh == 1/3):
+                        if ((w_reh is None and DeltaN_reh is None)
+                                or DeltaN_reh == 0 or w_reh == 1/3):
                             # assume instant reheating
-                            sol.delta_reh = 0
+                            sol.DeltaN_reh = 0
                             sol.w_reh = np.nan
                             sol.rho_reh_mp4 = 3/2 * sol.V_end
                             sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
-                        elif w_reh is not None and delta_reh is not None:
-                            if delta_reh < 0 or w_reh < -1/3:
-                                raise ValueError(f"delta_reh must be positive (end of reheating "
+                        elif w_reh is not None and DeltaN_reh is not None:
+                            if DeltaN_reh < 0 or w_reh < -1/3:
+                                raise ValueError(f"DeltaN_reh must be positive (end of reheating "
                                                  f"must be after end of inflation) and w_reh must "
                                                  f"be greater than -1/3 (reheating by definition "
                                                  f"happens after the end of inflation, but "
                                                  f"w_reh<-1/3 is inflating), but got "
-                                                 f"delta_reh={delta_reh} and w_reh={w_reh}.")
+                                                 f"DeltaN_reh={DeltaN_reh} and w_reh={w_reh}.")
                             sol.w_reh = w_reh
-                            sol.delta_reh = delta_reh
-                            sol.N_end -= 3/4 * (1/3 - w_reh) * delta_reh
-                            sol.rho_reh_mp4 = 3/2 * sol.V_end * np.exp(-3 * (1+w_reh) * delta_reh)
+                            sol.DeltaN_reh = DeltaN_reh
+                            sol.N_end -= 3/4 * (1/3 - w_reh) * DeltaN_reh
+                            sol.rho_reh_mp4 = 3/2 * sol.V_end * np.exp(-3 * (1+w_reh) * DeltaN_reh)
                             sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
-                        elif ((w_reh is None and delta_reh is not None) or
-                              (w_reh is not None and delta_reh is None)):
-                            raise ValueError(f"Both w_reh and delta_reh must be given for "
+                        elif ((w_reh is None and DeltaN_reh is not None) or
+                              (w_reh is not None and DeltaN_reh is None)):
+                            raise ValueError(f"Both w_reh and DeltaN_reh must be given for "
                                              f"reheating (or set both to None for instant "
                                              f"reheating), but got w_reh={w_reh} and "
-                                             f"delta_reh={delta_reh}.")
+                                             f"DeltaN_reh={DeltaN_reh}.")
                         sol.delta_N_calib = sol.N_end - sol._N_end
                         sol._logaH_star = np.log(K_STAR_lp) - sol.delta_N_calib
                         logaH = sol._logaH[sol.inflation_mask] + sol.delta_N_calib
@@ -609,7 +609,7 @@ class InflationEquations(Equations, ABC):
                             sol._N_cross = logaH2N(np.log(K_STAR_lp))
 
                         sol.N_star = sol._N_end - sol._N_cross
-                        sol._N_reh = sol._N_end + sol.delta_reh
+                        sol._N_reh = sol._N_end + sol.DeltaN_reh
 
                     else:  # only 'N_star' and 'reheating' as calibration methods for K==0
                         raise NotImplementedError(
@@ -658,7 +658,7 @@ class InflationEquations(Equations, ABC):
                         sol.rho_reh_GeV = np.nan
                         sol._N_reh = np.nan
                         sol.w_reh = np.nan
-                        sol.delta_reh = np.nan
+                        sol.DeltaN_reh = np.nan
                     else:
                         sol.rho_reh_GeV = rho_reh_GeV
                         sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
@@ -666,8 +666,8 @@ class InflationEquations(Equations, ABC):
                                       - np.log((45/pi**2)**(1/4) * g0**(-1/3))
                                       - np.log(g_th) / 12
                                       + np.log(3/2 * T_CMB_Tp**4 / sol.rho_reh_mp4) / 4)
-                        sol.delta_reh = sol._N_reh - sol._N_end
-                        sol.w_reh = np.log(3/2 * sol.V_end/sol.rho_reh_mp4) / (3*sol.delta_reh) - 1
+                        sol.DeltaN_reh = sol._N_reh - sol._N_end
+                        sol.w_reh = np.log(3/2*sol.V_end/sol.rho_reh_mp4) / (3*sol.DeltaN_reh) - 1
 
                 elif calibration_method == 'reheating':  # derive a0 and Omega_K0 from reheating
                     if Omega_K0 is not None:
@@ -678,32 +678,32 @@ class InflationEquations(Equations, ABC):
                               + np.log((45/pi**2)**(1/4) * g0**(-1/3))
                               + np.log(g_th)/12
                               + np.log(sol.V_end/T_CMB_Tp**4)/4)
-                    if (w_reh is None and delta_reh is None) or delta_reh == 0 or w_reh == 1/3:
+                    if (w_reh is None and DeltaN_reh is None) or DeltaN_reh == 0 or w_reh == 1/3:
                         # assume instant reheating
-                        sol.delta_reh = 0
+                        sol.DeltaN_reh = 0
                         sol.w_reh = np.nan
                         sol.rho_reh_mp4 = 3/2 * sol.V_end
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         sol._N_reh = sol._N_end
-                    elif w_reh is not None and delta_reh is not None:
-                        if delta_reh < 0 or w_reh < -1 / 3:
-                            raise ValueError(f"delta_reh must be positive (end of reheating "
+                    elif w_reh is not None and DeltaN_reh is not None:
+                        if DeltaN_reh < 0 or w_reh < -1 / 3:
+                            raise ValueError(f"DeltaN_reh must be positive (end of reheating "
                                              f"must be after end of inflation) and w_reh must "
                                              f"be greater than -1/3 (reheating by definition "
                                              f"happens after the end of inflation, but "
                                              f"w_reh<-1/3 is inflating), but got "
-                                             f"delta_reh={delta_reh} and w_reh={w_reh}.")
+                                             f"DeltaN_reh={DeltaN_reh} and w_reh={w_reh}.")
                         sol.w_reh = w_reh
-                        sol.delta_reh = delta_reh
-                        sol.N0 += 3/4 * (1/3 - w_reh) * delta_reh
-                        sol.rho_reh_mp4 = 3/2 * sol.V_end * np.exp(-3 * (1+w_reh) * delta_reh)
+                        sol.DeltaN_reh = DeltaN_reh
+                        sol.N0 += 3/4 * (1/3 - w_reh) * DeltaN_reh
+                        sol.rho_reh_mp4 = 3/2 * sol.V_end * np.exp(-3 * (1+w_reh) * DeltaN_reh)
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
-                        sol._N_reh = sol._N_end + delta_reh
-                    elif ((w_reh is None and delta_reh is not None) or
-                          (w_reh is not None and delta_reh is None)):
-                        raise ValueError(f"Both w_reh and delta_reh must be given for reheating "
+                        sol._N_reh = sol._N_end + DeltaN_reh
+                    elif ((w_reh is None and DeltaN_reh is not None) or
+                          (w_reh is not None and DeltaN_reh is None)):
+                        raise ValueError(f"Both w_reh and DeltaN_reh must be given for reheating "
                                          f"(or set both to None for instant reheating), "
-                                         f"but got w_reh={w_reh} and delta_reh={delta_reh}.")
+                                         f"but got w_reh={w_reh} and DeltaN_reh={DeltaN_reh}.")
                     sol.a0 = np.exp(sol.N0)
                     sol.a0_Mpc = sol.a0 * lp_m / Mpc_m
                     sol.Omega_K0 = -sol.K * c**2 / (sol.a0_Mpc * h * 100 * 1e3)**2
@@ -1422,7 +1422,7 @@ class InflationEquations(Equations, ABC):
         sol.P_s_approx = P_s_approx
         sol.P_t_approx = P_t_approx
 
-        def set_ns(n_s, N_star_min=20, N_star_max=90, **kwargs):
+        def set_ns(n_s, N_star_min=20, N_star_max=90, rho_reh_GeV=None, **kwargs):
             """Set scalar spectral index `n_s` of the primordial power spectrum in post-processing.
 
             For flat universes there is a straight-forward connection between the number of
@@ -1436,6 +1436,9 @@ class InflationEquations(Equations, ABC):
             N_star_min, N_star_max : float, default=(20, 90)
                 Minimum and maximum bound of `N_star` inbetween which the optimiser searches for
                 the value corresponding to the correct `n_s`.
+            rho_reh_GeV : float, optional
+                Energy density at the end of reheating in GeV (note that this is units of GeV not
+                GeV^4, so this is really the fourth root of the energy density `rho_reh^(1/4)`).
 
             """
             if sol.K != 0:
@@ -1447,7 +1450,8 @@ class InflationEquations(Equations, ABC):
 
             output = root_scalar(Nstar2ns, bracket=(N_star_min, N_star_max), **kwargs)
             N_star_new = output.root
-            calibrate_scale_factor(N_star=N_star_new)
+            calibrate_scale_factor(calibration_method='N_star', N_star=N_star_new,
+                                   rho_reh_GeV=rho_reh_GeV)
 
         sol.set_ns = set_ns
 
