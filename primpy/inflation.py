@@ -4,8 +4,9 @@ from abc import ABC
 import numpy as np
 from scipy.special import zeta
 from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
+from scipy.optimize import root_scalar
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
-from primpy.exceptionhandling import InsufficientInflationError
+from primpy.exceptionhandling import InsufficientInflationError, PrimpyError
 from primpy.units import pi, c, lp_m, Mpc_m, mp_GeV, lp_iGeV
 from primpy.parameters import K_STAR, K_STAR_lp, T_CMB_Tp, g0
 from primpy.equations import Equations
@@ -1420,5 +1421,34 @@ class InflationEquations(Equations, ABC):
 
         sol.P_s_approx = P_s_approx
         sol.P_t_approx = P_t_approx
+
+        def set_ns(n_s, N_star_min=20, N_star_max=90, **kwargs):
+            """Set scalar spectral index `n_s` of the primordial power spectrum in post-processing.
+
+            For flat universes there is a straight-forward connection between the number of
+            e-folds of inflation after horizon crossing of the pivot scale (`N_star`) and the
+            spectral index of the scalar primordial power spectrum (`n_s`).
+
+            Parameters
+            ----------
+            n_s : float
+                Target scalar spectral index of the primordial power spectrum.
+            N_star_min, N_star_max : float, default=(20, 90)
+                Minimum and maximum bound of `N_star` inbetween which the optimiser searches for
+                the value corresponding to the correct `n_s`.
+
+            """
+            if sol.K != 0:
+                raise PrimpyError("Setting n_s in post-processing works only for flat universes.")
+
+            def Nstar2ns(N_star):
+                calibrate_scale_factor(N_star=N_star)
+                return sol.n_s - n_s
+
+            output = root_scalar(Nstar2ns, bracket=(N_star_min, N_star_max), **kwargs)
+            N_star_new = output.root
+            calibrate_scale_factor(N_star=N_star_new)
+
+        sol.set_ns = set_ns
 
         return sol
