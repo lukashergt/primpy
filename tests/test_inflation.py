@@ -5,7 +5,7 @@ from pytest import approx
 from scipy.interpolate import interp1d
 import numpy as np
 from numpy.testing import assert_allclose
-from primpy.exceptionhandling import InflationEndWarning, InsufficientInflationError
+from primpy.exceptionhandling import InflationEndWarning, InsufficientInflationError, PrimpyError
 from primpy.units import Mpc_m, lp_m
 from primpy.parameters import K_STAR
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
@@ -353,6 +353,16 @@ def test_sol_time_efolds(K):
     for o in range(1, 4):
         assert_allclose(bist.P_s_approx(k, 'ARBDS', o), bisn.P_s_approx(k, 'ARBDS', o), rtol=1e-4)
         assert_allclose(bist.P_t_approx(k, 'ARBDS', o), bisn.P_t_approx(k, 'ARBDS', o), rtol=1e-4)
+
+    # set n_s
+    if K == 0:
+        bist.set_ns(0.96, N_star_min=20, N_star_max=65)
+        bisn.set_ns(0.96, N_star_min=20, N_star_max=65)
+        assert bist.n_s == approx(0.96)
+        assert bisn.n_s == approx(0.96)
+    else:
+        with pytest.raises(PrimpyError):
+            bist.set_ns(0.96)
 
     # reheating
     bist.calibrate_scale_factor(calibration_method='reheating', h=h, delta_reh=2, w_reh=0)
