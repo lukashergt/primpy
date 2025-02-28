@@ -16,7 +16,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         self.Pot = pp.InflationaryPotential
 
     def get_can_support_params(self):
-        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV'}
+        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV', 'phi0', 'p'}
 
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
@@ -29,14 +29,22 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         A_s = params_values_dict.get('A_s')
         n_s = params_values_dict.get('n_s')
         rho_reh_GeV = params_values_dict.get('rho_reh_GeV')
+        pot_kwargs = {}
+        if 'phi0' in params_values_dict.keys():
+            phi0 = params_values_dict.get('phi0')
+            pot_kwargs.update(phi0=phi0)
+        if 'p' in params_values_dict.keys():
+            p = params_values_dict.get('p')
+            pot_kwargs.update(p=p)
 
         atol = 1e-14
         rtol = 1e-6
         K = 0
         t_eval = np.logspace(5, 8, (8-5)*1000+1)
-        Lambda, phi_star, N_star = self.Pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None)
+        Lambda, phi_star, N_star = self.Pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None,
+                                                         **pot_kwargs)
         for i in range(11):
-            pot = self.Pot(Lambda=Lambda)
+            pot = self.Pot(Lambda=Lambda, **pot_kwargs)
             eq = InflationEquations(K=K, potential=pot, track_eta=False)
             ev = [InflationEvent(eq, +1, terminal=False),  # records inflation start
                   InflationEvent(eq, -1, terminal=True)]   # records inflation end
@@ -79,8 +87,50 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         return self.current_state['primordial_tensor_pk']
 
 
+class MonomialSlowRollPPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.MonomialPotential
+
+
+class LinearSlowRollPPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.LinearPotential
+
+
+class QuadraticSlowRollPPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.QuadraticPotential
+
+
 class StarobinskySlowRollPPS(SlowRollPPS):
 
     def initialize(self):
         super().initialize()
         self.Pot = pp.StarobinskyPotential
+
+
+class NaturalSlowRollPPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.NaturalPotential
+
+
+class DoubleWell2PPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.DoubleWell2Potential
+
+
+class DoubleWell4PPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.DoubleWell4Potential
