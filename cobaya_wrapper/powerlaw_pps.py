@@ -43,7 +43,7 @@ class PowerLawPPS(ExternalPrimordialPowerSpectrum):
         n_runrun = params_values_dict.get('n_runrun', 0)
         A_t = params_values_dict.get('A_t', 0)
         n_t = params_values_dict.get('n_t', None)
-        n_t_run = params_values_dict.get('n_t_run', None)
+        n_t_run = params_values_dict.get('n_t_run', 0)
         r = params_values_dict.get('r', A_t/A_s)
         if n_t is None:
             # set from inflationary consistency
