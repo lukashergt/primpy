@@ -360,6 +360,12 @@ def test_sol_time_efolds(K):
         bisn.set_ns(0.96, N_star_min=20, N_star_max=65)
         assert bist.n_s == approx(0.96)
         assert bisn.n_s == approx(0.96)
+        with pytest.raises(PrimpyError, match="Shooting for `n_s=0.91` failed, "
+                                              "required `N_star` probably too small."):
+            bist.set_ns(0.91, N_star_min=60, N_star_max=65)
+        with pytest.raises(PrimpyError, match="Shooting for `n_s=0.99` failed, "
+                                              "potentially higher `N_star` required."):
+            bisn.set_ns(0.99, N_star_min=20, N_star_max=25)
     else:
         with pytest.raises(PrimpyError):
             bist.set_ns(0.96)
