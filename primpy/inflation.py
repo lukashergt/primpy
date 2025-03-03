@@ -1444,11 +1444,26 @@ class InflationEquations(Equations, ABC):
             if sol.K != 0:
                 raise PrimpyError("Setting n_s in post-processing works only for flat universes.")
 
-            def Nstar2ns(N_star):
+            def Nstar2ns_minus_ns(N_star):
                 calibrate_scale_factor(N_star=N_star)
                 return sol.n_s - n_s
 
-            output = root_scalar(Nstar2ns, bracket=(N_star_min, N_star_max), **kwargs)
+            ns_min = Nstar2ns_minus_ns(N_star_min) + n_s
+            ns_max = Nstar2ns_minus_ns(N_star_max) + n_s
+            if ns_min > n_s and ns_max > n_s:
+                raise PrimpyError(
+                    f"Shooting for `n_s={n_s}` failed, required `N_star` probably too small. "
+                    f"Currently we have `N_star_min={N_star_min}` leading to "
+                    f"`n_s(N_star_min)={ns_min}`. You can try to lower `N_star_min`, but such a "
+                    f"low value might well be incompatible with any realistic reheating scenario."
+                )
+            elif ns_min < n_s and ns_max < n_s:
+                raise PrimpyError(
+                    f"Shooting for `n_s={n_s}` failed, potentially higher `N_star` required. "
+                    f"Increase `N_star_max`? Currently we have `N_star_max={N_star_max}` "
+                    f"leading to `n_s(N_star_max)={ns_max}`."
+                )
+            output = root_scalar(Nstar2ns_minus_ns, bracket=(N_star_min, N_star_max), **kwargs)
             N_star_new = output.root
             calibrate_scale_factor(calibration_method='N_star', N_star=N_star_new,
                                    rho_reh_GeV=rho_reh_GeV)
