@@ -1,7 +1,7 @@
 """Slow-roll inflationary primordial power spectrum (PPS) for use with Cobaya."""
 import numpy as np
 from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
-from primpy.exceptionhandling import PrimpyError
+from primpy.exceptionhandling import PrimpyError, StepSizeError
 import primpy.potentials as pp
 from primpy.time.inflation import InflationEquationsT as InflationEquations
 from primpy.events import InflationEvent
@@ -58,7 +58,8 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
             N_star = N_star if n_s is None else min(N_star, b.N_tot-0.1)
             b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
             if n_s is not None:
-                b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV, N_star_min=20, N_star_max=min(75, b.N_tot-0.1))
+                b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV,
+                         N_star_min=20, N_star_max=min(75, b.N_tot-0.1))
             # check whether the target A_s is met
             if abs(b.A_s - A_s) < atol + rtol * A_s:
                 break  # when the target is met, exit the loop
