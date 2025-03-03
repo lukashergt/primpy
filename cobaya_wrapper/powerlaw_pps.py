@@ -2,6 +2,7 @@
 import numpy as np
 from cobaya.theory import Theory
 from primpy.parameters import K_STAR
+from primpy.__version__ import __version__
 
 
 def power_law_primordial_scalar_pk(ks, A_s, n_s, n_run, n_runrun, k_pivot):
@@ -20,6 +21,7 @@ class ExternalPrimordialPowerSpectrum(Theory):
     def initialize(self):
         # need to provide valid results at wide k range, any that might be used
         super().initialize()
+        self.mpi_info(f"Using `primpy` module with version {__version__}.")
         self.kmin = 5e-7
         self.kmax = 5e1
         logkmin = np.log10(self.kmin)

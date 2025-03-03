@@ -1,7 +1,7 @@
 """Slow-roll inflationary primordial power spectrum (PPS) for use with Cobaya."""
 import numpy as np
 from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
-from primpy.exceptionhandling import PrimpyError
+from primpy.exceptionhandling import PrimpyError, StepSizeError
 import primpy.potentials as pp
 from primpy.time.inflation import InflationEquationsT as InflationEquations
 from primpy.events import InflationEvent
@@ -25,7 +25,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                 'A_s', 'n_s', 'n_run', 'n_runrun', 'A_t', 'n_t', 'r'}
 
     def calculate(self, state, want_derived=True, **params_values_dict):
-        N_star = params_values_dict.get('N_star', 90)
+        N_star = params_values_dict.get('N_star', 75)
         A_s = params_values_dict.get('A_s')
         n_s = params_values_dict.get('n_s')
         rho_reh_GeV = params_values_dict.get('rho_reh_GeV')
@@ -40,20 +40,26 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         atol = 1e-14
         rtol = 1e-6
         K = 0
-        t_eval = np.logspace(5, 8, (8-5)*1000+1)
-        Lambda, phi_star, N_star = self.Pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None,
-                                                         **pot_kwargs)
+        t_eval = np.logspace(5, 12, (12 - 5) * 1000 + 1)
+        Lambda, phi_star, _ = self.Pot.sr_As2Lambda(A_s=A_s, N_star=N_star+10, phi_star=None,
+                                                    **pot_kwargs)
+        if 'phi0' in pot_kwargs and phi_star >= phi0:
+            phi_star = 0.999 * phi0
         for i in range(11):
             pot = self.Pot(Lambda=Lambda, **pot_kwargs)
             eq = InflationEquations(K=K, potential=pot, track_eta=False)
             ev = [InflationEvent(eq, +1, terminal=False),  # records inflation start
                   InflationEvent(eq, -1, terminal=True)]   # records inflation end
-            ic = SlowRollIC(equations=eq, phi_i=phi_star*1.1, N_i=0, t_i=t_eval[0])
+            ic = SlowRollIC(equations=eq, phi_i=phi_star, N_i=0, t_i=t_eval[0])
             b = solve(ic=ic, events=ev, t_eval=t_eval,
                       atol=1e-18, rtol=2.22045e-14, method='DOP853')
+            if not b.success:
+                raise StepSizeError(b.message)
+            N_star = N_star if n_s is None else min(N_star, b.N_tot-0.1)
             b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
             if n_s is not None:
-                b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV)
+                b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV,
+                         N_star_min=20, N_star_max=min(75, b.N_tot-0.1))
             # check whether the target A_s is met
             if abs(b.A_s - A_s) < atol + rtol * A_s:
                 break  # when the target is met, exit the loop
@@ -64,8 +70,8 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
             else:
                 raise PrimpyError("`A_s` shooting failed.")
         if b.w_reh <= -1/3 or b.w_reh >= 1 or b.DeltaN_reh < 0:
-            raise PrimpyError(f"Unrealistic reheating scenario with w_reh={b.w_reh} and "
-                              f"DeltaN_reh={b.DeltaN_reh}.")
+            raise PrimpyError(f"Unrealistic reheating scenario with w_reh={b.w_reh}, "
+                              f"DeltaN_reh={b.DeltaN_reh}, and N_star={b.N_star}.")
         Pks = b.P_s_approx(self.ks)
         Pkt = b.P_t_approx(self.ks)
         state['primordial_scalar_pk'] = {'kmin': self.kmin,
@@ -122,14 +128,14 @@ class NaturalSlowRollPPS(SlowRollPPS):
         self.Pot = pp.NaturalPotential
 
 
-class DoubleWell2PPS(SlowRollPPS):
+class DoubleWell2SlowRollPPS(SlowRollPPS):
 
     def initialize(self):
         super().initialize()
         self.Pot = pp.DoubleWell2Potential
 
 
-class DoubleWell4PPS(SlowRollPPS):
+class DoubleWell4SlowRollPPS(SlowRollPPS):
 
     def initialize(self):
         super().initialize()
