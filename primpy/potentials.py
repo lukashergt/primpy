@@ -114,6 +114,22 @@ class InflationaryPotential(ABC):
         """
 
     @abstractmethod
+    def d4V(self, phi):
+        """Fourth derivative `V''''(phi)` with respect to inflaton `phi`.
+
+        Parameters
+        ----------
+        phi : float or np.ndarray
+            Inflaton field `phi`.
+
+        Returns
+        -------
+        d4V : float or np.ndarray
+            4th derivative of inflationary potential: `V''''(phi)`.
+
+        """
+
+    @abstractmethod
     def inv_V(self, V):
         """Inverse function `phi(V)` with respect to potential `V`.
 
