@@ -429,24 +429,19 @@ class QuadraticPotential(MonomialPotential):
             raise ValueError("'mass' was dropped use 'Lambda' instead: Lambda**4=mass**2")
         super().__init__(p=2, **pot_kwargs)
 
-    def V(self, phi):
-        """`V(phi) = Lambda**4 * phi**2`."""
+    def V(self, phi):  # noqa: D102
         return self.Lambda**4 * phi**2
 
-    def dV(self, phi):
-        """`V'(phi) = 2 * Lambda**4 * phi`."""
+    def dV(self, phi):  # noqa: D102
         return 2 * self.Lambda**4 * phi
 
-    def d2V(self, phi):
-        """`V''(phi) = 2 * Lambda**4`."""
+    def d2V(self, phi):  # noqa: D102
         return 2 * self.Lambda**4
 
-    def d3V(self, phi):
-        """`V'''(phi) = 0`."""
+    def d3V(self, phi):  # noqa: D102
         return 0
 
-    def inv_V(self, V):
-        """`phi(V) = sqrt(V) / Lambda**2`."""
+    def inv_V(self, V):  # noqa: D102
         return np.sqrt(V) / self.Lambda**2
 
     @staticmethod
@@ -635,27 +630,22 @@ class StarobinskyPotential(InflationaryPotential):
     def __init__(self, **pot_kwargs):
         super().__init__(**pot_kwargs)
 
-    def V(self, phi):
-        """`V(phi) = Lambda**4 * (1 - exp(-sqrt(2/3) * phi))**2`."""
+    def V(self, phi):  # noqa: D102
         return self.Lambda**4 * (1 - np.exp(-StarobinskyPotential.gamma * phi))**2
 
-    def dV(self, phi):
-        """`V'(phi) = Lambda**4 * 2 * gamma * exp(-2 * gamma * phi) * (-1 + exp(gamma * phi))`."""
+    def dV(self, phi):  # noqa: D102
         gamma = StarobinskyPotential.gamma
         return self.Lambda**4 * 2 * gamma * np.exp(-2 * gamma * phi) * (np.exp(gamma * phi) - 1)
 
-    def d2V(self, phi):
-        """`V''(phi) = Lambda**4 * 2 * gamma**2 * exp(-2*gamma*phi) * (2 - exp(gamma*phi))`."""
+    def d2V(self, phi):  # noqa: D102
         gamma = StarobinskyPotential.gamma
         return self.Lambda**4 * 2 * gamma**2 * np.exp(-2 * gamma * phi) * (2 - np.exp(gamma * phi))
 
-    def d3V(self, phi):
-        """`V'''(phi) = Lambda**4 * 2 * gamma**3 * exp(-2*gamma*phi) * (-4 + exp(gamma*phi))`."""
+    def d3V(self, phi):  # noqa: D102
         gamma = StarobinskyPotential.gamma
         return self.Lambda**4 * 2 * gamma**3 * np.exp(-2 * gamma * phi) * (np.exp(gamma * phi) - 4)
 
-    def inv_V(self, V):
-        """`phi(V) = -np.log(1 - np.sqrt(V) / Lambda**2) / gamma`."""
+    def inv_V(self, V):  # noqa: D102
         return -np.log(1 - np.sqrt(V) / self.Lambda**2) / StarobinskyPotential.gamma
 
     @staticmethod
@@ -771,24 +761,19 @@ class NaturalPotential(InflationaryPotential):
         self.phi0 = pot_kwargs.pop('phi0')
         super().__init__(**pot_kwargs)
 
-    def V(self, phi):
-        """`V(phi) = Lambda**4 * (1 - cos(pi*phi/phi0))`."""
+    def V(self, phi):  # noqa: D102
         return self.Lambda**4 / 2 * (1 - np.cos(pi * phi / self.phi0))
 
-    def dV(self, phi):
-        """`V(phi) = Lambda**4 * sin(pi*phi/phi0) * pi / phi0`."""
+    def dV(self, phi):  # noqa: D102
         return self.Lambda**4 / 2 * np.sin(pi * phi / self.phi0) * pi / self.phi0
 
-    def d2V(self, phi):
-        """`V(phi) = Lambda**4 * cos(pi*phi/phi0) * (pi / phi0)**2`."""
+    def d2V(self, phi):  # noqa: D102
         return self.Lambda**4 / 2 * np.cos(pi * phi / self.phi0) * (pi / self.phi0)**2
 
-    def d3V(self, phi):
-        """`V(phi) = -Lambda**4 * sin(pi*phi/phi0) * (pi / phi0)**3`."""
+    def d3V(self, phi):  # noqa: D102
         return -self.Lambda**4 / 2 * np.sin(pi * phi / self.phi0) * (pi / self.phi0)**3
 
-    def inv_V(self, V):
-        """`phi(V) = arccos(1 - V / Lambda**4) * phi0 / pi`."""
+    def inv_V(self, V):  # noqa: D102
         return np.arccos(1 - 2 * V / self.Lambda**4) * self.phi0 / pi
 
     @staticmethod
@@ -914,45 +899,28 @@ class DoubleWellPotential(InflationaryPotential):
         super().__init__(**pot_kwargs)
         self.prefactor = 2 * self.p * self.Lambda**4
 
-    def V(self, phi):
-        """`V(phi) = Lambda**4 * (1 - (phi/phi0)**p)**2`.
-
-        Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-        """
+    def V(self, phi):  # noqa: D102
         return self.Lambda**4 * (1 - ((phi - self.phi0) / self.phi0)**self.p)**2
 
-    def dV(self, phi):
-        """`V'(phi) = 2p*Lambda**4 * (-1 + (phi / phi0)**p) * phi**(p - 1) / phi0**p`.
-
-        Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-        """
+    def dV(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
         pre = self.prefactor
         return pre * (-1 + ((phi - phi0) / phi0)**p) * (phi - phi0)**(p - 1) / phi0**p
 
-    def d2V(self, phi):
-        """`V''(phi) = 2p*Lambda**4 * (1-p+(2*p-1)*(phi/phi0)**p) * phi**(p-2) / phi0**p`.
-
-        Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-        """
+    def d2V(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
         pre = self.prefactor
         return pre * (1 - p + (2 * p - 1) * ((phi-phi0) / phi0)**p) * (phi-phi0)**(p-2) / phi0**p
 
-    def d3V(self, phi):
-        """`V'''(phi) = 2p(p-1)Lambda**4 * (2-p+(4*p-2)*(phi/phi0)**p) * phi**(p-3) / phi0**p`.
-
-        Double-Well shifted such that left minimum is at zero: phi -> phi-phi0
-        """
+    def d3V(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
         pre = self.prefactor
         return pre * (p-1) * (2 - p + (4*p-2) * ((phi-phi0)/phi0)**p) * (phi-phi0)**(p-3) / phi0**p
 
-    def inv_V(self, V):
-        """`phi(V) = phi0 * (1 - sqrt(V) / Lambda**2)**(1/p)`."""
+    def inv_V(self, V):  # noqa: D102
         return self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
 
     @staticmethod
