@@ -441,6 +441,9 @@ class QuadraticPotential(MonomialPotential):
     def d3V(self, phi):  # noqa: D102
         return 0
 
+    def d4V(self, phi):  # noqa: D102
+        return 0
+
     def inv_V(self, V):  # noqa: D102
         return np.sqrt(V) / self.Lambda**2
 
