@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 from warnings import warn
 import numpy as np
+from scipy.special import lambertw
 from scipy.interpolate import interp1d
 from primpy.units import pi
 from primpy.exceptionhandling import PrimpyError, PrimpyWarning
@@ -664,8 +665,44 @@ class StarobinskyPotential(InflationaryPotential):
         gamma = StarobinskyPotential.gamma
         return self.Lambda**4 * 2 * gamma**3 * np.exp(-2 * gamma * phi) * (np.exp(gamma * phi) - 4)
 
+    def d4V(self, phi):  # noqa: D102
+        gamma = StarobinskyPotential.gamma
+        return 2 * self.Lambda**4 * gamma**4 * (8 - np.exp(gamma * phi)) * np.exp(-2 * gamma * phi)
+
     def inv_V(self, V):  # noqa: D102
         return -np.log(1 - np.sqrt(V) / self.Lambda**2) / StarobinskyPotential.gamma
+
+    def get_epsilon_1V(self, phi):  # noqa: D102
+        gamma = StarobinskyPotential.gamma
+        return 2 * gamma**2 / (1 - np.exp(gamma * phi))**2
+
+    def get_epsilon_2V(self, phi):  # noqa: D102
+        gamma = StarobinskyPotential.gamma
+        return gamma**2 / np.sinh(gamma * phi / 2)**2
+
+    def get_epsilon_3V(self, phi):  # noqa: D102
+        gamma = StarobinskyPotential.gamma
+        return 2 * gamma**2 * (np.exp(gamma * phi) + 1) / (np.exp(gamma * phi) - 1)**2
+
+    def get_epsilon_4V(self, phi):  # noqa: D102
+        gamma = StarobinskyPotential.gamma
+        return gamma**2 * (np.exp(gamma*phi)+3) / (2*(np.exp(gamma*phi)+1)*np.sinh(gamma*phi/2)**2)
+
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        gamma = StarobinskyPotential.gamma
+        return np.log(np.sqrt(2) * gamma + 1) / gamma
+
+    def sr_phi2N(self, phi):  # noqa: D102
+        g = StarobinskyPotential.gamma
+        phi_end = self.phi_end
+        return (-phi + phi_end) / (2*g) + (np.exp(g * phi) - np.exp(g * phi_end)) / (2*g**2)
+
+    def sr_N2phi(self, N):  # noqa: D102
+        g = StarobinskyPotential.gamma
+        phi_end = self.phi_end
+        return (-2*N*g + phi_end - np.exp(g*phi_end)/g -
+                lambertw(-np.exp(-2*N*g**2) * np.exp(g*phi_end) * np.exp(-np.exp(g*phi_end))) / g)
 
     @staticmethod
     def sr_Nstar2ns(N_star):
@@ -792,8 +829,43 @@ class NaturalPotential(InflationaryPotential):
     def d3V(self, phi):  # noqa: D102
         return -self.Lambda**4 / 2 * np.sin(pi * phi / self.phi0) * (pi / self.phi0)**3
 
+    def d4V(self, phi):  # noqa: D102
+        return -self.Lambda**4 / 2 * np.cos(pi * phi / self.phi0) * (pi / self.phi0)**4
+
     def inv_V(self, V):  # noqa: D102
         return np.arccos(1 - 2 * V / self.Lambda**4) * self.phi0 / pi
+
+    def get_epsilon_1V(self, phi):  # noqa: D102
+        phi0 = self.phi0
+        return pi**2 * np.sin(pi*phi/phi0)**2 / (2 * phi0**2 * (np.cos(pi*phi/phi0) - 1)**2)
+
+    def get_epsilon_2V(self, phi):  # noqa: D102
+        phi0 = self.phi0
+        return -2 * pi**2 / (phi0**2 * (np.cos(pi*phi/phi0) - 1))
+
+    def get_epsilon_3V(self, phi):  # noqa: D102
+        phi0 = self.phi0
+        return pi**2 * np.sin(pi*phi/phi0)**2 / (phi0**2 * (np.cos(pi*phi/phi0) - 1)**2)
+
+    def get_epsilon_4V(self, phi):  # noqa: D102
+        phi0 = self.phi0
+        return -2 * pi**2 / (phi0**2 * (np.cos(pi*phi/phi0) - 1))
+
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        return 2 * self.phi0 * np.arctan(np.sqrt(2) * pi / (2 * self.phi0)) / pi
+
+    def sr_phi2N(self, phi):  # noqa: D102
+        phi0 = self.phi0
+        phi_end = self.phi_end
+        return phi0**2/pi**2 * (+ np.log(np.tan(pi*phi/(2*phi0))**2 + 1)
+                                - np.log(np.tan(pi*phi_end/(2*phi0))**2 + 1))
+
+    def sr_N2phi(self, N):  # noqa: D102
+        phi0 = self.phi0
+        phi_end = self.phi_end
+        return 2*phi0/pi * np.arctan(np.sqrt((2*np.exp(pi**2*N/phi0**2)-np.cos(pi*phi_end/phi0)-1)
+                                             / (np.cos(pi*phi_end/phi0) + 1)))
 
     @staticmethod
     def sr_Nstar2ns(N_star, **pot_kwargs):
@@ -939,8 +1011,51 @@ class DoubleWellPotential(InflationaryPotential):
         pre = self.prefactor
         return pre * (p-1) * (2 - p + (4*p-2) * ((phi-phi0)/phi0)**p) * (phi-phi0)**(p-3) / phi0**p
 
+    def d4V(self, phi):  # noqa: D102
+        p = self.p
+        phi0 = self.phi0
+        pre = self.prefactor
+        phi_phi_0 = (phi - phi0) / phi0
+        return phi_phi_0**(p-4) * pre * (8*p**3*phi_phi_0**p - p**3 - 24*p**2*phi_phi_0**p + 6*p**2
+                                         + 22*p*phi_phi_0**p - 11*p - 6*phi_phi_0**p + 6) / phi0**4
+
     def inv_V(self, V):  # noqa: D102
-        return self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
+        return self.phi0 - self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
+
+    def get_epsilon_1V(self, phi):  # noqa: D102
+        p = self.p
+        phi0 = self.phi0
+        return 2 * p**2 * (phi - phi0)**(2 * p - 2) / (-phi0**p + (phi - phi0)**p)**2
+
+    def get_epsilon_2V(self, phi):  # noqa: D102
+        p = self.p
+        phi_phi_0 = (phi - self.phi0) / self.phi0
+        return (4 * p * phi_phi_0**(p - 2) * (p + phi_phi_0**p - 1)
+                / (self.phi0**2 * (phi_phi_0**(2 * p) - 2 * phi_phi_0**p + 1)))
+
+    def get_epsilon_3V(self, phi):  # noqa: D102
+        p = self.p
+        phi_phi_0 = (phi - self.phi0) / self.phi0
+        return (2*p*phi_phi_0**p * (p**2 - 3*p + 2*phi_phi_0**(2*p)
+                                    + phi_phi_0**p * (p**2+3*p-4) + 2)
+                / (self.phi0**2 * phi_phi_0**2 * (p+phi_phi_0**(3*p) + phi_phi_0**(2*p)*(p-3)
+                                                  + phi_phi_0**p*(3-2*p) - 1)))
+
+    def get_epsilon_4V(self, phi):  # noqa: D102
+        p = self.p
+        phi0 = self.phi0
+        phi_phi_0 = (phi - self.phi0) / self.phi0
+        num = 2*p * phi_phi_0**p * (p**4 - 6*p**3 + 13*p**2 - 12*p + 4 * phi_phi_0**(4*p)
+                                    + phi_phi_0**(3*p) * (p**3 + 3*p**2 + 12*p - 16)
+                                    + phi_phi_0**(2*p) * (5*p**3 + 7*p**2 - 36*p + 24)
+                                    + phi_phi_0**p * (3*p**4 - 23*p**2 + 36*p - 16) + 4)
+        den = (phi0**2 * phi_phi_0**2 * (p**3 - 4*p**2 + 5*p + 2*phi_phi_0**(5*p)
+                                         + phi_phi_0**(4*p) * (p**2 + 5*p - 10)
+                                         + phi_phi_0**(3*p) * (p**3 + p**2 - 20*p + 20)
+                                         + phi_phi_0**(2*p) * (-p**3 - 9 * p**2 + 30*p - 20)
+                                         + phi_phi_0**p * (-p**3 + 11*p**2 - 20*p + 10)
+                                         - 2))
+        return num / den
 
     @staticmethod
     def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
