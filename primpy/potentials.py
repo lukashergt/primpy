@@ -238,7 +238,7 @@ class InflationaryPotential(ABC):
     def sr_N2phi(self, N):
         """Convert from inflaton field `phi` to e-folds `N` assuming slow-roll approximation."""
 
-    def sr_As2Lambda(self, A_s, phi_star, N_star):
+    def sr_As2Lambda(self, A_s, phi_star, N_star, **pot_kwargs):
         """Get potential amplitude `Lambda` from PPS amplitude `A_s` assuming slow-roll."""
         if N_star is None:
             N_star = self.sr_phi2N(phi_star)
@@ -988,36 +988,38 @@ class DoubleWellPotential(InflationaryPotential):
         self.phi0 = pot_kwargs.pop('phi0')
         self.p = pot_kwargs.pop('p')
         super().__init__(**pot_kwargs)
-        self.prefactor = 2 * self.p * self.Lambda**4
 
     def V(self, phi):  # noqa: D102
-        return self.Lambda**4 * (1 - ((phi - self.phi0) / self.phi0)**self.p)**2
+        phi_0_phi = (self.phi0 - phi) / self.phi0
+        return self.Lambda**4 * (1 - phi_0_phi**self.p)**2
 
     def dV(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
-        pre = self.prefactor
-        return pre * (-1 + ((phi - phi0) / phi0)**p) * (phi - phi0)**(p - 1) / phi0**p
+        phi_0_phi = (phi0 - phi) / phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-1) / phi0
+        return pre * (1 - phi_0_phi**p)
 
     def d2V(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
-        pre = self.prefactor
-        return pre * (1 - p + (2 * p - 1) * ((phi-phi0) / phi0)**p) * (phi-phi0)**(p-2) / phi0**p
+        phi_0_phi = (phi0 - phi) / phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-2) / phi0**2
+        return pre * (-p + phi_0_phi**p * (2*p-1) + 1)
 
     def d3V(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
-        pre = self.prefactor
-        return pre * (p-1) * (2 - p + (4*p-2) * ((phi-phi0)/phi0)**p) * (phi-phi0)**(p-3) / phi0**p
+        phi_0_phi = (phi0 - phi) / phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-3) / phi0**3
+        return pre * (p**2 - 3*p + phi_0_phi**p * (-4*p**2 + 6*p - 2) + 2)
 
     def d4V(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
-        pre = self.prefactor
-        phi_phi_0 = (phi - phi0) / phi0
-        return phi_phi_0**(p-4) * pre * (8*p**3*phi_phi_0**p - p**3 - 24*p**2*phi_phi_0**p + 6*p**2
-                                         + 22*p*phi_phi_0**p - 11*p - 6*phi_phi_0**p + 6) / phi0**4
+        phi_0_phi = (phi0 - phi) / phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-4) / phi0**4
+        return pre * (-p**3 + 6*p**2 - 11*p + phi_0_phi**p * (8*p**3-24*p**2+22*p-6) + 6)
 
     def inv_V(self, V):  # noqa: D102
         return self.phi0 - self.phi0 * (1 - np.sqrt(V) / self.Lambda**2)**(1/self.p)
@@ -1025,45 +1027,68 @@ class DoubleWellPotential(InflationaryPotential):
     def get_epsilon_1V(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
-        return 2 * p**2 * (phi - phi0)**(2 * p - 2) / (-phi0**p + (phi - phi0)**p)**2
+        phi_0_phi = (phi0 - phi) / phi0
+        return 2 * p**2 * phi_0_phi**(2*p-2) / (phi0**2 * (phi_0_phi**p - 1)**2)
 
     def get_epsilon_2V(self, phi):  # noqa: D102
         p = self.p
-        phi_phi_0 = (phi - self.phi0) / self.phi0
-        return (4 * p * phi_phi_0**(p - 2) * (p + phi_phi_0**p - 1)
-                / (self.phi0**2 * (phi_phi_0**(2 * p) - 2 * phi_phi_0**p + 1)))
+        phi0 = self.phi0
+        phi_0_phi = (phi0 - phi) / phi0
+        return (4 * p * phi_0_phi**(p - 2) * (p + phi_0_phi**p - 1)
+                / (phi0**2 * (phi_0_phi**p - 1)**2))
 
     def get_epsilon_3V(self, phi):  # noqa: D102
         p = self.p
-        phi_phi_0 = (phi - self.phi0) / self.phi0
-        return (2*p*phi_phi_0**p * (p**2 - 3*p + 2*phi_phi_0**(2*p)
-                                    + phi_phi_0**p * (p**2+3*p-4) + 2)
-                / (self.phi0**2 * phi_phi_0**2 * (p+phi_phi_0**(3*p) + phi_phi_0**(2*p)*(p-3)
-                                                  + phi_phi_0**p*(3-2*p) - 1)))
+        phi0 = self.phi0
+        phi_0_phi = (phi0 - phi) / phi0
+        return (2*p*phi_0_phi**(p-2) * (p**2-3*p+2*phi_0_phi**(2*p)+phi_0_phi**p*(p**2+3*p-4)+2)
+                / (phi0**2 * (phi_0_phi**p - 1)**2 * (p + phi_0_phi**p - 1)))
 
     def get_epsilon_4V(self, phi):  # noqa: D102
         p = self.p
         phi0 = self.phi0
-        phi_phi_0 = (phi - self.phi0) / self.phi0
-        num = 2*p * phi_phi_0**p * (p**4 - 6*p**3 + 13*p**2 - 12*p + 4 * phi_phi_0**(4*p)
-                                    + phi_phi_0**(3*p) * (p**3 + 3*p**2 + 12*p - 16)
-                                    + phi_phi_0**(2*p) * (5*p**3 + 7*p**2 - 36*p + 24)
-                                    + phi_phi_0**p * (3*p**4 - 23*p**2 + 36*p - 16) + 4)
-        den = (phi0**2 * phi_phi_0**2 * (p**3 - 4*p**2 + 5*p + 2*phi_phi_0**(5*p)
-                                         + phi_phi_0**(4*p) * (p**2 + 5*p - 10)
-                                         + phi_phi_0**(3*p) * (p**3 + p**2 - 20*p + 20)
-                                         + phi_phi_0**(2*p) * (-p**3 - 9 * p**2 + 30*p - 20)
-                                         + phi_phi_0**p * (-p**3 + 11*p**2 - 20*p + 10)
-                                         - 2))
+        phi_0_phi = (phi0 - phi) / phi0
+        num = 2 * p * phi_0_phi**(p-2) * (p**4 - 6*p**3 + 13*p**2 - 12*p
+                                          + 4*phi_0_phi**(4*p)
+                                          + phi_0_phi**(3*p) * (p**3 + 3*p**2 + 12*p - 16)
+                                          + phi_0_phi**(2*p) * (5*p**3 + 7*p**2 - 36*p + 24)
+                                          + phi_0_phi**p * (3*p**4 - 23*p**2 + 36*p - 16) + 4)
+        den = phi0**2 * (p**3 - 4 * p**2 + 5 * p
+                         + 2 * phi_0_phi**(5*p)
+                         + phi_0_phi**(4*p) * (p**2 + 5*p - 10)
+                         + phi_0_phi**(3*p) * (p**3 + p**2 - 20*p + 20)
+                         + phi_0_phi**(2*p) * (-p**3 - 9*p**2 + 30*p - 20)
+                         + phi_0_phi**p * (-p**3 + 11*p**2 - 20*p + 10) - 2)
         return num / den
 
-    @staticmethod
-    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`."""
-        raise NotImplementedError("This function is not implemented for DoubleWellPotential, yet. "
-                                  "It is implemented for DoubleWell2Potential and "
-                                  "DoubleWell4Potential, though. Feel free to raise an issue on"
-                                  "github if this is something you need.")
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        phi0 = self.phi0
+        phis = np.linspace(0, phi0, 10001)[1:-1]
+        e1V = self.get_epsilon_1V(phi=phis)
+        loge2phi = interp1d(np.log10(e1V), phis)
+        phi_end = loge2phi(0).item()
+        return phi_end
+
+    def sr_phi2N(self, phi):  # noqa: D102
+        p = self.p
+        phi0 = self.phi0
+        phi_e = self.phi_end
+        if p == 2:
+            return (phi0**2 * (-np.log(phi0 - phi) + np.log(phi0 - phi_e)) / 4
+                    + (phi0 - phi)**2 / 8 - (phi0 - phi_e)**2 / 8)
+        else:
+            return (+ phi0**p * (phi0 - phi)**(2 - p) / (2 * (p - 2))
+                    - phi0**p * (phi0 - phi_e)**(2 - p) / (2 * (p - 2))
+                    + (phi0 - phi)**2 / 4
+                    - (phi0 - phi_e)**2 / 4) / p
+
+    def sr_N2phi(self, N):  # noqa: D102
+        phi0 = self.phi0
+        phis = np.linspace(0, phi0, 100001)[1:-1]
+        Ns = self.sr_phi2N(phis)
+        N2phi = interp1d(Ns, phis)
+        return N2phi(N)
 
 
 class DoubleWell2Potential(DoubleWellPotential):
@@ -1079,6 +1104,12 @@ class DoubleWell2Potential(DoubleWellPotential):
 
     def __init__(self, **pot_kwargs):
         super().__init__(p=2, **pot_kwargs)
+
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        phi0 = self.phi0
+        phi_0_phi_end = np.sqrt(phi0**2 - 2 * np.sqrt(2) * np.sqrt(phi0**2 + 2) + 4) / phi0
+        return phi0 * (1 - phi_0_phi_end)
 
     @staticmethod
     def phi2efolds(phi_shifted, phi0):
@@ -1170,6 +1201,17 @@ class DoubleWell4Potential(DoubleWellPotential):
 
     def __init__(self, **pot_kwargs):
         super().__init__(p=4, **pot_kwargs)
+
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        phi0 = self.phi0
+        # Approximate solution:
+        phi_0_phi_end = (77 * 2**(5 / 6) * phi0**(17 / 3) / 3981312
+                         - 35 * 2**(1 / 6) * phi0**(13 / 3) / 165888
+                         - 2**(5 / 6) * phi0**(5 / 3) / 96
+                         + 2**(1 / 6) * phi0**(1 / 3) / 2
+                         + np.sqrt(2) * phi0**3 / 768)
+        return phi0 * (1 - phi_0_phi_end)
 
     @staticmethod
     def phi_end_squared(phi0):
