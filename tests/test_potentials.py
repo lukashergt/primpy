@@ -195,6 +195,8 @@ def test_natural_slow_roll(pot_kwargs, N_star):
     n_s = Pot.sr_Nstar2ns(N_star=N_star, **pot_kwargs)
     assert 0.8 < n_s < 1
     assert Pot.sr_ns2Nstar(n_s=n_s, **pot_kwargs) == approx(N_star)
+    with pytest.raises(PrimpyError):
+        Pot.sr_ns2Nstar(n_s=n_s, phi0=1)
 
     r = Pot.sr_Nstar2r(N_star=N_star, **pot_kwargs)
     assert 1e-4 < r < 1
