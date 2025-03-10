@@ -55,6 +55,9 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     pot.get_epsilon_2(phi=phi)
     pot.get_epsilon_3(phi=phi)
     pot.get_epsilon_4(phi=phi)
+    Pot(A_s=2e-9, N_star=60, **pot_kwargs)
+    pot2 = Pot(A_s=2e-9, phi_star=5, **pot_kwargs)
+    assert pot2.Lambda == approx(L)
 
 
 @pytest.mark.parametrize('Lambda, phi', [(1, 1), (0.0025, 20)])
