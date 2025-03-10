@@ -4,6 +4,7 @@ import pytest
 from pytest import approx
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
+from primpy.exceptionhandling import PrimpyError, PrimpyWarning
 import primpy.potentials as pp
 
 
@@ -58,6 +59,10 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     Pot(A_s=2e-9, N_star=60, **pot_kwargs)
     pot2 = Pot(A_s=2e-9, phi_star=5, **pot_kwargs)
     assert pot2.Lambda == approx(L)
+    with pytest.warns(PrimpyWarning):
+        Pot(A_s=2e-9, N_star=60, Lambda=1e-2, **pot_kwargs)
+    with pytest.raises(PrimpyError):
+        Pot(A_s=2e-9, **pot_kwargs)
 
 
 @pytest.mark.parametrize('Lambda, phi', [(1, 1), (0.0025, 20)])
