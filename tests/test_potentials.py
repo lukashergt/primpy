@@ -17,7 +17,7 @@ import primpy.potentials as pp
                                              (pp.DoubleWellPotential, dict(phi0=100, p=2)),
                                              (pp.DoubleWell2Potential, dict(phi0=100)),
                                              (pp.DoubleWell4Potential, dict(phi0=100))])
-@pytest.mark.parametrize('Lambda, phi', [(1, 1), (2e-3, 10)])
+@pytest.mark.parametrize('Lambda, phi', [(1, 1.), (2e-3, 10.)])
 def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     with pytest.raises(Exception):
         kwargs = pot_kwargs.copy()
@@ -32,20 +32,16 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     pot.d2V(phi=phi)
     pot.d3V(phi=phi)
     assert pot.inv_V(V=Lambda**4/2) > 0
-    if type(pot) is pp.DoubleWellPotential:
-        with pytest.raises(NotImplementedError):
-            pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
-    else:
-        L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
-        assert L > 0
-        assert p > 0
-        assert N == 60
-        L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
-        assert L > 0
-        assert p == 5
-        assert 0 < N < 100
-        with pytest.raises(Exception):
-            pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
+    L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
+    assert L > 0
+    assert p > 0
+    assert N == 60
+    L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
+    assert L > 0
+    assert p == 5
+    assert 0 < N < 100
+    with pytest.raises(Exception):
+        pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
 
 
 @pytest.mark.parametrize('Lambda, phi', [(1, 1), (0.0025, 20)])
