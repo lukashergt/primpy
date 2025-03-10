@@ -16,7 +16,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         self.Pot = pp.InflationaryPotential
 
     def get_can_support_params(self):
-        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV', 'phi0', 'p'}
+        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV', 'phi0', 'p', 'alpha'}
 
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
@@ -36,21 +36,24 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         if 'p' in params_values_dict.keys():
             p = params_values_dict.get('p')
             pot_kwargs.update(p=p)
+        if 'alpha' in params_values_dict.keys():
+            alpha = params_values_dict.get('alpha')
+            pot_kwargs.update(alpha=alpha)
 
         atol = 1e-14
         rtol = 1e-6
         K = 0
         t_eval = np.logspace(5, 12, (12 - 5) * 1000 + 1)
-        Lambda, phi_star, _ = self.Pot.sr_As2Lambda(A_s=A_s, N_star=N_star+10, phi_star=None,
-                                                    **pot_kwargs)
-        if 'phi0' in pot_kwargs and phi_star >= phi0:
-            phi_star = 0.999 * phi0
+        pot = self.Pot(**pot_kwargs)
+        Lambda, phi_i, _ = pot.sr_As2Lambda(A_s=A_s, N_star=N_star+10, phi_star=None, **pot_kwargs)
+        if 'phi0' in pot_kwargs and phi_i >= phi0:
+            phi_i = 0.999 * phi0
         for i in range(11):
             pot = self.Pot(Lambda=Lambda, **pot_kwargs)
             eq = InflationEquations(K=K, potential=pot, track_eta=False)
             ev = [InflationEvent(eq, +1, terminal=False),  # records inflation start
                   InflationEvent(eq, -1, terminal=True)]   # records inflation end
-            ic = SlowRollIC(equations=eq, phi_i=phi_star, N_i=0, t_i=t_eval[0])
+            ic = SlowRollIC(equations=eq, phi_i=phi_i, N_i=0, t_i=t_eval[0])
             b = solve(ic=ic, events=ev, t_eval=t_eval,
                       atol=1e-18, rtol=2.22045e-14, method='DOP853')
             if not b.success:
@@ -140,3 +143,10 @@ class DoubleWell4SlowRollPPS(SlowRollPPS):
     def initialize(self):
         super().initialize()
         self.Pot = pp.DoubleWell4Potential
+
+
+class TmodelSlowRollPPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.TmodelPotential
