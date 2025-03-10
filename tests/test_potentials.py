@@ -4,6 +4,7 @@ import pytest
 from pytest import approx
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
+from primpy.exceptionhandling import PrimpyError, PrimpyWarning
 import primpy.potentials as pp
 
 
@@ -16,8 +17,9 @@ import primpy.potentials as pp
                                              (pp.NaturalPotential, dict(phi0=100)),
                                              (pp.DoubleWellPotential, dict(phi0=100, p=2)),
                                              (pp.DoubleWell2Potential, dict(phi0=100)),
-                                             (pp.DoubleWell4Potential, dict(phi0=100))])
-@pytest.mark.parametrize('Lambda, phi', [(1, 1), (2e-3, 10)])
+                                             (pp.DoubleWell4Potential, dict(phi0=100)),
+                                             (pp.TmodelPotential, dict(p=2, alpha=1))])
+@pytest.mark.parametrize('Lambda, phi', [(1, 3.), (2e-3, 10.)])
 def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     with pytest.raises(Exception):
         kwargs = pot_kwargs.copy()
@@ -31,21 +33,36 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     assert pot.dV(phi=phi) > 0
     pot.d2V(phi=phi)
     pot.d3V(phi=phi)
+    pot.d4V(phi=phi)
     assert pot.inv_V(V=Lambda**4/2) > 0
-    if type(pot) is pp.DoubleWellPotential:
-        with pytest.raises(NotImplementedError):
-            pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
-    else:
-        L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
-        assert L > 0
-        assert p > 0
-        assert N == 60
-        L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
-        assert L > 0
-        assert p == 5
-        assert 0 < N < 100
-        with pytest.raises(Exception):
-            pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
+    assert 0 < pot.phi_end < phi
+    L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
+    assert L > 0
+    assert p > 0
+    assert N == 60
+    L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=None, **pot_kwargs)
+    assert L > 0
+    assert p == 5
+    assert 0 < N < 100
+    with pytest.raises(Exception):
+        pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
+    e1V = pot.get_epsilon_1V(phi=phi)
+    assert 0 < e1V < 1
+    pot.get_epsilon_2V(phi=phi)
+    pot.get_epsilon_3V(phi=phi)
+    pot.get_epsilon_4V(phi=phi)
+    e1 = pot.get_epsilon_1(phi=phi)
+    assert 0 < e1 < 1
+    pot.get_epsilon_2(phi=phi)
+    pot.get_epsilon_3(phi=phi)
+    pot.get_epsilon_4(phi=phi)
+    Pot(A_s=2e-9, N_star=60, **pot_kwargs)
+    pot2 = Pot(A_s=2e-9, phi_star=5, **pot_kwargs)
+    assert pot2.Lambda == approx(L)
+    with pytest.warns(PrimpyWarning):
+        Pot(A_s=2e-9, N_star=60, Lambda=1e-2, **pot_kwargs)
+    with pytest.raises(PrimpyError):
+        Pot(A_s=2e-9, **pot_kwargs)
 
 
 @pytest.mark.parametrize('Lambda, phi', [(1, 1), (0.0025, 20)])
@@ -115,6 +132,9 @@ def test_doublewell_inflation_V(Pot, phi0):
          (2 - pot.p + 2 * (-1 + 2 * pot.p) * (-1 + phi / phi0)**pot.p)) / (phi0 - phi)**3,
         rtol=1e-12, atol=1e-12)
 
+    with pytest.warns(DeprecationWarning):
+        Pot.phi2efolds(phi0/2, phi0=phi0)
+
 
 def test_starobinsky_inflation_power_to_potential():
     pot = pp.StarobinskyPotential(Lambda=1e-3)
@@ -170,6 +190,9 @@ def test_starobinsky_slow_roll(N_star):
     assert r == approx(aprx, rel=1e-3)
     assert Pot.sr_r2Nstar(r=r) == approx(N_star)
 
+    with pytest.warns(DeprecationWarning):
+        Pot.phi2efolds(phi=5)
+
 
 @pytest.mark.parametrize('pot_kwargs', [dict(phi0=10), dict(phi0=100), dict(phi0=1000)])
 @pytest.mark.parametrize('N_star', [20, 60, 90])
@@ -178,10 +201,15 @@ def test_natural_slow_roll(pot_kwargs, N_star):
     n_s = Pot.sr_Nstar2ns(N_star=N_star, **pot_kwargs)
     assert 0.8 < n_s < 1
     assert Pot.sr_ns2Nstar(n_s=n_s, **pot_kwargs) == approx(N_star)
+    with pytest.raises(PrimpyError):
+        Pot.sr_ns2Nstar(n_s=n_s, phi0=1)
 
     r = Pot.sr_Nstar2r(N_star=N_star, **pot_kwargs)
     assert 1e-4 < r < 1
     assert Pot.sr_r2Nstar(r=r, **pot_kwargs) == approx(N_star)
+
+    with pytest.warns(DeprecationWarning):
+        Pot.phi2efolds(phi=pot_kwargs['phi0']/2, phi0=pot_kwargs['phi0'])
 
 
 @pytest.mark.parametrize('a_feature', [0.1, 0.01])

@@ -87,8 +87,8 @@ shifting the number of e-folds :math:`N` by a constant.
 .. plot:: :context: close-figs
 
     # slow-roll estimate of amplitude `Lambda` and field value `phi_star` at horizon crossing
-    Lambda, phi_star, N_star = Pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None)
-    pot = Pot(Lambda=Lambda)
+    pot = Pot(A_s=A_s, N_star=N_star, phi_star=None)
+    phi_guess = pot.sr_N2phi(N=N_tot)
     eq = InflationEquations(K=K, potential=pot, track_eta=False)
     ev = [UntilNEvent(eq, value=N_end+delta_N_reh),  # decides stopping criterion
           InflationEvent(eq, +1, terminal=False),    # records inflation start
@@ -96,7 +96,7 @@ shifting the number of e-folds :math:`N` by a constant.
 
     # from inflation start forwards in time, optimising to get `N_tot` e-folds of inflation
     ic_fore = ISIC_Nt(equations=eq, N_tot=N_tot, N_i=N_end-N_tot, t_i=t_eval[0],
-                      phi_i_bracket=[phi_star-3, phi_star+3])
+                      phi_i_bracket=[phi_guess-2, phi_guess+2])
     fward = solve(ic=ic_fore, events=ev, t_eval=t_eval)
     # from inflation start backwards in time
     ic_back = InflationStartIC(equations=eq, phi_i=ic_fore.phi_i, N_i=ic_fore.N_i, t_i=t_eval[0],
