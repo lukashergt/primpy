@@ -224,7 +224,38 @@ class InflationaryPotential(ABC):
         """Convert from inflaton field `phi` to e-folds `N` assuming slow-roll approximation."""
 
     def sr_As2Lambda(self, A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s` assuming slow-roll."""
+        """Get potential amplitude `Lambda` from PPS amplitude `A_s` using slow-roll approximation.
+
+        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
+        that produces the desired amplitude `A_s` of the primordial power
+        spectrum using the slow-roll approximation.
+
+        Note that either `phi_star` or `N_star` have to be passed as `None`, and will be
+        calculated subsequently from the respective other.
+
+        Parameters
+        ----------
+        A_s : float
+            Target amplitude `A_s` of scalar primordial power spectrum
+            (at the pivot scale `k=0.05 Mpc^{-1}`).
+        phi_star : float
+            Inflaton field value at the time of horizon crossing of the pivot scale.
+        N_star : float
+            Number of e-folds of inflation remaining at the time of horizon crossing of
+            the pivot scale.
+
+        Returns
+        -------
+        Lambda : float
+            Potential amplitude parameter `Lambda` corresponding approximately to `A_s`.
+        phi_star : float
+            Estimated inflaton field value at the time of horizon crossing of the pivot scale,
+            inferred from `N_star`. (Exact if passed as input.)
+        N_star : float
+            Estimated number of e-folds of inflation remaining at the time of horizon crossing of
+            the pivot scale, inferred from `phi_star`. (Exact if passed as input.)
+
+        """
         if N_star is None:
             N_star = self.sr_phi2N(phi_star)
         elif phi_star is None:
@@ -514,8 +545,10 @@ class StarobinskyPotential(InflationaryPotential):
     def sr_N2phi(self, N):  # noqa: D102
         g = StarobinskyPotential.gamma
         phi_end = self.phi_end
-        return (-2*N*g + phi_end - np.exp(g*phi_end)/g -
-                lambertw(-np.exp(-2*N*g**2)*np.exp(g*phi_end)*np.exp(-np.exp(g*phi_end)), -1) / g)
+        return np.real_if_close(
+            -2*N*g + phi_end - np.exp(g*phi_end)/g
+            - lambertw(-np.exp(-2*N*g**2)*np.exp(g*phi_end)*np.exp(-np.exp(g*phi_end)), -1) / g
+        )
 
     @staticmethod
     def sr_Nstar2ns(N_star):
