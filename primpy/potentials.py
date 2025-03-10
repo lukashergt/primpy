@@ -702,7 +702,7 @@ class StarobinskyPotential(InflationaryPotential):
         g = StarobinskyPotential.gamma
         phi_end = self.phi_end
         return (-2*N*g + phi_end - np.exp(g*phi_end)/g -
-                lambertw(-np.exp(-2*N*g**2) * np.exp(g*phi_end) * np.exp(-np.exp(g*phi_end))) / g)
+                lambertw(-np.exp(-2*N*g**2)*np.exp(g*phi_end)*np.exp(-np.exp(g*phi_end)), -1) / g)
 
     @staticmethod
     def sr_Nstar2ns(N_star):
