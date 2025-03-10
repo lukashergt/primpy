@@ -924,87 +924,87 @@ class DoubleWell4Potential(DoubleWellPotential):
 class TmodelPotential(InflationaryPotential):
     """T-model potential: `V(phi) = Lambda**4 * (tanh(phi / (sqrt(6) * alpha)))**(2*p)`."""
 
-    tag = 'tmn'
+    tag = 'tmp'
     name = 'TmodelPotential'
     tex = r'T-model'
     perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
-        self.n = pot_kwargs.pop('n')
+        self.p = pot_kwargs.pop('p')
         self.alpha = pot_kwargs.pop('alpha')
         self.s_6_a = np.sqrt(6 * self.alpha)
         super().__init__(**pot_kwargs)
 
     def V(self, phi):  # noqa: D102
         C = np.tanh(phi / self.s_6_a)
-        return self.Lambda**4 * C**(2 * self.n)
+        return self.Lambda**4 * C**(2 * self.p)
 
     def dV(self, phi):  # noqa: D102
-        n = self.n
-        L1 = n * self.Lambda**4 / self.s_6_a
+        p = self.p
+        L1 = p * self.Lambda**4 / self.s_6_a
         C = np.tanh(phi / self.s_6_a)
-        return 2 * L1 * (C**(2*n-1) - C**(2*n+1))
+        return 2 * L1 * (C**(2*p-1) - C**(2*p+1))
 
     def d2V(self, phi):  # noqa: D102
-        n = self.n
-        L2 = 2 * n * self.Lambda**4 / self.s_6_a**2
+        p = self.p
+        L2 = 2 * p * self.Lambda**4 / self.s_6_a**2
         C = np.tanh(phi / self.s_6_a)
-        return L2 * (+ C**(2*n-2) * (2 * n - 1)
-                     - C**(2*n+0) * 4 * n
-                     + C**(2*n+2) * (2 * n + 1))
+        return L2 * (+ C**(2*p-2) * (2 * p - 1)
+                     - C**(2*p+0) * 4 * p
+                     + C**(2*p+2) * (2 * p + 1))
 
     def d3V(self, phi):  # noqa: D102
-        n = self.n
-        L3 = 4 * n * self.Lambda**4 / self.s_6_a**3
+        p = self.p
+        L3 = 4 * p * self.Lambda**4 / self.s_6_a**3
         C = np.tanh(phi / self.s_6_a)
-        return L3 * (+ C**(2*n-3) * (2*n**2 - 3*n + 1)
-                     + C**(2*n-1) * (-6*n**2 + 3*n - 1)
-                     + C**(2*n+1) * (6*n**2 + 3*n + 1)
-                     + C**(2*n+3) * (-2*n**2 - 3*n - 1))
+        return L3 * (+ C**(2*p-3) * (2*p**2 - 3*p + 1)
+                     + C**(2*p-1) * (-6*p**2 + 3*p - 1)
+                     + C**(2*p+1) * (6*p**2 + 3*p + 1)
+                     + C**(2*p+3) * (-2*p**2 - 3*p - 1))
 
     def d4V(self, phi):  # noqa: D102
-        n = self.n
-        L4 = 4 * n * self.Lambda**4 / self.s_6_a**4
+        p = self.p
+        L4 = 4 * p * self.Lambda**4 / self.s_6_a**4
         C = np.tanh(phi / self.s_6_a)
-        return L4 * (+ C**(2*n - 4) * (4*n**3 - 12*n**2 + 11*n - 3)
-                     + C**(2*n - 2) * (-16*n**3 + 24*n**2 - 16*n + 4)
-                     + C**(2*n + 0) * (24 * n**3 + 10 * n)
-                     + C**(2*n + 2) * (-16*n**3 - 24*n**2 - 16*n - 4)
-                     + C**(2*n + 4) * (4*n**3 + 12*n**2 + 11*n + 3))
+        return L4 * (+ C**(2*p - 4) * (4*p**3 - 12*p**2 + 11*p - 3)
+                     + C**(2*p - 2) * (-16*p**3 + 24*p**2 - 16*p + 4)
+                     + C**(2*p + 0) * (24 * p**3 + 10 * p)
+                     + C**(2*p + 2) * (-16*p**3 - 24*p**2 - 16*p - 4)
+                     + C**(2*p + 4) * (4*p**3 + 12*p**2 + 11*p + 3))
 
     def inv_V(self, V):  # noqa: D102
-        n = self.n
-        return self.s_6_a * np.arctanh(V**(1/(2*n)) / self.Lambda**(2/n))
+        p = self.p
+        return self.s_6_a * np.arctanh(V**(1/(2*p)) / self.Lambda**(2/p))
 
     def get_epsilon_1V(self, phi):  # noqa: D102
-        return 8 * self.n**2 / (self.s_6_a**2 * np.sinh(2 * phi / self.s_6_a)**2)
+        return 8 * self.p**2 / (self.s_6_a**2 * np.sinh(2 * phi / self.s_6_a)**2)
 
     def get_epsilon_2V(self, phi):  # noqa: D102
         C = np.tanh(phi / self.s_6_a)
-        return 4 * self.n * (1 - C**4) / (C**2 * self.s_6_a**2)
+        return 4 * self.p * (1 - C**4) / (C**2 * self.s_6_a**2)
 
     def get_epsilon_3V(self, phi):  # noqa: D102
         C = np.tanh(phi / self.s_6_a)
-        return 4 * self.n * (-C**6 + C**4 - C**2 + 1) / (C**2 * self.s_6_a**2 * (C**2 + 1))
+        return 4 * self.p * (-C**6 + C**4 - C**2 + 1) / (C**2 * self.s_6_a**2 * (C**2 + 1))
 
     def get_epsilon_4V(self, phi):  # noqa: D102
         C = np.tanh(phi / self.s_6_a)
-        return (4 * self.n * (-C**10 - C**8 + 4*C**6 - 4*C**4 + C**2 + 1)
+        return (4 * self.p * (-C**10 - C**8 + 4*C**6 - 4*C**4 + C**2 + 1)
                 / (C**2 * self.s_6_a**2 * (C**6 + C**4 + C**2 + 1)))
 
     @cached_property
     def phi_end(self):  # noqa: D102
-        return self.s_6_a/2 * np.arcsinh(2 * np.sqrt(2) * self.n / self.s_6_a)
+        return self.s_6_a/2 * np.arcsinh(2 * np.sqrt(2) * self.p / self.s_6_a)
 
     def sr_phi2N(self, phi):  # noqa: D102
-        n = self.n
+        p = self.p
         s_6_a = self.s_6_a
-        return s_6_a/(8*n) * (s_6_a * np.cosh(2*phi/s_6_a) - np.sqrt(8*n**2 + s_6_a**2))
+        return s_6_a/(8*p) * (s_6_a * np.cosh(2*phi/s_6_a) - np.sqrt(8*p**2 + s_6_a**2))
 
     def sr_N2phi(self, N):  # noqa: D102
-        n = self.n
+        p = self.p
         s_6_a = self.s_6_a
-        return s_6_a / 2 * np.arccosh(8*n/s_6_a**2 * N + np.sqrt(8*n**2+s_6_a**2)/s_6_a)
+        return s_6_a / 2 * np.arccosh(8*p/s_6_a**2 * N + np.sqrt(8*p**2+s_6_a**2)/s_6_a)
 
 
 # TODO:
