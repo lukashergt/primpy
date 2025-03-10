@@ -148,11 +148,6 @@ class InflationaryPotential(ABC):
 
     # TODO:
     # @abstractmethod
-    # def sr_phi_end(self):
-    #     """Slow-roll approximation for the inflaton value at the end of inflation."""
-
-    # TODO:
-    # @abstractmethod
     # def sr_n_s(self):
     #     """Slow-roll approximation for the spectral index."""
 
@@ -160,16 +155,6 @@ class InflationaryPotential(ABC):
     # @abstractmethod
     # def sr_n_s(self):
     #     """Slow-roll approximation for the tensor-to-scalar ratio."""
-
-    # TODO:
-    # @abstractmethod
-    # def sr_epsilon(self):
-    #     """Slow-roll potential parameter `epsilon`."""
-
-    # TODO:
-    # @abstractmethod
-    # def sr_eta(self):
-    #     """Slow-roll potential parameter `eta`."""
 
     @abstractmethod
     def get_epsilon_1V(self, phi):
