@@ -18,7 +18,7 @@ import primpy.potentials as pp
                                              (pp.DoubleWell2Potential, dict(phi0=100)),
                                              (pp.DoubleWell4Potential, dict(phi0=100)),
                                              (pp.TmodelPotential, dict(p=2, alpha=1))])
-@pytest.mark.parametrize('Lambda, phi', [(1, 1.), (2e-3, 10.)])
+@pytest.mark.parametrize('Lambda, phi', [(1, 3.), (2e-3, 10.)])
 def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     with pytest.raises(Exception):
         kwargs = pot_kwargs.copy()
@@ -32,7 +32,9 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     assert pot.dV(phi=phi) > 0
     pot.d2V(phi=phi)
     pot.d3V(phi=phi)
+    pot.d4V(phi=phi)
     assert pot.inv_V(V=Lambda**4/2) > 0
+    assert 0 < pot.phi_end < phi
     L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
     assert L > 0
     assert p > 0
@@ -43,6 +45,16 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     assert 0 < N < 100
     with pytest.raises(Exception):
         pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
+    e1V = pot.get_epsilon_1V(phi=phi)
+    assert 0 < e1V < 1
+    pot.get_epsilon_2V(phi=phi)
+    pot.get_epsilon_3V(phi=phi)
+    pot.get_epsilon_4V(phi=phi)
+    e1 = pot.get_epsilon_1(phi=phi)
+    assert 0 < e1 < 1
+    pot.get_epsilon_2(phi=phi)
+    pot.get_epsilon_3(phi=phi)
+    pot.get_epsilon_4(phi=phi)
 
 
 @pytest.mark.parametrize('Lambda, phi', [(1, 1), (0.0025, 20)])
