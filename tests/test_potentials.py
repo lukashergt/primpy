@@ -16,7 +16,8 @@ import primpy.potentials as pp
                                              (pp.NaturalPotential, dict(phi0=100)),
                                              (pp.DoubleWellPotential, dict(phi0=100, p=2)),
                                              (pp.DoubleWell2Potential, dict(phi0=100)),
-                                             (pp.DoubleWell4Potential, dict(phi0=100))])
+                                             (pp.DoubleWell4Potential, dict(phi0=100)),
+                                             (pp.TmodelPotential, dict(p=2, alpha=1))])
 @pytest.mark.parametrize('Lambda, phi', [(1, 1.), (2e-3, 10.)])
 def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     with pytest.raises(Exception):
