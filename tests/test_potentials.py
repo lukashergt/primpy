@@ -132,6 +132,9 @@ def test_doublewell_inflation_V(Pot, phi0):
          (2 - pot.p + 2 * (-1 + 2 * pot.p) * (-1 + phi / phi0)**pot.p)) / (phi0 - phi)**3,
         rtol=1e-12, atol=1e-12)
 
+    with pytest.warns(DeprecationWarning):
+        Pot.phi2efolds(phi0/2, phi0=phi0)
+
 
 def test_starobinsky_inflation_power_to_potential():
     pot = pp.StarobinskyPotential(Lambda=1e-3)
@@ -187,6 +190,9 @@ def test_starobinsky_slow_roll(N_star):
     assert r == approx(aprx, rel=1e-3)
     assert Pot.sr_r2Nstar(r=r) == approx(N_star)
 
+    with pytest.warns(DeprecationWarning):
+        Pot.phi2efolds(phi=5)
+
 
 @pytest.mark.parametrize('pot_kwargs', [dict(phi0=10), dict(phi0=100), dict(phi0=1000)])
 @pytest.mark.parametrize('N_star', [20, 60, 90])
@@ -201,6 +207,9 @@ def test_natural_slow_roll(pot_kwargs, N_star):
     r = Pot.sr_Nstar2r(N_star=N_star, **pot_kwargs)
     assert 1e-4 < r < 1
     assert Pot.sr_r2Nstar(r=r, **pot_kwargs) == approx(N_star)
+
+    with pytest.warns(DeprecationWarning):
+        Pot.phi2efolds(phi=pot_kwargs['phi0']/2, phi0=pot_kwargs['phi0'])
 
 
 @pytest.mark.parametrize('a_feature', [0.1, 0.01])
