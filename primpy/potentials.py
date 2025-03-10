@@ -333,46 +333,6 @@ class MonomialPotential(InflationaryPotential):
         p = pot_kwargs.pop('p')
         return p * (16 - r) / (4 * r)
 
-    @staticmethod
-    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Monomial potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        p = pot_kwargs.pop('p')
-        if N_star is None:
-            N_star = phi_star**2 / (2 * p) - p / 4
-        elif phi_star is None:
-            phi_star = np.sqrt(p / 2 * (4 * N_star + p))
-        else:
-            raise Exception("Need to specify either N_star or phi_star. "
-                            "The respective other should be None.")
-        Lambda = (3 * A_s)**(1/4) * np.sqrt(2 * pi * p) * phi_star**(-1/2-p/4)
-        return Lambda, phi_star, N_star
-
 
 class LinearPotential(MonomialPotential):
     """Linear potential: `V(phi) = Lambda**4 * phi`."""
@@ -400,37 +360,6 @@ class LinearPotential(MonomialPotential):
     @staticmethod
     def sr_r2Nstar(r, **pot_params):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=1)
-
-    @staticmethod
-    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Linear potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        return MonomialPotential.sr_As2Lambda(A_s, phi_star, N_star, p=1)
 
 
 class QuadraticPotential(MonomialPotential):
@@ -480,45 +409,6 @@ class QuadraticPotential(MonomialPotential):
     def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=2)
 
-    @staticmethod
-    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton mass `m` (i.e. essentially the potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Quadratic potential (Lambda**2 = mass).
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        if N_star is None:
-            N_star = (phi_star**2 - 2) / 4
-        elif phi_star is None:
-            phi_star = np.sqrt(4 * N_star + 2)
-        else:
-            raise Exception("Need to specify either N_star or phi_star. "
-                            "The respective other should be None.")
-        Lambda = 2 * np.sqrt(pi * np.sqrt(6 * A_s)) / phi_star
-        return Lambda, phi_star, N_star
-
 
 class CubicPotential(MonomialPotential):
     """Linear potential: `V(phi) = Lambda**4 * phi`."""
@@ -547,37 +437,6 @@ class CubicPotential(MonomialPotential):
     def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=3)
 
-    @staticmethod
-    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Linear potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        return MonomialPotential.sr_As2Lambda(A_s, phi_star, N_star, p=3)
-
 
 class QuarticPotential(MonomialPotential):
     """Linear potential: `V(phi) = Lambda**4 * phi`."""
@@ -605,37 +464,6 @@ class QuarticPotential(MonomialPotential):
     @staticmethod
     def sr_r2Nstar(r, **pot_kwargs):  # noqa: D102
         return MonomialPotential.sr_r2Nstar(r=r, p=4)
-
-    @staticmethod
-    def sr_As2Lambda(A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Linear potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star: float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        return MonomialPotential.sr_As2Lambda(A_s, phi_star, N_star, p=4)
 
 
 class StarobinskyPotential(InflationaryPotential):
@@ -754,49 +582,6 @@ class StarobinskyPotential(InflationaryPotential):
         phi_end = np.log(1 + np.sqrt(2) * gamma) / gamma  # =~ 0.9402
         return (np.exp(gamma * phi) - np.exp(gamma * phi_end)
                 - gamma * (phi - phi_end)) / (2 * gamma**2)
-
-    @classmethod
-    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Starobinsky potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        if N_star is None:
-            N_star = cls.phi2efolds(phi=phi_star)
-        elif phi_star is None:
-            # phi = np.sqrt(3 / 2) * np.log(4 / 3 * N_star + 1)  # insufficient approximation
-            phi_sample = np.linspace(0.95, 20, 100000)  # 0.95 >~ phi_end =~ 0.9402
-            N_sample = cls.phi2efolds(phi=phi_sample)
-            logN2phi = interp1d(np.log(N_sample), phi_sample)
-            phi_star = logN2phi(np.log(N_star))
-        else:
-            raise Exception("Need to specify either N_star or phi_star. "
-                            "The respective other should be None.")
-        Lambda = (2 * A_s)**(1/4) * np.sqrt(pi) / np.sinh(phi_star / np.sqrt(6))
-        return Lambda, phi_star, N_star
 
 
 class NaturalPotential(InflationaryPotential):
@@ -923,54 +708,6 @@ class NaturalPotential(InflationaryPotential):
         assert np.all(phi < phi0)
         f = phi0 / pi
         return -f**2 * (np.log(1 + 1 / (2 * f**2)) + 2 * np.log(np.cos(phi / (2 * f))))
-
-    @classmethod
-    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Other Parameters
-        ----------------
-        phi0 : float
-            Inflaton distance between local maximum and minima.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Natural inflation potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        phi0 = pot_kwargs.pop('phi0')
-        f = phi0 / pi
-        if N_star is None:
-            N_star = cls.phi2efolds(phi=phi_star, phi0=phi0)
-        elif phi_star is None:
-            phi_star = 2 * f * np.arccos(np.exp(-N_star / (2*f**2)) / np.sqrt(1 + 1 / (2*f**2)))
-        else:
-            raise Exception("Need to specify either N_star or phi_star. "
-                            "The respective other should be None.")
-        numerator = pi * np.sin(phi_star / f)
-        denominator = f * np.sin(phi_star / (2 * f))**3
-        Lambda = (3 * A_s)**(1/4) * np.sqrt(numerator / denominator)
-        return Lambda, phi_star, N_star
 
 
 class DoubleWellPotential(InflationaryPotential):
@@ -1137,56 +874,6 @@ class DoubleWell2Potential(DoubleWellPotential):
         phi_end2 = 4 + phi0**2 - 2 * np.sqrt(4 + 2 * phi0**2)
         return (phi2 - phi_end2 - phi0**2 * np.log(phi2 / phi_end2)) / 8
 
-    @classmethod
-    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Other Parameters
-        ----------------
-        phi0 : float
-            Inflaton distance between local maximum and minima.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Double-Well potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        phi0 = pot_kwargs.pop('phi0')
-        if N_star is None:
-            N_star = cls.phi2efolds(phi_shifted=phi_star, phi0=phi0)
-        elif phi_star is None:
-            # phi = phi_end * np.exp((-8 * N_star - phi_end**2) / (2 * phi0**2))  # inaccurate
-            phi_end_shifted = phi0 - np.sqrt(4 + phi0**2 - 2 * np.sqrt(4 + 2 * phi0**2))
-            phi_sample = np.linspace(phi_end_shifted, phi0, 100000)[1:-1]
-            N_sample = cls.phi2efolds(phi_shifted=phi_sample, phi0=phi0)
-            logN2phi = interp1d(np.log(N_sample), phi_sample)
-            phi_star = float(logN2phi(np.log(N_star)))
-        else:
-            raise Exception("Need to specify either N_star or phi_star. "
-                            "The respective other should be None.")
-        Lambda = (3 * A_s)**(1/4) * np.sqrt(8 * pi * phi_star) * phi0 / (phi0**2 - phi_star**2)
-        return Lambda, phi_star, N_star
-
 
 class DoubleWell4Potential(DoubleWellPotential):
     """Quartic Double-Well potential: `V(phi) = Lambda**4 * (1 - (phi/phi0)**4)**2`.
@@ -1201,17 +888,6 @@ class DoubleWell4Potential(DoubleWellPotential):
 
     def __init__(self, **pot_kwargs):
         super().__init__(p=4, **pot_kwargs)
-
-    @cached_property
-    def phi_end(self):  # noqa: D102
-        phi0 = self.phi0
-        # Approximate solution:
-        phi_0_phi_end = (77 * 2**(5 / 6) * phi0**(17 / 3) / 3981312
-                         - 35 * 2**(1 / 6) * phi0**(13 / 3) / 165888
-                         - 2**(5 / 6) * phi0**(5 / 3) / 96
-                         + 2**(1 / 6) * phi0**(1 / 3) / 2
-                         + np.sqrt(2) * phi0**3 / 768)
-        return phi0 * (1 - phi_0_phi_end)
 
     @staticmethod
     def phi_end_squared(phi0):
@@ -1258,55 +934,6 @@ class DoubleWell4Potential(DoubleWellPotential):
         phi2 = (phi_shifted - phi0)**2
         phi_end2 = cls.phi_end_squared(phi0=phi0)
         return (phi2 - phi_end2 + phi0**4 * (1/phi2 - 1/phi_end2)) / 16
-
-    @classmethod
-    def sr_As2Lambda(cls, A_s, phi_star, N_star, **pot_kwargs):
-        """Get potential amplitude `Lambda` from PPS amplitude `A_s`.
-
-        Find the inflaton amplitude `Lambda` (4th root of potential amplitude)
-        that produces the desired amplitude `A_s` of the primordial power
-        spectrum using the slow-roll approximation.
-
-        Parameters
-        ----------
-        A_s : float or np.ndarray
-            Amplitude `A_s` of the primordial power spectrum.
-        phi_star : float or None
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float or None
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        Other Parameters
-        ----------------
-        phi0 : float
-            Inflaton distance between local maximum and minima.
-
-        Returns
-        -------
-        Lambda : float or np.ndarray
-            Amplitude parameter `Lambda` for the Double-Well potential.
-        phi_star : float
-            Inflaton value at horizon crossing of the pivot scale.
-        N_star : float
-            Number of observable e-folds of inflation `N_star`
-            from horizon crossing till the end of inflation.
-
-        """
-        phi0 = pot_kwargs.pop('phi0')
-        if N_star is None:
-            N_star = cls.phi2efolds(phi_shifted=phi_star, phi0=phi0)
-        elif phi_star is None:
-            phi_end_shifted = phi0 - np.sqrt(cls.phi_end_squared(phi0=phi0))
-            phi_sample = np.linspace(phi_end_shifted, phi0, 100000)[1:-1]
-            N_sample = cls.phi2efolds(phi_shifted=phi_sample, phi0=phi0)
-            logN2phi = interp1d(np.log(N_sample), phi_sample)
-            phi_star = float(logN2phi(np.log(N_star)))
-        else:
-            raise Exception("Need to specify either N_star or phi_star. "
-                            "The respective other should be None.")
-        Lambda = (768 * A_s)**(1/4) * np.sqrt(pi * phi_star**3) * phi0**2 / (phi0**4 - phi_star**4)
-        return Lambda, phi_star, N_star
 
 
 class TmodelPotential(InflationaryPotential):
