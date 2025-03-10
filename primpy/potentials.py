@@ -596,6 +596,8 @@ class StarobinskyPotential(InflationaryPotential):
             Number of e-folds `N` until end of inflation.
 
         """
+        warn(DeprecationWarning("This method will be removed in future versions, it is superseded "
+                                "by `sr_phi2N`."))
         gamma = StarobinskyPotential.gamma
         phi_end = np.log(1 + np.sqrt(2) * gamma) / gamma  # =~ 0.9402
         return (np.exp(gamma * phi) - np.exp(gamma * phi_end)
@@ -723,6 +725,8 @@ class NaturalPotential(InflationaryPotential):
             Number of e-folds `N` until end of inflation.
 
         """
+        warn(DeprecationWarning("This method will be removed in future versions, it is superseded "
+                                "by `sr_phi2N`."))
         assert np.all(phi < phi0)
         f = phi0 / pi
         return -f**2 * (np.log(1 + 1 / (2 * f**2)) + 2 * np.log(np.cos(phi / (2 * f))))
@@ -887,6 +891,8 @@ class DoubleWell2Potential(DoubleWellPotential):
             Number of e-folds `N` until end of inflation.
 
         """
+        warn(DeprecationWarning("This method will be removed in future versions, it is superseded "
+                                "by `sr_phi2N`."))
         assert np.all(phi_shifted < phi0)
         phi2 = (phi_shifted - phi0)**2
         phi_end2 = 4 + phi0**2 - 2 * np.sqrt(4 + 2 * phi0**2)
@@ -948,6 +954,8 @@ class DoubleWell4Potential(DoubleWellPotential):
             Number of e-folds `N` until end of inflation.
 
         """
+        warn(DeprecationWarning("This method will be removed in future versions, it is superseded "
+                                "by `sr_phi2N`."))
         assert np.all(phi_shifted < phi0)
         phi2 = (phi_shifted - phi0)**2
         phi_end2 = cls.phi_end_squared(phi0=phi0)
