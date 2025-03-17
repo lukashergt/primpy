@@ -91,8 +91,12 @@ def solve_oscode(background, k, **kwargs):
             # set idx_beg to 0 if horizon starts out too small:
             idx_beg = 0 if idx_beg.size == 0 else idx_beg[-1]
         idx_end = np.argwhere(b._logaH - np.log(ki) > np.log(fac_end)).ravel()[0]
-        # set minimum for idx_end, needed e.g. in KD for superhorizon modes:
-        idx_end = idx_end if idx_end - idx_beg > b._logaH.size//20 else idx_beg + b._logaH.size//20
+        if b._N[idx_end] - b._N[idx_beg] < 10:
+            # For KD, for very large modes it can happen that they never go sub-horizon, and
+            # therefore `idx_end` will be set equal (or close to equal) to `idx_beg`. These modes
+            # nonetheless need to be evolved a bit past inflationstart before they properly freeze
+            # in. Hence, we additionally require that from `beg` to `end` at least 10 e-folds pass:
+            idx_end = np.argwhere(b._N - b._N[idx_beg] > 10).ravel()[0]
         if b.independent_variable == 't':
             p = PerturbationT(background=b, k=ki, idx_beg=idx_beg, idx_end=idx_end, **kwargs)
         elif b.independent_variable == '_N':

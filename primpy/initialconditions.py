@@ -68,6 +68,8 @@ class SlowRollIC(InitialConditions):
             self.x_ini = self.t_i
             self.x_end = self.x_end
             self.dphidt_i = -self.dV_i / (3 * self.H_i)
+            # TODO: Make the initial dphidt more accurate by using only d2phidt2=0 in the e.o.m.,
+            #       not dphidt=0 in Friedmann 1.
         elif isinstance(self.equations, InflationEquationsN):
             self.x_ini = self.N_i
             self.x_end = self.x_end
