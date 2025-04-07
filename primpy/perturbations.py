@@ -68,6 +68,9 @@ class Perturbation(ABC):
                                                   y2_i=y2[0], dy2_i=dy2[0])
                 uk_end = a * np.nanmedian(y1[-5:]) + b * np.nanmedian(y2[-5:])
                 setattr(mode, 'P_%s_%s' % (mode.tag, vac), np.abs(uk_end)**2 * mode.pps_norm)
+                if mode.x_eval is not None:
+                    uk = a * mode.one.y_eval[0] + b * mode.two.y_eval[0]
+                    setattr(mode, 'P_%s_%s_eval' % (mode.tag, vac), np.abs(uk)**2 * mode.pps_norm)
 
     @staticmethod
     def _get_coefficients_a_b(uk_i, duk_i, y1_i, dy1_i, y2_i, dy2_i):
