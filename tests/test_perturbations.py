@@ -4,6 +4,7 @@ import pytest
 from pytest import approx
 import numpy as np
 from numpy.testing import assert_allclose
+from scipy.interpolate import interp1d
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, CollapseEvent
 from primpy.time.inflation import InflationEquationsT
@@ -262,3 +263,63 @@ def test_perturbations_large_scales_pyoscode_vs_background(K, f_i, abs_Omega_K0)
         assert_allclose(np.log(pps_t.P_t_RST), bist.logk2logP_t(logk_iMpc), rtol=1e-3, atol=1e-8)
         assert_allclose(np.log(pps_n.P_s_RST), bisn.logk2logP_s(logk_iMpc), rtol=1e-3, atol=1e-8)
         assert_allclose(np.log(pps_n.P_t_RST), bisn.logk2logP_t(logk_iMpc), rtol=1e-3, atol=1e-8)
+
+
+@pytest.mark.parametrize('K', [-1, 0, +1])
+@pytest.mark.parametrize('k', [1e-4, 0.05, 1])
+def test_dense_output_time_vs_efolds(K, k):
+    Omega_K0 = -K * 0.01
+    h = 0.7
+    pot = StarobinskyPotential(A_s=2.2e-9, N_star=60)
+    N_i = 12
+    phi_i = pot.sr_N2phi(70+N_i)
+    t_eval = np.logspace(4, 8, 10000)
+    N_eval = np.linspace(N_i, 80, 10000)
+    eq_t = InflationEquationsT(K=K, potential=pot)
+    eq_n = InflationEquationsN(K=K, potential=pot)
+    ic_t = InflationStartIC(eq_t, phi_i=phi_i, N_i=N_i, t_i=t_eval[0])
+    ic_n = InflationStartIC(eq_n, phi_i=phi_i, N_i=N_i, t_i=None)
+    ev_t = [InflationEvent(eq_t, +1, terminal=False),
+            InflationEvent(eq_t, -1, terminal=True),
+            CollapseEvent(eq_t)]
+    ev_n = [InflationEvent(eq_n, +1, terminal=False),
+            InflationEvent(eq_n, -1, terminal=True),
+            CollapseEvent(eq_n)]
+    bist = solve(ic=ic_t, events=ev_t, t_eval=t_eval)
+    bisn = solve(ic=ic_n, events=ev_n, t_eval=N_eval)
+    assert bist.independent_variable == 't'
+    assert bisn.independent_variable == '_N'
+    assert bist.N_tot == approx(bisn.N_tot, rel=1e-4)
+    if K == 0:
+        bist.calibrate_scale_factor(N_star=50)
+        bisn.calibrate_scale_factor(N_star=50)
+    else:
+        bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
+        bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h)
+
+    # check that dense output has correct size
+    num_eval = 1000
+    pert_t = solve_oscode(background=bist, k=k * bist.a0_Mpc, num_eval=num_eval)
+    pert_n = solve_oscode(background=bisn, k=k * bisn.a0_Mpc, num_eval=num_eval, even_grid=True)
+    assert pert_t.scalar.t_eval.size == num_eval
+    assert pert_n.scalar._N_eval.size == num_eval
+    assert pert_n.scalar.N_eval.size == num_eval
+    assert pert_t.tensor.t_eval.size == num_eval
+    assert pert_n.tensor._N_eval.size == num_eval
+    assert pert_n.tensor.N_eval.size == num_eval
+    assert pert_t.scalar.one.y_eval[0].real.size == num_eval
+    assert pert_n.scalar.one.y_eval[0].real.size == num_eval
+    assert pert_t.scalar.two.y_eval[0].real.size == num_eval
+    assert pert_n.scalar.two.y_eval[0].real.size == num_eval
+    assert pert_t.tensor.one.y_eval[0].real.size == num_eval
+    assert pert_n.tensor.one.y_eval[0].real.size == num_eval
+    assert pert_t.tensor.two.y_eval[0].real.size == num_eval
+    assert pert_n.tensor.two.y_eval[0].real.size == num_eval
+
+    # check that time and e-folds solutions match for PPS observable
+    assert pert_t.scalar.P_s_RST == approx(pert_n.scalar.P_s_RST, rel=5e-3)
+    N2t = interp1d(bist._N, bist.t)
+    t2P_s = interp1d(pert_t.scalar.t_eval, pert_t.scalar.P_s_RST_eval)
+    t2P_t = interp1d(pert_t.tensor.t_eval, pert_t.tensor.P_t_RST_eval)
+    assert_allclose(t2P_s(N2t(pert_n.scalar._N_eval[:-1])), pert_n.scalar.P_s_RST_eval[:-1], 5e-3)
+    assert_allclose(t2P_t(N2t(pert_n.tensor._N_eval[:-1])), pert_n.tensor.P_t_RST_eval[:-1], 5e-3)
