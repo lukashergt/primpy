@@ -32,10 +32,10 @@ class ScalarModeN(ScalarMode):
         super(ScalarModeN, self).__init__(background=background, k=k, **kwargs)
         self._set_independent_variable('_N')
         if 'num_eval' in kwargs and kwargs['num_eval'] > 0:
-            self._N_eval = np.logspace(self.background._N[self.idx_beg],
+            self._N_eval = np.linspace(self.background._N[self.idx_beg],
                                        self.background._N[self.idx_end],
                                        kwargs['num_eval'])
-            self.N_eval = np.logspace(self.background.N[self.idx_beg],
+            self.N_eval = np.linspace(self.background.N[self.idx_beg],
                                       self.background.N[self.idx_end],
                                       kwargs['num_eval'])
             self.x_eval = self._N_eval
@@ -134,10 +134,10 @@ class TensorModeN(TensorMode):
         super(TensorModeN, self).__init__(background=background, k=k, **kwargs)
         self._set_independent_variable('_N')
         if 'num_eval' in kwargs and kwargs['num_eval'] > 0:
-            self._N_eval = np.logspace(self.background._N[self.idx_beg],
+            self._N_eval = np.linspace(self.background._N[self.idx_beg],
                                        self.background._N[self.idx_end],
                                        kwargs['num_eval'])
-            self.N_eval = np.logspace(self.background.N[self.idx_beg],
+            self.N_eval = np.linspace(self.background.N[self.idx_beg],
                                       self.background.N[self.idx_end],
                                       kwargs['num_eval'])
             self.x_eval = self._N_eval
