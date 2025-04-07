@@ -31,6 +31,16 @@ class ScalarModeN(ScalarMode):
     def __init__(self, background, k, **kwargs):
         super(ScalarModeN, self).__init__(background=background, k=k, **kwargs)
         self._set_independent_variable('_N')
+        if 'num_eval' in kwargs and kwargs['num_eval'] > 0:
+            self._N_eval = np.logspace(self.background._N[self.idx_beg],
+                                       self.background._N[self.idx_end],
+                                       kwargs['num_eval'])
+            self.N_eval = np.logspace(self.background.N[self.idx_beg],
+                                      self.background.N[self.idx_end],
+                                      kwargs['num_eval'])
+            self.x_eval = self._N_eval
+        else:
+            self.x_eval = None
 
     def __call__(self, x, y):
         """Vector of derivatives."""
@@ -123,6 +133,16 @@ class TensorModeN(TensorMode):
     def __init__(self, background, k, **kwargs):
         super(TensorModeN, self).__init__(background=background, k=k, **kwargs)
         self._set_independent_variable('_N')
+        if 'num_eval' in kwargs and kwargs['num_eval'] > 0:
+            self._N_eval = np.logspace(self.background._N[self.idx_beg],
+                                       self.background._N[self.idx_end],
+                                       kwargs['num_eval'])
+            self.N_eval = np.logspace(self.background.N[self.idx_beg],
+                                      self.background.N[self.idx_end],
+                                      kwargs['num_eval'])
+            self.x_eval = self._N_eval
+        else:
+            self.x_eval = None
 
     def __call__(self, x, y):
         """Vector of derivatives."""
