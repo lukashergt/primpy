@@ -307,14 +307,14 @@ def test_dense_output_time_vs_efolds(K, k):
     assert pert_t.tensor.t_eval.size == num_eval
     assert pert_n.tensor._N_eval.size == num_eval
     assert pert_n.tensor.N_eval.size == num_eval
-    assert pert_t.scalar.one.y_eval[0].real.size == num_eval
-    assert pert_n.scalar.one.y_eval[0].real.size == num_eval
-    assert pert_t.scalar.two.y_eval[0].real.size == num_eval
-    assert pert_n.scalar.two.y_eval[0].real.size == num_eval
-    assert pert_t.tensor.one.y_eval[0].real.size == num_eval
-    assert pert_n.tensor.one.y_eval[0].real.size == num_eval
-    assert pert_t.tensor.two.y_eval[0].real.size == num_eval
-    assert pert_n.tensor.two.y_eval[0].real.size == num_eval
+    assert pert_t.scalar.one.y_eval.shape == (2, num_eval)
+    assert pert_n.scalar.one.y_eval.shape == (2, num_eval)
+    assert pert_t.scalar.two.y_eval.shape == (2, num_eval)
+    assert pert_n.scalar.two.y_eval.shape == (2, num_eval)
+    assert pert_t.tensor.one.y_eval.shape == (2, num_eval)
+    assert pert_n.tensor.one.y_eval.shape == (2, num_eval)
+    assert pert_t.tensor.two.y_eval.shape == (2, num_eval)
+    assert pert_n.tensor.two.y_eval.shape == (2, num_eval)
 
     # check that time and e-folds solutions match for PPS observable
     assert pert_t.scalar.P_s_RST == approx(pert_n.scalar.P_s_RST, rel=5e-3)
