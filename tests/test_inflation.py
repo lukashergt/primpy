@@ -432,6 +432,9 @@ def test_reheating(K, DeltaN_reh, w_reh):
     assert bist.N_star == approx(bisn.N_star, rel=1e-5)
     assert bist.N_dagg == approx(bisn.N_dagg, rel=1e-5)
     assert bist.N_reh == approx(bisn.N_reh, rel=1e-5)
+    assert bist.w_reh == approx(bisn.w_reh, rel=1e-5)
+    assert bist.DeltaN_reh == approx(bisn.DeltaN_reh, rel=1e-5)
+    assert bist.rho_reh_GeV == approx(bisn.rho_reh_GeV, rel=1e-5)
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
