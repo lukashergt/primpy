@@ -592,7 +592,11 @@ class InflationEquations(Equations, ABC):
                             sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         elif w_reh is not None and DeltaN_reh is None and rho_reh_GeV is not None:
                             # reheating from w_reh and rho_reh
-                            pass
+                            sol.w_reh = w_reh
+                            sol.rho_reh_GeV = rho_reh_GeV
+                            sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
+                            sol.DeltaN_reh = -(1+w_reh)/3 * np.log(2/3*sol.rho_reh_mp4 / sol.V_end)
+                            sol.N_end -= 3/4 * (1/3 - w_reh) * sol.DeltaN_reh
                         else:
                             raise ValueError(
                                 f"Something in the reheating setup went wrong. Keep in mind that "
