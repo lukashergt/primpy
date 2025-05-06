@@ -2,6 +2,7 @@
 import numpy as np
 from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
 from primpy.exceptionhandling import PrimpyError, StepSizeError
+from primpy.units import mp_GeV, lp_iGeV
 import primpy.potentials as pp
 from primpy.time.inflation import InflationEquationsT as InflationEquations
 from primpy.events import InflationEvent
@@ -16,7 +17,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         self.Pot = pp.InflationaryPotential
 
     def get_can_support_params(self):
-        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV', 'phi0', 'p', 'alpha'}
+        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV', 'w_reh', 'phi0', 'p', 'alpha'}
 
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
@@ -60,6 +61,8 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                       atol=1e-18, rtol=2.22045e-14, method='DOP853')
             if not b.success:
                 raise StepSizeError(b.message)
+            if rho_reh_GeV > (1/3*(1/2*b.dphidt**2+b.potential.V(b.phi))*mp_GeV/lp_iGeV**3)**(1/4):
+                raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
             if N_star is not None and n_s is None:
                 N_star = N_star
                 b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
