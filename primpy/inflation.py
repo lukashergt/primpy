@@ -576,7 +576,7 @@ class InflationEquations(Equations, ABC):
                                      - np.log((45/pi**2)**(1/4) * g0**(-1/3))
                                      - np.log(g_th) / 12
                                      - np.log(sol.V_end/T_CMB_Tp**4)/4)
-                        if ((w_reh is None and DeltaN_reh is None)
+                        if ((w_reh is None and DeltaN_reh is None and rho_reh_GeV is None)
                                 or DeltaN_reh == 0 or w_reh == 1/3):
                             # assume instant reheating
                             sol.DeltaN_reh = 0
@@ -598,7 +598,7 @@ class InflationEquations(Equations, ABC):
                             sol.DeltaN_reh = -(1+w_reh)/3 * np.log(2/3*sol.rho_reh_mp4 / sol.V_end)
                             sol.N_end -= 3/4 * (1/3 - w_reh) * sol.DeltaN_reh
                         else:
-                            raise ValueError(
+                            raise PrimpyError(
                                 f"Something in the reheating setup went wrong. Keep in mind that "
                                 f"two of `w_reh`, `DeltaN_reh`, and `rho_reh_GeV` must be "
                                 f"specified. The respective third should be `None` and will be "
@@ -686,36 +686,51 @@ class InflationEquations(Equations, ABC):
                         raise ValueError(f"For curved universes with "
                                          f"calibration_method='reheating' Omega_K0 must be None, "
                                          f"but got Omega_K0={Omega_K0}.")
+                    if (DeltaN_reh is not None and DeltaN_reh < 0 or
+                            w_reh is not None and w_reh < -1 / 3):
+                        raise ValueError(f"DeltaN_reh must be positive (end of reheating "
+                                         f"must be after end of inflation) and w_reh must "
+                                         f"be greater than -1/3 (reheating by definition "
+                                         f"happens after the end of inflation, but "
+                                         f"w_reh<-1/3 is inflating), but got "
+                                         f"DeltaN_reh={DeltaN_reh} and w_reh={w_reh}.")
                     sol.N0 = (sol._N_end
                               + np.log((45/pi**2)**(1/4) * g0**(-1/3))
                               + np.log(g_th)/12
                               + np.log(sol.V_end/T_CMB_Tp**4)/4)
-                    if (w_reh is None and DeltaN_reh is None) or DeltaN_reh == 0 or w_reh == 1/3:
+                    if ((w_reh is None and DeltaN_reh is None and rho_reh_GeV is None)
+                            or DeltaN_reh == 0 or w_reh == 1/3):
                         # assume instant reheating
                         sol.DeltaN_reh = 0
                         sol.w_reh = 1/3
                         sol.rho_reh_mp4 = 3/2 * sol.V_end
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         sol._N_reh = sol._N_end
-                    elif w_reh is not None and DeltaN_reh is not None:
-                        if DeltaN_reh < 0 or w_reh < -1 / 3:
-                            raise ValueError(f"DeltaN_reh must be positive (end of reheating "
-                                             f"must be after end of inflation) and w_reh must "
-                                             f"be greater than -1/3 (reheating by definition "
-                                             f"happens after the end of inflation, but "
-                                             f"w_reh<-1/3 is inflating), but got "
-                                             f"DeltaN_reh={DeltaN_reh} and w_reh={w_reh}.")
+                    elif w_reh is not None and DeltaN_reh is not None and rho_reh_GeV is None:
+                        # reheating from w_reh and DeltaN_reh
                         sol.w_reh = w_reh
                         sol.DeltaN_reh = DeltaN_reh
                         sol.N0 += 3/4 * (1/3 - w_reh) * DeltaN_reh
                         sol.rho_reh_mp4 = 3/2 * sol.V_end * np.exp(-3 * (1+w_reh) * DeltaN_reh)
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         sol._N_reh = sol._N_end + DeltaN_reh
-                    elif ((w_reh is None and DeltaN_reh is not None) or
-                          (w_reh is not None and DeltaN_reh is None)):
-                        raise ValueError(f"Both w_reh and DeltaN_reh must be given for reheating "
-                                         f"(or set both to None for instant reheating), "
-                                         f"but got w_reh={w_reh} and DeltaN_reh={DeltaN_reh}.")
+                    elif w_reh is not None and DeltaN_reh is None and rho_reh_GeV is not None:
+                        # reheating from w_reh and rho_reh
+                        sol.w_reh = w_reh
+                        sol.rho_reh_GeV = rho_reh_GeV
+                        sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
+                        sol.DeltaN_reh = -(1+w_reh) / 3 * np.log(2/3 * sol.rho_reh_mp4 / sol.V_end)
+                        sol.N0 += 3/4 * (1/3 - w_reh) * sol.DeltaN_reh
+                        sol._N_reh = sol._N_end + sol.DeltaN_reh
+                    else:
+                        raise PrimpyError(
+                            f"Something in the reheating setup went wrong. Keep in mind that "
+                            f"two of `w_reh`, `DeltaN_reh`, and `rho_reh_GeV` must be "
+                            f"specified. The respective third should be `None` and will be "
+                            f"inferred. Or set all to `None` for instant reheating. "
+                            f"However, we got w_reh={w_reh}, DeltaN_reh={DeltaN_reh}, and "
+                            f"rho_reh_GeV={rho_reh_GeV}."
+                        )
                     sol.a0 = np.exp(sol.N0)
                     sol.a0_Mpc = sol.a0 * lp_m / Mpc_m
                     sol.Omega_K0 = -sol.K * c**2 / (sol.a0_Mpc * h * 100 * 1e3)**2
