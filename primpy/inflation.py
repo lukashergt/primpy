@@ -580,7 +580,7 @@ class InflationEquations(Equations, ABC):
                                 or DeltaN_reh == 0 or w_reh == 1/3):
                             # assume instant reheating
                             sol.DeltaN_reh = 0
-                            sol.w_reh = np.nan
+                            sol.w_reh = 1/3
                             sol.rho_reh_mp4 = 3/2 * sol.V_end
                             sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         elif w_reh is not None and DeltaN_reh is not None and rho_reh_GeV is None:
@@ -693,7 +693,7 @@ class InflationEquations(Equations, ABC):
                     if (w_reh is None and DeltaN_reh is None) or DeltaN_reh == 0 or w_reh == 1/3:
                         # assume instant reheating
                         sol.DeltaN_reh = 0
-                        sol.w_reh = np.nan
+                        sol.w_reh = 1/3
                         sol.rho_reh_mp4 = 3/2 * sol.V_end
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         sol._N_reh = sol._N_end
