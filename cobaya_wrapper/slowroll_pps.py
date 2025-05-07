@@ -61,13 +61,18 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                       atol=1e-18, rtol=2.22045e-14, method='DOP853')
             if not b.success:
                 raise StepSizeError(b.message)
-            if rho_reh_GeV > (1/3*(1/2*b.dphidt**2+b.potential.V(b.phi))*mp_GeV/lp_iGeV**3)**(1/4):
+            rho_end_GeV = (1/3 * (1/2 * b.dphidt[b.inflation_mask][-1]**2
+                                  + b.potential.V(b.phi[b.inflation_mask][-1]))
+                           * mp_GeV / lp_iGeV**3)**(1/4)
+            if rho_reh_GeV > rho_end_GeV:
                 raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
-            if N_star is not None and n_s is None:
+            if w_reh is not None and rho_reh_GeV is not None:
+                b.calibrate_scale_factor(calibration_method='reheating',
+                                         rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
+            elif N_star is not None and n_s is None:
                 N_star = N_star
-                b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
-            elif w_reh is not None and rho_reh_GeV is not None:
-                b.calibrate_scale_factor(rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
+                b.calibrate_scale_factor(calibration_method='N_star', N_star=N_star,
+                                         rho_reh_GeV=rho_reh_GeV)
             else:
                 N_star = min(N_star, b.N_tot-0.1)
                 b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
