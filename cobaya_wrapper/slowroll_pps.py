@@ -2,6 +2,7 @@
 import numpy as np
 from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
 from primpy.exceptionhandling import PrimpyError, StepSizeError
+from primpy.units import mp_GeV, lp_iGeV
 import primpy.potentials as pp
 from primpy.time.inflation import InflationEquationsT as InflationEquations
 from primpy.events import InflationEvent
@@ -16,7 +17,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         self.Pot = pp.InflationaryPotential
 
     def get_can_support_params(self):
-        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV', 'phi0', 'p', 'alpha'}
+        return {'A_s', 'n_s', 'N_star', 'rho_reh_GeV', 'w_reh', 'phi0', 'p', 'alpha'}
 
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
@@ -29,6 +30,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         A_s = params_values_dict.get('A_s')
         n_s = params_values_dict.get('n_s')
         rho_reh_GeV = params_values_dict.get('rho_reh_GeV')
+        w_reh = params_values_dict.get('w_reh')
         pot_kwargs = {}
         if 'phi0' in params_values_dict.keys():
             phi0 = params_values_dict.get('phi0')
@@ -59,11 +61,22 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                       atol=1e-18, rtol=2.22045e-14, method='DOP853')
             if not b.success:
                 raise StepSizeError(b.message)
-            N_star = N_star if n_s is None else min(N_star, b.N_tot-0.1)
-            b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
-            if n_s is not None:
-                b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV,
-                         N_star_min=20, N_star_max=min(75, b.N_tot-0.1))
+            rho_end_GeV = (1/3 * (1/2 * b.dphidt[b.inflation_mask][-1]**2
+                                  + b.potential.V(b.phi[b.inflation_mask][-1]))
+                           * mp_GeV / lp_iGeV**3)**(1/4)
+            if rho_reh_GeV > rho_end_GeV:
+                raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
+            if w_reh is not None and rho_reh_GeV is not None:
+                b.calibrate_scale_factor(calibration_method='reheating',
+                                         rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
+            elif N_star is not None and n_s is None:
+                N_star = N_star
+                b.calibrate_scale_factor(calibration_method='N_star', N_star=N_star,
+                                         rho_reh_GeV=rho_reh_GeV)
+            else:
+                N_star = min(N_star, b.N_tot-0.1)
+                b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
+                b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV, N_star_min=20, N_star_max=N_star)
             # check whether the target A_s is met
             if abs(b.A_s - A_s) < atol + rtol * A_s:
                 break  # when the target is met, exit the loop
