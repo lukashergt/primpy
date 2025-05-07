@@ -564,9 +564,9 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, DeltaN_reh=-5)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=-1, DeltaN_reh=5)
-    with pytest.raises(ValueError):
+    with pytest.raises(PrimpyError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, DeltaN_reh=None)
-    with pytest.raises(ValueError):
+    with pytest.raises(PrimpyError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, DeltaN_reh=5)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(background=b, N_star=None)
@@ -601,9 +601,9 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=0, DeltaN_reh=-5)
     with pytest.raises(ValueError):  # w_reh < -1/3
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=-1, DeltaN_reh=5)
-    with pytest.raises(ValueError):  # w_reh provided but DeltaN_reh missing
+    with pytest.raises(PrimpyError):  # w_reh provided but DeltaN_reh missing
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=0, DeltaN_reh=None)
-    with pytest.raises(ValueError):  # DeltaN_reh provided but w_reh missing
+    with pytest.raises(PrimpyError):  # DeltaN_reh provided but w_reh missing
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=None, DeltaN_reh=5)
     with pytest.raises(NotImplementedError):  # non-existent calibration_method
         b_sol.calibrate_scale_factor(calibration_method='spam', h=h)
