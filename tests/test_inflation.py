@@ -5,7 +5,8 @@ from pytest import approx
 from scipy.interpolate import interp1d
 import numpy as np
 from numpy.testing import assert_allclose
-from primpy.exceptionhandling import InflationEndWarning, InsufficientInflationError, PrimpyError
+from primpy.exceptionhandling import InflationEndWarning, PrimpyWarning
+from primpy.exceptionhandling import InsufficientInflationError, PrimpyError
 from primpy.units import Mpc_m, lp_m
 from primpy.parameters import K_STAR
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
@@ -560,6 +561,10 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(N_star=None)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(N_star=-N_star)
+    with pytest.warns(PrimpyWarning):
+        b_sol.calibrate_scale_factor(calibration_method='N_star', N_star=85, rho_reh_GeV=1e6)
+    with pytest.warns(PrimpyWarning):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=1, DeltaN_reh=60)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, DeltaN_reh=-5)
     with pytest.raises(ValueError):
