@@ -1,7 +1,8 @@
 """Slow-roll inflationary primordial power spectrum (PPS) for use with Cobaya."""
+import warnings
 import numpy as np
 from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
-from primpy.exceptionhandling import PrimpyError, StepSizeError
+from primpy.exceptionhandling import PrimpyError, StepSizeError, PrimpyWarning
 from primpy.units import mp_GeV, lp_iGeV
 import primpy.potentials as pp
 from primpy.time.inflation import InflationEquationsT as InflationEquations
@@ -66,17 +67,18 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                            * mp_GeV / lp_iGeV**3)**(1/4)
             if rho_reh_GeV > rho_end_GeV:
                 raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
-            if w_reh is not None and rho_reh_GeV is not None:
-                b.calibrate_scale_factor(calibration_method='reheating',
-                                         rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
-            elif N_star is not None and n_s is None:
-                N_star = N_star
-                b.calibrate_scale_factor(calibration_method='N_star', N_star=N_star,
-                                         rho_reh_GeV=rho_reh_GeV)
-            else:
-                N_star = min(N_star, b.N_tot-0.1)
-                b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
-                b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV, N_star_min=20, N_star_max=N_star)
+            with warnings.catch_warnings(action='ignore', category=PrimpyWarning):
+                if w_reh is not None and rho_reh_GeV is not None:
+                    b.calibrate_scale_factor(calibration_method='reheating',
+                                             rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
+                elif N_star is not None and n_s is None:
+                    N_star = N_star
+                    b.calibrate_scale_factor(calibration_method='N_star', N_star=N_star,
+                                             rho_reh_GeV=rho_reh_GeV)
+                else:
+                    N_star = min(N_star, b.N_tot-0.1)
+                    b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
+                    b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV, N_star_min=20, N_star_max=N_star)
             # check whether the target A_s is met
             if abs(b.A_s - A_s) < atol + rtol * A_s:
                 break  # when the target is met, exit the loop
@@ -86,9 +88,10 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                 Lambda = (A_s / b.A_s)**(1 / 4) * Lambda
             else:
                 raise PrimpyError("`A_s` shooting failed.")
-        if b.w_reh <= -1/3 or b.w_reh >= 1 or b.DeltaN_reh < 0:
+        if b.w_reh <= -1/3 or b.w_reh >= 1 or b.DeltaN_reh < 0 or b.N_reh > b.N0:
             raise PrimpyError(f"Unrealistic reheating scenario with w_reh={b.w_reh}, "
-                              f"DeltaN_reh={b.DeltaN_reh}, and N_star={b.N_star}.")
+                              f"DeltaN_reh={b.DeltaN_reh}, N_star={b.N_star}, "
+                              f"N_reh={b.N_reh}, and N0={b.N0}.")
         Pks = b.P_s_approx(self.ks)
         Pkt = b.P_t_approx(self.ks)
         state['primordial_scalar_pk'] = {'kmin': self.kmin,

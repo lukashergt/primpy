@@ -6,7 +6,7 @@ from scipy.special import zeta
 from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
 from scipy.optimize import root_scalar
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
-from primpy.exceptionhandling import InsufficientInflationError, PrimpyError
+from primpy.exceptionhandling import InsufficientInflationError, PrimpyError, PrimpyWarning
 from primpy.units import pi, c, lp_m, Mpc_m, mp_GeV, lp_iGeV
 from primpy.parameters import K_STAR, K_STAR_lp, T_CMB_Tp, g0
 from primpy.equations import Equations
@@ -765,6 +765,12 @@ class InflationEquations(Equations, ABC):
             sol.N_dagg = sol.N_cross - sol.N_beg
             sol.k_iMpc = np.exp(sol.logk)
             sol._k = np.exp(sol._logaH[sol.inflation_mask])
+            if not np.isnan(sol.DeltaN_reh) and sol.DeltaN_reh < 0:
+                warn(f"Reheating duration cannot be negative, but DeltaN_reh={sol.DeltaN_reh}.",
+                     PrimpyWarning)
+            elif not np.isnan(sol.N_reh) and sol.N_reh > sol.N0:
+                warn(f"Reheating does not end until after today: N0={sol.N0} < N_reh={sol.N_reh}.",
+                     PrimpyWarning)
 
             # derive comoving Hubble horizon
             sol.cHH_Mpc = sol.a0 / (np.exp(sol.N) * sol.H) * lp_m / Mpc_m
@@ -1472,7 +1478,7 @@ class InflationEquations(Equations, ABC):
                 raise PrimpyError("Setting n_s in post-processing works only for flat universes.")
 
             def Nstar2ns_minus_ns(N_star):
-                calibrate_scale_factor(N_star=N_star)
+                calibrate_scale_factor(calibration_method='N_star', N_star=N_star)
                 return sol.n_s - n_s
 
             ns_min = Nstar2ns_minus_ns(N_star_min) + n_s
