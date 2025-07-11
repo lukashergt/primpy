@@ -23,7 +23,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
                 'N_end', 'phi_end', 'V_end', 'H_end',
-                'N_reh', 'w_reh', 'DeltaN_reh',
+                'N_reh', 'w_reh', 'DeltaN_reh', 'rho_reh_GeV'
                 'A_s', 'n_s', 'n_run', 'n_runrun', 'A_t', 'n_t', 'r'}
 
     def calculate(self, state, want_derived=True, **params_values_dict):
@@ -72,7 +72,6 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                     b.calibrate_scale_factor(calibration_method='reheating',
                                              rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
                 elif N_star is not None and n_s is None:
-                    N_star = N_star
                     b.calibrate_scale_factor(calibration_method='N_star', N_star=N_star,
                                              rho_reh_GeV=rho_reh_GeV)
                 else:
