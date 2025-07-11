@@ -546,13 +546,26 @@ class InflationEquations(Equations, ABC):
                         N2logaH = interp1d(sol._N[sol.inflation_mask],
                                            sol._logaH[sol.inflation_mask])
                         sol._logaH_star = N2logaH(sol._N_cross)
+                        sol.H_star = np.exp(sol._logaH_star - sol._N_cross)
                         sol.delta_N_calib = sol.N0 - sol._logaH_star + np.log(K_STAR_lp)
-                        if rho_reh_GeV is None:
+                        if rho_reh_GeV is None and w_reh is None and DeltaN_reh is None:
                             sol.rho_reh_GeV = np.nan
                             sol._N_reh = np.nan
                             sol.w_reh = np.nan
                             sol.DeltaN_reh = np.nan
-                        else:
+                        elif rho_reh_GeV is None and w_reh is not None and DeltaN_reh is None:
+                            sol.w_reh = w_reh
+                            sol.N_end = N_star + np.log(K_STAR_lp / sol.H_star)
+                            sol.N_reh = -4/(3*w_reh-1) * (sol.N0
+                                                          - np.log((45/pi**2)**(1/4) * g0**(-1/3))
+                                                          - np.log(g_th) / 12
+                                                          - np.log(sol.V_end / T_CMB_Tp**4) / 4
+                                                          - 3/4 * (1+w_reh) * sol.N_end)
+                            sol._N_reh = sol.N_reh - sol.delta_N_calib
+                            sol.DeltaN_reh = sol.N_reh - sol.N_end
+                            sol.rho_reh_mp4 = 3/2*sol.V_end * np.exp(-3*(1+w_reh) * sol.DeltaN_reh)
+                            sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
+                        elif rho_reh_GeV is not None and w_reh is None and DeltaN_reh is None:
                             sol.rho_reh_GeV = rho_reh_GeV
                             sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
                             sol.N_reh = (sol.N0
@@ -562,6 +575,13 @@ class InflationEquations(Equations, ABC):
                             sol._N_reh = sol.N_reh - sol.delta_N_calib
                             sol.DeltaN_reh = sol._N_reh - sol._N_end
                             sol.w_reh = np.log(3/2*sol.V_end/sol.rho_reh_mp4)/(3*sol.DeltaN_reh)-1
+                        else:
+                            raise ValueError(
+                                f"Something in the reheating setup went wrong. When calibrating "
+                                f"with N_star={N_star}, then you should provide either "
+                                f"rho_reh_GeV xor w_reh, but got rho_reh_GeV={rho_reh_GeV}, "
+                                f"w_reh={w_reh}, and DeltaN_reh={DeltaN_reh}."
+                            )
 
                     elif calibration_method == 'reheating':  # derive _N_cross from reheating
                         if (DeltaN_reh is not None and DeltaN_reh < 0 or
@@ -576,8 +596,12 @@ class InflationEquations(Equations, ABC):
                                      - np.log((45/pi**2)**(1/4) * g0**(-1/3))
                                      - np.log(g_th) / 12
                                      - np.log(sol.V_end/T_CMB_Tp**4)/4)
-                        if ((w_reh is None and DeltaN_reh is None and rho_reh_GeV is None)
-                                or DeltaN_reh == 0 or w_reh == 1/3):
+                        if (
+                                (rho_reh_GeV is None and w_reh is None and DeltaN_reh is None)
+                                or (rho_reh_GeV is None and DeltaN_reh is None and w_reh == 1 / 3)
+                                or (rho_reh_GeV is None and w_reh is None and DeltaN_reh == 0)
+                                or (rho_reh_GeV is None and w_reh == 1 / 3 and DeltaN_reh == 0)
+                        ):
                             # assume instant reheating
                             sol.DeltaN_reh = 0
                             sol.w_reh = 1/3
@@ -595,10 +619,10 @@ class InflationEquations(Equations, ABC):
                             sol.w_reh = w_reh
                             sol.rho_reh_GeV = rho_reh_GeV
                             sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
-                            sol.DeltaN_reh = -(1+w_reh)/3 * np.log(2/3*sol.rho_reh_mp4 / sol.V_end)
+                            sol.DeltaN_reh = np.log(3/2*sol.V_end/sol.rho_reh_mp4) / (3*(1+w_reh))
                             sol.N_end -= 3/4 * (1/3 - w_reh) * sol.DeltaN_reh
                         else:
-                            raise PrimpyError(
+                            raise ValueError(
                                 f"Something in the reheating setup went wrong. Keep in mind that "
                                 f"two of `w_reh`, `DeltaN_reh`, and `rho_reh_GeV` must be "
                                 f"specified. The respective third should be `None` and will be "
@@ -607,9 +631,9 @@ class InflationEquations(Equations, ABC):
                                 f"rho_reh_GeV={rho_reh_GeV}."
                             )
                         sol.delta_N_calib = sol.N_end - sol._N_end
-                        sol._logaH_star = np.log(K_STAR_lp) - sol.delta_N_calib
-                        logaH = sol._logaH[sol.inflation_mask] + sol.delta_N_calib
-                        logaH2N = interp1d(logaH, sol._N[sol.inflation_mask])
+                        sol._logaH_star = sol.N0 + np.log(K_STAR_lp) - sol.delta_N_calib
+                        logaH2N = interp1d(sol._logaH[sol.inflation_mask],
+                                           sol._N[sol.inflation_mask])
                         if sol._logaH_star < sol._logaH_beg or sol._logaH_star > sol._logaH_end:
                             raise InsufficientInflationError(
                                 f"Pivot scale log(K_STAR)={np.log(K_STAR_lp)} is not within the "
@@ -618,7 +642,7 @@ class InflationEquations(Equations, ABC):
                                 f"logaH_end={sol._logaH_end+sol.delta_N_calib}."
                             )
                         else:
-                            sol._N_cross = logaH2N(np.log(K_STAR_lp))
+                            sol._N_cross = logaH2N(sol._logaH_star)
 
                         sol.N_star = sol._N_end - sol._N_cross
                         sol._N_reh = sol._N_end + sol.DeltaN_reh
@@ -698,8 +722,12 @@ class InflationEquations(Equations, ABC):
                               + np.log((45/pi**2)**(1/4) * g0**(-1/3))
                               + np.log(g_th)/12
                               + np.log(sol.V_end/T_CMB_Tp**4)/4)
-                    if ((w_reh is None and DeltaN_reh is None and rho_reh_GeV is None)
-                            or DeltaN_reh == 0 or w_reh == 1/3):
+                    if (
+                            (rho_reh_GeV is None and w_reh is None and DeltaN_reh is None)
+                            or (rho_reh_GeV is None and DeltaN_reh is None and w_reh == 1/3)
+                            or (rho_reh_GeV is None and w_reh is None and DeltaN_reh == 0)
+                            or (rho_reh_GeV is None and w_reh == 1/3 and DeltaN_reh == 0)
+                    ):
                         # assume instant reheating
                         sol.DeltaN_reh = 0
                         sol.w_reh = 1/3
@@ -723,7 +751,7 @@ class InflationEquations(Equations, ABC):
                         sol.N0 += 3/4 * (1/3 - w_reh) * sol.DeltaN_reh
                         sol._N_reh = sol._N_end + sol.DeltaN_reh
                     else:
-                        raise PrimpyError(
+                        raise ValueError(
                             f"Something in the reheating setup went wrong. Keep in mind that "
                             f"two of `w_reh`, `DeltaN_reh`, and `rho_reh_GeV` must be "
                             f"specified. The respective third should be `None` and will be "
