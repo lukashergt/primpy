@@ -793,10 +793,10 @@ class InflationEquations(Equations, ABC):
             sol.N_dagg = sol.N_cross - sol.N_beg
             sol.k_iMpc = np.exp(sol.logk)
             sol._k = np.exp(sol._logaH[sol.inflation_mask])
-            if not np.isnan(sol.DeltaN_reh) and sol.DeltaN_reh < 0:
+            if background is None and sol.DeltaN_reh < 0:
                 warn(f"Reheating duration cannot be negative, but DeltaN_reh={sol.DeltaN_reh}.",
                      PrimpyWarning)
-            elif not np.isnan(sol.N_reh) and sol.N_reh > sol.N0:
+            elif background is None and sol.N_reh > sol.N0:
                 warn(f"Reheating does not end until after today: N0={sol.N0} < N_reh={sol.N_reh}.",
                      PrimpyWarning)
 
