@@ -640,6 +640,8 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(N_star=None)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(N_star=-N_star)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=1e6, w_reh=0)
     with pytest.warns(PrimpyWarning):
         b_sol.calibrate_scale_factor(calibration_method='N_star', N_star=85, rho_reh_GeV=1e6)
     with pytest.warns(PrimpyWarning):
