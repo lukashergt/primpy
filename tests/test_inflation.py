@@ -475,7 +475,7 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
         (None, 1e12, 1),
     ]
 )
-def test_reheating_self_consistency_flat(N_star_in, w_reh_in, rho_reh_GeV_in):
+def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in):
     K = 0  # consider only flat unverses
     N_i = 14
     phi_i = 6.5
