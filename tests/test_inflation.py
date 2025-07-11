@@ -408,8 +408,8 @@ def test_sol_time_efolds(K):
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
-@pytest.mark.parametrize('DeltaN_reh', [None, 0, 5])
-@pytest.mark.parametrize('w_reh', [None, -1/3, 0, 1/3, 1])
+@pytest.mark.parametrize('DeltaN_reh', [None, -1, 0, 5])
+@pytest.mark.parametrize('w_reh', [None, -1, -1/3, 0, 1/3, 1])
 @pytest.mark.parametrize('rho_reh_GeV', [None, 1e9])
 def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
     pot = StarobinskyPotential(Lambda=3.3e-3)
@@ -426,15 +426,20 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
     ev_N = [InflationEvent(eq_N, +1, terminal=False),
             InflationEvent(eq_N, -1, terminal=True)]
 
-    if (w_reh is not None and w_reh != 1/3 and DeltaN_reh is not None and DeltaN_reh > 0
-        and rho_reh_GeV is not None) or (
-            not (w_reh is None and DeltaN_reh is None and rho_reh_GeV is None)
-            and ((w_reh is None and DeltaN_reh is not None and DeltaN_reh > 0 and
-                  rho_reh_GeV is not None) or
-                 w_reh is None and DeltaN_reh is None or
-                 w_reh is None and rho_reh_GeV is None and DeltaN_reh > 0 or
-                 DeltaN_reh is None and rho_reh_GeV is None and w_reh != 1/3)):
-        with pytest.raises(PrimpyError):
+    if (
+            # Need at least 2 reheating input parameters (except for instant reheating).
+            (rho_reh_GeV is None and w_reh is None and DeltaN_reh is not None and DeltaN_reh != 0)
+            or (rho_reh_GeV is None and DeltaN_reh is None and w_reh is not None and w_reh != 1/3)
+            or (w_reh is None and DeltaN_reh is None and rho_reh_GeV is not None)
+            # rho_reh and DeltaN_reh combination not implemented (yet).
+            or (w_reh is None and rho_reh_GeV is not None and DeltaN_reh is not None)
+            # Must not specify all three at the same time.
+            or (w_reh is not None and DeltaN_reh is not None and rho_reh_GeV is not None)
+            # w_reh < -1/3 and DeltaN_reh < 0 not allowed as input.
+            or (w_reh is not None and w_reh < -1/3)
+            or (DeltaN_reh is not None and DeltaN_reh < 0)
+    ):
+        with pytest.raises(ValueError):
             bist = solve(ic=ic_t, events=ev_t, dense_output=True, method='DOP853', rtol=1e-12)
             bist.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=w_reh,
                                         DeltaN_reh=DeltaN_reh, rho_reh_GeV=rho_reh_GeV)
@@ -451,6 +456,80 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
         assert bist.w_reh == approx(bisn.w_reh, rel=1e-5)
         assert bist.DeltaN_reh == approx(bisn.DeltaN_reh, rel=1e-5)
         assert bist.rho_reh_GeV == approx(bisn.rho_reh_GeV, rel=1e-5)
+
+
+@pytest.mark.parametrize(
+    'N_star_in, rho_reh_GeV_in, w_reh_in', [
+        (50, 1e3, None),
+        (50, 1e12, None),
+        (60, 1e3, None),
+        (60, 1e12, None),
+        (50, None, -1/3),  # (N_star,w_reh) combination is tricky.
+        (50, None, 0),     # For low N_star, need w<1/3.
+        (60, None, 1),     # For high N_star, need w>1/3.
+        (None, 1e3, -1/3),
+        (None, 1e12, -1/3),
+        (None, 1e3, 0),
+        (None, 1e12, 0),
+        (None, 1e3, 1),
+        (None, 1e12, 1),
+    ]
+)
+def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in):
+    K = 0  # consider only flat unverses
+    N_i = 14
+    phi_i = 6.5
+    t_i = 7e4
+    pot = StarobinskyPotential(Lambda=3.3e-3)
+    eq = InflationEquationsT(K=K, potential=pot)
+    ic = SlowRollIC(eq, phi_i=phi_i, N_i=N_i, t_i=t_i)
+    ev = [InflationEvent(eq, +1, terminal=False),
+          InflationEvent(eq, -1, terminal=True)]
+    b = solve(ic=ic, events=ev, dense_output=True)
+
+    # calibrate with reheating input parameters
+    calibration_method = 'N_star' if N_star_in is not None else 'reheating'
+    b.calibrate_scale_factor(calibration_method,
+                             N_star=N_star_in,
+                             rho_reh_GeV=rho_reh_GeV_in,
+                             w_reh=w_reh_in,
+                             DeltaN_reh=None)
+    # record the resulting derived parameters
+    N_star_out = b.N_star
+    rho_reh_GeV_out = b.rho_reh_GeV
+    w_reh_out = b.w_reh
+    DeltaN_reh_out = b.DeltaN_reh
+    N_end_out = b.N_end
+    N_reh_out = b.N_reh
+    # re-calibrate using different input parameters and compare to previously recorded output
+    b.calibrate_scale_factor('N_star', N_star=N_star_out, rho_reh_GeV=rho_reh_GeV_out)
+    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+    b.calibrate_scale_factor('N_star', N_star=N_star_out, w_reh=w_reh_out)
+    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+    b.calibrate_scale_factor('reheating', rho_reh_GeV=rho_reh_GeV_out, w_reh=w_reh_out)
+    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+    b.calibrate_scale_factor('reheating', w_reh=w_reh_out, DeltaN_reh=DeltaN_reh_out)
+    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
@@ -561,6 +640,8 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(N_star=None)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(N_star=-N_star)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=1e6, w_reh=0)
     with pytest.warns(PrimpyWarning):
         b_sol.calibrate_scale_factor(calibration_method='N_star', N_star=85, rho_reh_GeV=1e6)
     with pytest.warns(PrimpyWarning):
@@ -569,9 +650,9 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, DeltaN_reh=-5)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=-1, DeltaN_reh=5)
-    with pytest.raises(PrimpyError):
+    with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, DeltaN_reh=None)
-    with pytest.raises(PrimpyError):
+    with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, DeltaN_reh=5)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(background=b, N_star=None)
@@ -606,9 +687,9 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=0, DeltaN_reh=-5)
     with pytest.raises(ValueError):  # w_reh < -1/3
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=-1, DeltaN_reh=5)
-    with pytest.raises(PrimpyError):  # w_reh provided but DeltaN_reh missing
+    with pytest.raises(ValueError):  # w_reh provided but DeltaN_reh missing
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=0, DeltaN_reh=None)
-    with pytest.raises(PrimpyError):  # DeltaN_reh provided but w_reh missing
+    with pytest.raises(ValueError):  # DeltaN_reh provided but w_reh missing
         b_sol.calibrate_scale_factor(calibration_method='reheating', h=h, w_reh=None, DeltaN_reh=5)
     with pytest.raises(NotImplementedError):  # non-existent calibration_method
         b_sol.calibrate_scale_factor(calibration_method='spam', h=h)
