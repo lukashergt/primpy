@@ -96,6 +96,8 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                                          'kmax': self.kmax,
                                          'Pk': Pkt,
                                          'log_regular': True}
+        state['primordial_cHH'] = {'N': b.N,
+                                   'cHH': b.cHH_Mpc}
         derived_params = self.get_can_provide_params()
         state['derived'] = {derived_param: getattr(b, derived_param)
                             for derived_param in derived_params}
@@ -105,6 +107,9 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
 
     def get_primordial_tensor_pk(self):
         return self.current_state['primordial_tensor_pk']
+
+    def get_comoving_hubble_horizon(self):
+        return self.current_state['primordial_cHH']
 
 
 class MonomialSlowRollPPS(SlowRollPPS):
