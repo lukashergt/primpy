@@ -48,7 +48,8 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
         t_eval = np.logspace(5, 12, (12 - 5) * 1000 + 1)
         pot = self.Pot(**pot_kwargs)
         Lambda, _, _ = pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None, **pot_kwargs)
-        phi_i = pot.sr_N2phi(N=90)  # choose sufficiently high N to accommodate even highest N_star
+        # choose sufficiently high N to accommodate even highest N_star
+        phi_i = pot.sr_N2phi(N=max(N_star+30, 90))
         if 'phi0' in pot_kwargs and phi_i > phi0:
             phi_i = phi0
         for i in range(11):
