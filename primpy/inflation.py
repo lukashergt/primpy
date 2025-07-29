@@ -563,6 +563,13 @@ class InflationEquations(Equations, ABC):
                                                           - 3/4 * (1+w_reh) * sol.N_end)
                             sol._N_reh = sol.N_reh - sol.delta_N_calib
                             sol.DeltaN_reh = sol.N_reh - sol.N_end
+                            if sol.DeltaN_reh < 0 or w_reh < -1/3:
+                                raise ValueError(f"DeltaN_reh must be positive (end of reheating "
+                                                 f"must be after end of inflation) and w_reh must "
+                                                 f"be greater than -1/3 (reheating by definition "
+                                                 f"happens after the end of inflation, but "
+                                                 f"w_reh<-1/3 is inflating), but got "
+                                                 f"DeltaN_reh={DeltaN_reh} and w_reh={w_reh}.")
                             sol.rho_reh_mp4 = 3/2*sol.V_end * np.exp(-3*(1+w_reh) * sol.DeltaN_reh)
                             sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         elif rho_reh_GeV is not None and w_reh is None and DeltaN_reh is None:

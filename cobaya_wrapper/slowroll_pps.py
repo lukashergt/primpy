@@ -3,7 +3,6 @@ import warnings
 import numpy as np
 from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
 from primpy.exceptionhandling import PrimpyError, StepSizeError, PrimpyWarning
-from primpy.units import mp_GeV, lp_iGeV
 import primpy.potentials as pp
 from primpy.time.inflation import InflationEquationsT as InflationEquations
 from primpy.events import InflationEvent
@@ -62,11 +61,6 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                       atol=1e-18, rtol=2.22045e-14, method='DOP853')
             if not b.success:
                 raise StepSizeError(b.message)
-            rho_end_GeV = (1/3 * (1/2 * b.dphidt[b.inflation_mask][-1]**2
-                                  + b.potential.V(b.phi[b.inflation_mask][-1]))
-                           * mp_GeV / lp_iGeV**3)**(1/4)
-            if rho_reh_GeV > rho_end_GeV:
-                raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
             with warnings.catch_warnings(action='ignore', category=PrimpyWarning):
                 if w_reh is not None and rho_reh_GeV is not None:
                     b.calibrate_scale_factor(calibration_method='reheating',
