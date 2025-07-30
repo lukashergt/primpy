@@ -10,6 +10,7 @@ from primpy.exceptionhandling import InsufficientInflationError, PrimpyError, Pr
 from primpy.units import pi, c, lp_m, Mpc_m, mp_GeV, lp_iGeV
 from primpy.parameters import K_STAR, K_STAR_lp, T_CMB_Tp, g0
 from primpy.equations import Equations
+from primpy.reheating import is_instant_reheating
 
 
 class InflationEquations(Equations, ABC):
@@ -610,12 +611,7 @@ class InflationEquations(Equations, ABC):
                                      - np.log((45/pi**2)**(1/4) * g0**(-1/3))
                                      - np.log(g_th) / 12
                                      - np.log(sol.V_end/T_CMB_Tp**4)/4)
-                        if (
-                                (rho_reh_GeV is None and w_reh is None and DeltaN_reh is None)
-                                or (rho_reh_GeV is None and DeltaN_reh is None and w_reh == 1 / 3)
-                                or (rho_reh_GeV is None and w_reh is None and DeltaN_reh == 0)
-                                or (rho_reh_GeV is None and w_reh == 1 / 3 and DeltaN_reh == 0)
-                        ):
+                        if is_instant_reheating(rho_reh_GeV, w_reh, DeltaN_reh, lnR_rad):
                             # assume instant reheating
                             sol.DeltaN_reh = 0
                             sol.w_reh = 1/3
@@ -642,6 +638,7 @@ class InflationEquations(Equations, ABC):
                                              / (3 * sol.DeltaN_reh) - 1)
                             else:
                                 sol.rho_reh_GeV = np.nan
+                                sol._N_reh = np.nan
                                 sol.w_reh = np.nan
                                 sol.DeltaN_reh = np.nan
                         elif w_reh is not None and DeltaN_reh is not None and rho_reh_GeV is None:
