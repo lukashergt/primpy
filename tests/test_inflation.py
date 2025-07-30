@@ -473,6 +473,8 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
         (None, 1e12, 0, None),
         (None, 1e3, 1, None),
         (None, 1e12, 1, None),
+        (None, 1e3, None, -5),
+        (None, 1e3, None, +5),
     ]
 )
 def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, lnR_rad_in):
@@ -493,7 +495,8 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
                              N_star=N_star_in,
                              rho_reh_GeV=rho_reh_GeV_in,
                              w_reh=w_reh_in,
-                             DeltaN_reh=None)
+                             DeltaN_reh=None,
+                             lnR_rad=lnR_rad_in)
     # record the resulting derived parameters
     N_star_out = b.N_star
     rho_reh_GeV_out = b.rho_reh_GeV
