@@ -433,6 +433,11 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
             or (w_reh is None and DeltaN_reh is None and rho_reh_GeV is not None)
             # rho_reh and DeltaN_reh combination not implemented (yet).
             or (w_reh is None and rho_reh_GeV is not None and DeltaN_reh is not None)
+            # invalid instant reheating
+            or (w_reh is not None and w_reh == 1/3 and DeltaN_reh is not None and DeltaN_reh != 0)
+            or (w_reh is not None and w_reh != 1/3 and DeltaN_reh is not None and DeltaN_reh == 0)
+            or (w_reh is not None and w_reh == 1/3 and rho_reh_GeV is not None)
+            or (DeltaN_reh is not None and DeltaN_reh == 0 and rho_reh_GeV is not None)
             # Must not specify all three at the same time.
             or (w_reh is not None and DeltaN_reh is not None and rho_reh_GeV is not None)
             # w_reh < -1/3 and DeltaN_reh < 0 not allowed as input.
@@ -634,6 +639,30 @@ def test_Ncross_not_during_inflation(K, Eq):
         assert np.log(K_STAR) < np.min(b_sol.logk)
 
 
+@pytest.mark.parametrize('N_star_in, lnR_rad_in', [(50, None),
+                                                   (None, +5)])
+def test_calibration_nan(N_star_in, lnR_rad_in):
+    K = 0  # consider only flat unverses
+    N_i = 14
+    phi_i = 6.5
+    t_i = 7e4
+    pot = StarobinskyPotential(Lambda=3.3e-3)
+    eq = InflationEquationsT(K=K, potential=pot)
+    ic = SlowRollIC(eq, phi_i=phi_i, N_i=N_i, t_i=t_i)
+    ev = [InflationEvent(eq, +1, terminal=False),
+          InflationEvent(eq, -1, terminal=True)]
+    b = solve(ic=ic, events=ev, dense_output=True)
+
+    # calibrate with reheating input parameters
+    calibration_method = 'N_star' if N_star_in is not None else 'reheating'
+    b.calibrate_scale_factor(calibration_method, N_star=N_star_in, lnR_rad=lnR_rad_in)
+    assert np.isnan(b.rho_reh_GeV)
+    assert np.isnan(b.w_reh)
+    assert np.isnan(b.DeltaN_reh)
+    assert np.isnan(b._N_reh)
+    assert np.isnan(b.N_reh)
+
+
 def test_calibration_input_errors():
     N_i = 10
     phi_i = 20
@@ -660,6 +689,8 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=1e6, w_reh=0)
     with pytest.warns(PrimpyWarning):
         b_sol.calibrate_scale_factor(calibration_method='N_star', N_star=85, rho_reh_GeV=1e6)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='N_star', N_star=60, w_reh=0)
     with pytest.warns(PrimpyWarning):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=1, DeltaN_reh=60)
     with pytest.raises(ValueError):
@@ -670,6 +701,8 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, DeltaN_reh=None)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, DeltaN_reh=5)
+    with pytest.raises(ValueError):
+        b_sol.calibrate_scale_factor(calibration_method='reheating', lnR_rad=5, w_reh=0)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(background=b, N_star=None)
     with pytest.raises(ValueError):
