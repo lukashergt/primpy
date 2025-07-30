@@ -463,6 +463,7 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
         assert bist.DeltaN_reh == approx(bisn.DeltaN_reh, rel=1e-5)
         assert bist.rho_reh_GeV == approx(bisn.rho_reh_GeV, rel=1e-5)
         assert bist.rho_reh_mp4 == approx(bisn.rho_reh_mp4, rel=1e-5)
+        assert bist.delta_N_calib == approx(bisn.delta_N_calib, rel=1e-5)
 
 
 @pytest.mark.parametrize(
@@ -511,13 +512,14 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
                              lnR_rad=lnR_rad_in)
     # record the resulting derived parameters
     N_star_out = b.N_star
+    lnR_rad_out = b.lnR_rad
     rho_reh_GeV_out = b.rho_reh_GeV
     rho_reh_mp4_out = b.rho_reh_mp4
     w_reh_out = b.w_reh
     DeltaN_reh_out = b.DeltaN_reh
-    lnR_rad_out = b.lnR_rad
     N_end_out = b.N_end
     N_reh_out = b.N_reh
+    delta_N_calib_out = b.delta_N_calib
     if is_instant_reheating(N_star_in, rho_reh_GeV_in, w_reh_in, None, lnR_rad_in):
         # if instant reheating, check correct parameter inference
         assert np.isfinite(N_star_out)
@@ -527,6 +529,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
         assert w_reh_out == 1/3
         assert DeltaN_reh_out == 0
         assert N_end_out == N_reh_out
+        assert np.isfinite(delta_N_calib_out)
     elif (N_star_in is not None and rho_reh_GeV_in is None and w_reh_in is None
           or lnR_rad_in is not None and rho_reh_GeV_in is None and w_reh_in is None):
         # when insufficient info for reheating, check correct setting of nans
@@ -538,6 +541,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
         assert np.isnan(DeltaN_reh_out)
         assert np.isfinite(N_end_out)
         assert np.isnan(N_reh_out)
+        assert np.isfinite(delta_N_calib_out)
     else:
         # re-calibrate using different input parameters and compare to previously recorded output
         b.calibrate_scale_factor('N_star', N_star=N_star_out, rho_reh_GeV=rho_reh_GeV_out)
@@ -549,6 +553,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
         assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
         assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
         assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        assert b.delta_N_calib == approx(delta_N_calib_out, rel=1e-12, abs=1e-12)
         b.calibrate_scale_factor('N_star', N_star=N_star_out, w_reh=w_reh_out)
         assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
         assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
@@ -558,6 +563,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
         assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
         assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
         assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        assert b.delta_N_calib == approx(delta_N_calib_out, rel=1e-12, abs=1e-12)
         b.calibrate_scale_factor('reheating', rho_reh_GeV=rho_reh_GeV_out, w_reh=w_reh_out)
         assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
         assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
@@ -567,6 +573,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
         assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
         assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
         assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        assert b.delta_N_calib == approx(delta_N_calib_out, rel=1e-12, abs=1e-12)
         b.calibrate_scale_factor('reheating', w_reh=w_reh_out, DeltaN_reh=DeltaN_reh_out)
         assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
         assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
@@ -576,6 +583,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
         assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
         assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
         assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        assert b.delta_N_calib == approx(delta_N_calib_out, rel=1e-12, abs=1e-12)
         b.calibrate_scale_factor('reheating', lnR_rad=lnR_rad_out, rho_reh_GeV=rho_reh_GeV_out)
         assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
         assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
@@ -585,6 +593,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
         assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
         assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
         assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        assert b.delta_N_calib == approx(delta_N_calib_out, rel=1e-12, abs=1e-12)
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
@@ -675,7 +684,7 @@ def test_Ncross_not_during_inflation(K, Eq):
 
 @pytest.mark.parametrize('N_star_in, lnR_rad_in', [(50, None),
                                                    (None, +5)])
-def test_calibration_nan(N_star_in, lnR_rad_in):
+def test_reheating_nan(N_star_in, lnR_rad_in):
     K = 0  # consider only flat unverses
     N_i = 14
     phi_i = 6.5
