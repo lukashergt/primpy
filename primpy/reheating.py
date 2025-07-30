@@ -1,11 +1,13 @@
 """Helper functions for the epoch of reheating."""
 
 
-def is_instant_reheating(rho_reh_GeV, w_reh, DeltaN_reh, lnR_rad):
+def is_instant_reheating(N_star, rho_reh_GeV, w_reh, DeltaN_reh, lnR_rad):
     """Check whether any given parameter combination amounts to instant reheating.
 
     Parameters
     ----------
+    N_star : float
+        Number of e-folds of inflation after horizon crossing of pivot scale `K_STAR`.
     rho_reh_GeV : float
         Energy density at the end of reheating in GeV.
     w_reh : float
@@ -18,7 +20,9 @@ def is_instant_reheating(rho_reh_GeV, w_reh, DeltaN_reh, lnR_rad):
         https://arxiv.org/abs/1004.5525
 
     """
-    if (
+    if N_star is not None:
+        return False
+    elif (
         rho_reh_GeV is None and w_reh is None and DeltaN_reh is None and lnR_rad is None
         or w_reh is not None and w_reh == 1 / 3
         or DeltaN_reh is not None and DeltaN_reh == 0

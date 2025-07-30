@@ -7,7 +7,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from primpy.exceptionhandling import InflationEndWarning, PrimpyWarning
 from primpy.exceptionhandling import InsufficientInflationError, PrimpyError
-from primpy.units import Mpc_m, lp_m
+from primpy.units import Mpc_m, lp_m, mp_GeV
 from primpy.parameters import K_STAR
 from primpy.potentials import QuadraticPotential, StarobinskyPotential
 from primpy.events import InflationEvent, UntilNEvent
@@ -16,6 +16,7 @@ from primpy.time.inflation import InflationEquationsT
 from primpy.efolds.inflation import InflationEquationsN
 from primpy.initialconditions import InflationStartIC, ISIC_NsOk, SlowRollIC
 from primpy.solver import solve
+from primpy.reheating import is_instant_reheating
 
 
 def test_not_implemented_errors():
@@ -461,15 +462,17 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
         assert bist.w_reh == approx(bisn.w_reh, rel=1e-5)
         assert bist.DeltaN_reh == approx(bisn.DeltaN_reh, rel=1e-5)
         assert bist.rho_reh_GeV == approx(bisn.rho_reh_GeV, rel=1e-5)
+        assert bist.rho_reh_mp4 == approx(bisn.rho_reh_mp4, rel=1e-5)
 
 
 @pytest.mark.parametrize(
     'N_star_in, rho_reh_GeV_in, w_reh_in, lnR_rad_in', [
+        (50, None, None, None),
         (50, 1e3, None, None),
         (50, 1e12, None, None),
         (60, 1e3, None, None),
         (60, 1e12, None, None),
-        (50, None, -1/3, None),  # (N_star,w_reh) combination is tricky.
+        (50, None, -1/3, None),  # (N_star, w_reh) combination is tricky.
         (50, None, 0, None),     # For low N_star, need w<1/3.
         (60, None, 1, None),     # For high N_star, need w>1/3.
         (None, 1e3, -1/3, None),
@@ -480,6 +483,10 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
         (None, 1e12, 1, None),
         (None, 1e3, None, -5),
         (None, 1e3, None, +5),
+        (None, None, None, +5),
+        (None, None, 1/3, None),
+        (None, None, None, 0),
+        (None, None, 1/3, 0),
     ]
 )
 def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, lnR_rad_in):
@@ -505,52 +512,79 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
     # record the resulting derived parameters
     N_star_out = b.N_star
     rho_reh_GeV_out = b.rho_reh_GeV
+    rho_reh_mp4_out = b.rho_reh_mp4
     w_reh_out = b.w_reh
     DeltaN_reh_out = b.DeltaN_reh
     lnR_rad_out = b.lnR_rad
     N_end_out = b.N_end
     N_reh_out = b.N_reh
-    # re-calibrate using different input parameters and compare to previously recorded output
-    b.calibrate_scale_factor('N_star', N_star=N_star_out, rho_reh_GeV=rho_reh_GeV_out)
-    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
-    assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
-    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
-    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
-    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
-    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
-    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
-    b.calibrate_scale_factor('N_star', N_star=N_star_out, w_reh=w_reh_out)
-    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
-    assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
-    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
-    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
-    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
-    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
-    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
-    b.calibrate_scale_factor('reheating', rho_reh_GeV=rho_reh_GeV_out, w_reh=w_reh_out)
-    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
-    assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
-    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
-    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
-    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
-    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
-    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
-    b.calibrate_scale_factor('reheating', w_reh=w_reh_out, DeltaN_reh=DeltaN_reh_out)
-    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
-    assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
-    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
-    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
-    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
-    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
-    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
-    b.calibrate_scale_factor('reheating', lnR_rad=lnR_rad_out, rho_reh_GeV=rho_reh_GeV_out)
-    assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
-    assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
-    assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
-    assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
-    assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
-    assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
-    assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+    if is_instant_reheating(N_star_in, rho_reh_GeV_in, w_reh_in, None, lnR_rad_in):
+        # if instant reheating, check correct parameter inference
+        assert np.isfinite(N_star_out)
+        assert lnR_rad_out == 0
+        assert rho_reh_GeV_out == approx((3 / 2 * b.V_end)**(1/4) * mp_GeV, rel=1e-12, abs=1e-12)
+        assert rho_reh_mp4_out == approx((3 / 2 * b.V_end), rel=1e-12, abs=1e-12)
+        assert w_reh_out == 1/3
+        assert DeltaN_reh_out == 0
+        assert N_end_out == N_reh_out
+    elif (N_star_in is not None and rho_reh_GeV_in is None and w_reh_in is None
+          or lnR_rad_in is not None and rho_reh_GeV_in is None and w_reh_in is None):
+        # when insufficient info for reheating, check correct setting of nans
+        assert np.isfinite(N_star_out)
+        assert np.isfinite(lnR_rad_out)
+        assert np.isnan(rho_reh_GeV_out)
+        assert np.isnan(rho_reh_mp4_out)
+        assert np.isnan(w_reh_out)
+        assert np.isnan(DeltaN_reh_out)
+        assert np.isfinite(N_end_out)
+        assert np.isnan(N_reh_out)
+    else:
+        # re-calibrate using different input parameters and compare to previously recorded output
+        b.calibrate_scale_factor('N_star', N_star=N_star_out, rho_reh_GeV=rho_reh_GeV_out)
+        assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+        assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_mp4 == approx(rho_reh_mp4_out, rel=1e-12, abs=1e-12)
+        assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+        assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+        assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+        assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        b.calibrate_scale_factor('N_star', N_star=N_star_out, w_reh=w_reh_out)
+        assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+        assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_mp4 == approx(rho_reh_mp4_out, rel=1e-12, abs=1e-12)
+        assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+        assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+        assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+        assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        b.calibrate_scale_factor('reheating', rho_reh_GeV=rho_reh_GeV_out, w_reh=w_reh_out)
+        assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+        assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_mp4 == approx(rho_reh_mp4_out, rel=1e-12, abs=1e-12)
+        assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+        assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+        assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+        assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        b.calibrate_scale_factor('reheating', w_reh=w_reh_out, DeltaN_reh=DeltaN_reh_out)
+        assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+        assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_mp4 == approx(rho_reh_mp4_out, rel=1e-12, abs=1e-12)
+        assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+        assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+        assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+        assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
+        b.calibrate_scale_factor('reheating', lnR_rad=lnR_rad_out, rho_reh_GeV=rho_reh_GeV_out)
+        assert b.N_star == approx(N_star_out, rel=1e-12, abs=1e-12)
+        assert b.lnR_rad == approx(lnR_rad_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_GeV == approx(rho_reh_GeV_out, rel=1e-12, abs=1e-12)
+        assert b.rho_reh_mp4 == approx(rho_reh_mp4_out, rel=1e-12, abs=1e-12)
+        assert b.w_reh == approx(w_reh_out, rel=1e-12, abs=1e-12)
+        assert b.DeltaN_reh == approx(DeltaN_reh_out, rel=1e-12, abs=1e-12)
+        assert b.N_end == approx(N_end_out, rel=1e-12, abs=1e-12)
+        assert b.N_reh == approx(N_reh_out, rel=1e-12, abs=1e-12)
 
 
 @pytest.mark.parametrize('K', [-1, 0, +1])
