@@ -624,9 +624,11 @@ class InflationEquations(Equations, ABC):
                             sol.lnR_rad = lnR_rad
                             sol.N_end += sol.lnR_rad
                             if not (w_reh is None and DeltaN_reh is None):
-                                raise ValueError("`lnR_rad` is meant to be agnostic to the details"
-                                                 "of reheating, so it should not be combined with"
-                                                 "any of [w_reh, DeltaN_reh, rho_reh_GeV].")
+                                raise ValueError(
+                                    "`lnR_rad` is meant to be agnostic to the details of "
+                                    "reheating, so it should not be combined with any of "
+                                    "[w_reh, DeltaN_reh, rho_reh_GeV]."
+                                )
                             elif rho_reh_GeV is not None:
                                 sol.rho_reh_GeV = rho_reh_GeV
                                 sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
