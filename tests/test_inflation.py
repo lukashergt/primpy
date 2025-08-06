@@ -467,30 +467,34 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
 
 
 @pytest.mark.parametrize(
-    'N_star_in, rho_reh_GeV_in, w_reh_in, lnR_rad_in', [
-        (50, None, None, None),
-        (50, 1e3, None, None),
-        (50, 1e12, None, None),
-        (60, 1e3, None, None),
-        (60, 1e12, None, None),
-        (50, None, -1/3, None),  # (N_star, w_reh) combination is tricky.
-        (50, None, 0, None),     # For low N_star, need w<1/3.
-        (60, None, 1, None),     # For high N_star, need w>1/3.
-        (None, 1e3, -1/3, None),
-        (None, 1e12, -1/3, None),
-        (None, 1e3, 0, None),
-        (None, 1e12, 0, None),
-        (None, 1e3, 1, None),
-        (None, 1e12, 1, None),
-        (None, 1e3, None, -5),
-        (None, 1e3, None, +5),
-        (None, None, None, +5),
-        (None, None, 1/3, None),
-        (None, None, None, 0),
-        (None, None, 1/3, 0),
+    'N_star_in, rho_reh_GeV_in, w_reh_in, DeltaN_reh_in, lnR_rad_in', [
+        (50, None, None, None, None),
+        (50, 1e3, None, None, None),
+        (50, 1e12, None, None, None),
+        (60, 1e3, None, None, None),
+        (60, 1e12, None, None, None),
+        (50, None, -1/3, None, None),  # (N_star, w_reh) combination is tricky.
+        (50, None, 0, None, None),     # For low N_star, need w<1/3.
+        (60, None, 1, None, None),     # For high N_star, need w>1/3.
+        (None, 1e3, -1/3, None, None),
+        (None, 1e12, -1/3, None, None),
+        (None, 1e3, 0, None, None),
+        (None, 1e12, 0, None, None),
+        (None, 1e3, 1, None, None),
+        (None, 1e12, 1, None, None),
+        (None, 1e3, None, None, -5),
+        (None, 1e3, None, None, +5),
+        (None, None, None, None, +5),
+        (None, None, 1/3, None, None),
+        (None, None, None, 0, None),
+        (None, None, None, None, 0),
+        (None, None, 1/3, 0, None),
+        (None, None, 1/3, None, 0),
+        (None, None, None, 0, 0),
     ]
 )
-def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, lnR_rad_in):
+def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in,
+                                         DeltaN_reh_in, lnR_rad_in):
     K = 0  # consider only flat unverses
     N_i = 14
     phi_i = 6.5
@@ -508,7 +512,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
                              N_star=N_star_in,
                              rho_reh_GeV=rho_reh_GeV_in,
                              w_reh=w_reh_in,
-                             DeltaN_reh=None,
+                             DeltaN_reh=DeltaN_reh_in,
                              lnR_rad=lnR_rad_in)
     # record the resulting derived parameters
     N_star_out = b.N_star
@@ -520,7 +524,7 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in, ln
     N_end_out = b.N_end
     N_reh_out = b.N_reh
     delta_N_calib_out = b.delta_N_calib
-    if is_instant_reheating(N_star_in, rho_reh_GeV_in, w_reh_in, None, lnR_rad_in):
+    if is_instant_reheating(N_star_in, rho_reh_GeV_in, w_reh_in, DeltaN_reh_in, lnR_rad_in):
         # if instant reheating, check correct parameter inference
         assert np.isfinite(N_star_out)
         assert lnR_rad_out == 0
