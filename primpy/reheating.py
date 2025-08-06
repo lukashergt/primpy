@@ -4,10 +4,18 @@
 def is_instant_reheating(N_star, rho_reh_GeV, w_reh, DeltaN_reh, lnR_rad):
     """Check whether any given parameter combination amounts to instant reheating.
 
+    Checks for corner cases where w_reh=1/3 or DeltaN_reh=0 or lnR_rad=0, where we assume instant
+    reheating and apply simplified formulas.
+
     Parameters
     ----------
     N_star : float
         Number of e-folds of inflation after horizon crossing of pivot scale `K_STAR`.
+        If this parameter is given, then this assumes non-instant reheating and returns `False`.
+        (Even though we could in principle pass the N_star value that would amount to w=1/3 and
+        DeltaN_reh=0. However, we would have to actually do the calculation, and this function is
+        about checking for the instant reheating corner case before doing the actual reheating
+        computation.)
     rho_reh_GeV : float
         Energy density at the end of reheating in GeV.
     w_reh : float
@@ -19,6 +27,9 @@ def is_instant_reheating(N_star, rho_reh_GeV, w_reh, DeltaN_reh, lnR_rad):
         but is agnostic to the details of reheating. See Martin & Ringeval (2010).
         https://arxiv.org/abs/1004.5525
 
+    Returns
+    -------
+    bool
     """
     if N_star is not None:
         return False
