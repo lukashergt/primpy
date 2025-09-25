@@ -3,7 +3,7 @@ from warnings import warn
 from abc import ABC
 import numpy as np
 from scipy.special import zeta
-from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
+from scipy.interpolate import interp1d, InterpolatedUnivariateSpline, make_lsq_spline
 from scipy.optimize import root_scalar
 from primpy.exceptionhandling import CollapseWarning, InflationStartWarning, InflationEndWarning
 from primpy.exceptionhandling import InsufficientInflationError, PrimpyError, PrimpyWarning
@@ -856,15 +856,22 @@ class InflationEquations(Equations, ABC):
             elif method == 'ARBDS':
                 derive_approx_power_ARBDS(order=order, **interp1d_kwargs)
 
-            dlogPdlogk_s = sol.logk2logP_s.derivatives(np.log(K_STAR))
-            dlogPdlogk_t = sol.logk2logP_t.derivatives(np.log(K_STAR))
-            sol.A_s = np.exp(dlogPdlogk_s[0])
-            sol.n_s = 1 + dlogPdlogk_s[1]
-            sol.n_run = dlogPdlogk_s[2]
-            sol.n_runrun = dlogPdlogk_s[3]
-            sol.A_t = np.exp(dlogPdlogk_t[0])
-            sol.n_t = dlogPdlogk_t[1]
+            sol.A_s = np.exp(sol.logk2logP_s(np.log(K_STAR)))
+            sol.n_s = 1 + sol.logk2logP_s.derivative(1)(np.log(K_STAR))
+            sol.n_run = sol.logk2logP_s.derivative(2)(np.log(K_STAR))
+            sol.n_runrun = sol.logk2logP_s.derivative(3)(np.log(K_STAR))
+            sol.A_t = np.exp(sol.logk2logP_t(np.log(K_STAR)))
+            sol.n_t = sol.logk2logP_t.derivative(1)(np.log(K_STAR))
             sol.r = sol.A_t / sol.A_s
+            # dlogPdlogk_s = sol.logk2logP_s.derivatives(np.log(K_STAR))
+            # dlogPdlogk_t = sol.logk2logP_t.derivatives(np.log(K_STAR))
+            # sol.A_s = np.exp(dlogPdlogk_s[0])
+            # sol.n_s = 1 + dlogPdlogk_s[1]
+            # sol.n_run = dlogPdlogk_s[2]
+            # sol.n_runrun = dlogPdlogk_s[3]
+            # sol.A_t = np.exp(dlogPdlogk_t[0])
+            # sol.n_t = dlogPdlogk_t[1]
+            # sol.r = sol.A_t / sol.A_s
 
         def derive_approx_power_CGS(order=3, **interp1d_kwargs):
             """Slow-roll approximation by Choe, Gong, and Stewart.
@@ -965,14 +972,18 @@ class InflationEquations(Equations, ABC):
             if order == 0:
                 sol.P_scalar_approx = Ps0
                 sol.P_tensor_approx = Pt0
-            logk2logP_s_0 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_s,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
-            logk2logP_t_0 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_t,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
+            knots = np.linspace(sol.logk[mask][0], sol.logk[mask][-1], sol.logk[mask].size//10)
+            knots = np.concatenate(([knots[0]] * 5, knots, [knots[-1]] * 5))
+            logk2logP_s_0 = make_lsq_spline(x=sol.logk[mask], y=logP_s, t=knots, k=5)
+            logk2logP_t_0 = make_lsq_spline(x=sol.logk[mask], y=logP_t, t=knots, k=5)
+            # logk2logP_s_0 = InterpolatedUnivariateSpline(
+            #     sol.logk[mask], logP_s,
+            #     k=spline_order, ext=extrapolate, **interp1d_kwargs
+            # )
+            # logk2logP_t_0 = InterpolatedUnivariateSpline(
+            #     sol.logk[mask], logP_t,
+            #     k=spline_order, ext=extrapolate, **interp1d_kwargs
+            # )
             sol.P_s_approx_CGS0 = lambda k: np.exp(logk2logP_s_0(np.log(k)))
             sol.P_t_approx_CGS0 = lambda k: np.exp(logk2logP_t_0(np.log(k)))
 
@@ -1025,14 +1036,16 @@ class InflationEquations(Equations, ABC):
             if order == 3:
                 sol.P_scalar_approx = P_s
                 sol.P_tensor_approx = P_t
-            logk2logP_s_3 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_s,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
-            logk2logP_t_3 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_t,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
+            logk2logP_s_3 = make_lsq_spline(x=sol.logk[mask], y=logP_s, t=knots, k=5)
+            logk2logP_t_3 = make_lsq_spline(x=sol.logk[mask], y=logP_t, t=knots, k=5)
+            # logk2logP_s_3 = InterpolatedUnivariateSpline(
+            #     sol.logk[mask], logP_s,
+            #     k=spline_order, ext=extrapolate, **interp1d_kwargs
+            # )
+            # logk2logP_t_3 = InterpolatedUnivariateSpline(
+            #     sol.logk[mask], logP_t,
+            #     k=spline_order, ext=extrapolate, **interp1d_kwargs
+            # )
             sol.P_s_approx_CGS3 = lambda k: np.exp(logk2logP_s_3(np.log(k)))
             sol.P_t_approx_CGS3 = lambda k: np.exp(logk2logP_t_3(np.log(k)))
             if order == 0:
