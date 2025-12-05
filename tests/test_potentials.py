@@ -22,6 +22,7 @@ import primpy.potentials as pp
         (pp.DoubleWell4Potential, dict(phi0=100)),
         (pp.TmodelPotential, dict(p=2, alpha=1)),
         (pp.RadionGaugePotential, dict(p=2, alpha=1)),
+        (pp.RadionGauge2Potential, dict(alpha=1)),
     ]
 )
 @pytest.mark.parametrize('Lambda, phi', [(1, 3.), (2e-3, 10.)])

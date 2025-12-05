@@ -1068,7 +1068,7 @@ class RadionGaugePotential(InflationaryPotential):
     Attributes
     ----------
     mu : float
-        Alternative potential parameter, related to `alpha` as `mu^p = alpha`, allowing to express
+        Alternative potential parameter, related to `alpha` as `mu**p = alpha`, allowing to express
         the potential in terms of the fraction `phi/mu`. Provided here for convenience.
 
     """
@@ -1170,6 +1170,54 @@ class RadionGaugePotential(InflationaryPotential):
         out = root_scalar(root_N, bracket=(self.phi_end, self.inv_V(V=self.Lambda**4*(1-1e-15))))
         phi = out.root
         return phi
+
+
+class RadionGauge2Potential(RadionGaugePotential):
+    """Quadratic Radion Gauge potential: `V(phi) = Lambda**4 * phi**2 / (alpha + phi**2)`.
+
+    Listed in the Encyclopaedia Inflationaris under eq. (5.226).
+    Also related to the KKLT version of D-Brane Inflation, see eq. (6.319).
+
+    Parameters
+    ----------
+    Lambda : float
+        Potential amplitude parameter.
+    alpha : float
+        Potential parameter controlling the tensor-to-scalar ratio similar to other `alpha`
+        parameters in alpha-attractors.
+
+    Attributes
+    ----------
+    mu : float
+        Alternative potential parameter, related to `alpha` as `mu**2 = alpha`, allowing to express
+        the potential in terms of the fraction `phi/mu`. Provided here for convenience.
+
+    """
+
+    tag = 'rg2'
+    name = 'RadionGauge2Potential'
+    tex = r'Radion Gauge (p=2)'
+    perturbation_ic = (1, 0, 0, 1)
+
+    def __init__(self, **pot_kwargs):
+        super().__init__(p=2, **pot_kwargs)
+
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        a = self.alpha
+        phi_end = 3**(1/12) * np.sqrt(
+            3 * a**(4/3)
+            + 3**(2/3) * a**(2/3) * (np.sqrt(3)*a + 9*np.sqrt(2*a+27) + 27*np.sqrt(3))**(2/3)
+            - 2 * 3**(5/6) * a * (np.sqrt(3)*a + 9*np.sqrt(2*a+27) + 27*np.sqrt(3))**(1/3)
+        ) / (
+            3 * (np.sqrt(3)*a + 9*np.sqrt(2*a+27) + 27*np.sqrt(3))**(1/6)
+        )
+        return phi_end
+
+    def sr_N2phi(self, N):  # noqa: D102
+        alpha = self.alpha
+        phi_end = self.phi_end
+        return np.sqrt(-alpha + np.sqrt(8*N*alpha + alpha**2 + 2*alpha*phi_end**2 + phi_end**4))
 
 
 # TODO:
