@@ -1052,7 +1052,25 @@ class TmodelPotential(InflationaryPotential):
 class RadionGaugePotential(InflationaryPotential):
     """Generalised Radion Gauge potential: `V(phi) = Lambda**4 * phi**p / (alpha + phi**p)`.
 
-    Also related to the KKLT version of D-Brane Inflation.
+    Listed in the Encyclopaedia Inflationaris under eq. (5.226).
+    Also related to the KKLT version of D-Brane Inflation, see eq. (6.319).
+
+    Parameters
+    ----------
+    Lambda : float
+        Potential amplitude parameter.
+    p : float
+        Power of the inflaton field in the potential.
+    alpha : float
+        Potential parameter controlling the tensor-to-scalar ratio similar to other `alpha`
+        parameters in alpha-attractors.
+
+    Attributes
+    ----------
+    mu : float
+        Alternative potential parameter, related to `alpha` as `mu^p = alpha`, allowing to express
+        the potential in terms of the fraction `phi/mu`. Provided here for convenience.
+
     """
 
     tag = 'rgp'
@@ -1131,11 +1149,11 @@ class RadionGaugePotential(InflationaryPotential):
                            - 2 * (alpha + phi**p)**5)))
 
     @cached_property
-    def phi_end(self, **kwargs):  # noqa: D102
+    def phi_end(self):  # noqa: D102
         def V2epsilon1(V):
             phi = self.inv_V(V)
             return self.get_epsilon_1V(phi) - 1
-        output = root_scalar(V2epsilon1, bracket=(1e-30, self.Lambda**4 * (1-1e-15)), **kwargs)
+        output = root_scalar(V2epsilon1, bracket=(1e-30, self.Lambda**4 * (1-1e-15)))
         phi_end = self.inv_V(V=output.root)
         return phi_end
 
@@ -1146,11 +1164,11 @@ class RadionGaugePotential(InflationaryPotential):
         return ((phi**(p+2) - phi_end**(p+2) + (phi**2 - phi_end**2) * (alpha*p/2 + alpha)) /
                 (alpha * p * (p+2)))
 
-    def sr_N2phi(self, N, **kwargs):  # noqa: D102
-        def V2N(V):
-            return self.sr_phi2N(phi=self.inv_V(V=V))
-        output = root_scalar(V2N, bracket=(1e-30, self.Lambda**4 * (1-1e-15)), **kwargs)
-        phi = self.inv_V(V=output.root)
+    def sr_N2phi(self, N):  # noqa: D102
+        def root_N(phi_in):
+            return self.sr_phi2N(phi=phi_in) - N
+        out = root_scalar(root_N, bracket=(self.phi_end, self.inv_V(V=self.Lambda**4*(1-1e-15))))
+        phi = out.root
         return phi
 
 
