@@ -1074,7 +1074,7 @@ class RadionGaugePotential(InflationaryPotential):
     """
 
     tag = 'rgp'
-    name = 'RadionGauge'
+    name = 'RadionGaugePotential'
     tex = r'Radion Gauge'
     perturbation_ic = (1, 0, 0, 1)
 
