@@ -687,6 +687,30 @@ def test_Ncross_not_during_inflation(K, Eq):
         assert np.log(K_STAR) < np.min(b_sol.logk)
 
 
+@pytest.mark.parametrize('N_star_in, DeltaN_minus1_in', [(50, None),
+                                                         (None, +5)])
+def test_reheating_nan(N_star_in, DeltaN_minus1_in):
+    K = 0  # consider only flat unverses
+    N_i = 14
+    phi_i = 6.5
+    t_i = 7e4
+    pot = StarobinskyPotential(Lambda=3.3e-3)
+    eq = InflationEquationsT(K=K, potential=pot)
+    ic = SlowRollIC(eq, phi_i=phi_i, N_i=N_i, t_i=t_i)
+    ev = [InflationEvent(eq, +1, terminal=False),
+          InflationEvent(eq, -1, terminal=True)]
+    b = solve(ic=ic, events=ev, dense_output=True)
+
+    # calibrate with reheating input parameters
+    calibration_method = 'N_star' if N_star_in is not None else 'reheating'
+    b.calibrate_scale_factor(calibration_method, N_star=N_star_in, DeltaN_minus1=DeltaN_minus1_in)
+    assert np.isnan(b.rho_reh_GeV)
+    assert np.isnan(b.w_reh)
+    assert np.isnan(b.DeltaN_reh)
+    assert np.isnan(b._N_reh)
+    assert np.isnan(b.N_reh)
+
+
 def test_calibration_input_errors():
     N_i = 10
     phi_i = 20
