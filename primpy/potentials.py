@@ -1,4 +1,5 @@
 """Inflationary potentials."""
+import sys
 from abc import ABC, abstractmethod
 from functools import cached_property
 from warnings import warn
@@ -8,6 +9,9 @@ from scipy.interpolate import interp1d
 from scipy.optimize import root_scalar
 from primpy.units import pi
 from primpy.exceptionhandling import PrimpyError, PrimpyWarning
+
+
+EPS = sys.float_info.epsilon
 
 
 class InflationaryPotential(ABC):
@@ -750,35 +754,31 @@ class DoubleWellPotential(InflationaryPotential):
         super().__init__(**pot_kwargs)
 
     def V(self, phi):  # noqa: D102
-        phi_0_phi = (self.phi0 - phi) / self.phi0
+        phi_0_phi = 1 - phi / self.phi0
         return self.Lambda**4 * (1 - phi_0_phi**self.p)**2
 
     def dV(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-1) / phi0
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-1) / self.phi0
         return pre * (1 - phi_0_phi**p)
 
     def d2V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-2) / phi0**2
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-2) / self.phi0**2
         return pre * (-p + phi_0_phi**p * (2*p-1) + 1)
 
     def d3V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-3) / phi0**3
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-3) / self.phi0**3
         return pre * (p**2 - 3*p + phi_0_phi**p * (-4*p**2 + 6*p - 2) + 2)
 
     def d4V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-4) / phi0**4
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-4) / self.phi0**4
         return pre * (-p**3 + 6*p**2 - 11*p + phi_0_phi**p * (8*p**3-24*p**2+22*p-6) + 6)
 
     def inv_V(self, V):  # noqa: D102
@@ -786,49 +786,43 @@ class DoubleWellPotential(InflationaryPotential):
 
     def get_epsilon_1V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        return 2 * p**2 * phi_0_phi**(2*p-2) / (phi0**2 * (phi_0_phi**p - 1)**2)
+        phi_0_phi = 1 - phi / self.phi0
+        return 2 * p**2 * phi_0_phi**(2*p-2) / (self.phi0**2 * (phi_0_phi**p - 1)**2)
 
     def get_epsilon_2V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
+        phi_0_phi = 1 - phi / self.phi0
         return (4 * p * phi_0_phi**(p - 2) * (p + phi_0_phi**p - 1)
-                / (phi0**2 * (phi_0_phi**p - 1)**2))
+                / (self.phi0**2 * (phi_0_phi**p - 1)**2))
 
     def get_epsilon_3V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
+        phi_0_phi = 1 - phi / self.phi0
         return (2*p*phi_0_phi**(p-2) * (p**2-3*p+2*phi_0_phi**(2*p)+phi_0_phi**p*(p**2+3*p-4)+2)
-                / (phi0**2 * (phi_0_phi**p - 1)**2 * (p + phi_0_phi**p - 1)))
+                / (self.phi0**2 * (phi_0_phi**p - 1)**2 * (p + phi_0_phi**p - 1)))
 
     def get_epsilon_4V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
+        phi_0_phi = 1 - phi / self.phi0
         num = 2 * p * phi_0_phi**(p-2) * (p**4 - 6*p**3 + 13*p**2 - 12*p
                                           + 4*phi_0_phi**(4*p)
                                           + phi_0_phi**(3*p) * (p**3 + 3*p**2 + 12*p - 16)
                                           + phi_0_phi**(2*p) * (5*p**3 + 7*p**2 - 36*p + 24)
                                           + phi_0_phi**p * (3*p**4 - 23*p**2 + 36*p - 16) + 4)
-        den = phi0**2 * (p**3 - 4 * p**2 + 5 * p
-                         + 2 * phi_0_phi**(5*p)
-                         + phi_0_phi**(4*p) * (p**2 + 5*p - 10)
-                         + phi_0_phi**(3*p) * (p**3 + p**2 - 20*p + 20)
-                         + phi_0_phi**(2*p) * (-p**3 - 9*p**2 + 30*p - 20)
-                         + phi_0_phi**p * (-p**3 + 11*p**2 - 20*p + 10) - 2)
+        den = self.phi0**2 * (p**3 - 4 * p**2 + 5 * p
+                              + 2 * phi_0_phi**(5*p)
+                              + phi_0_phi**(4*p) * (p**2 + 5*p - 10)
+                              + phi_0_phi**(3*p) * (p**3 + p**2 - 20*p + 20)
+                              + phi_0_phi**(2*p) * (-p**3 - 9*p**2 + 30*p - 20)
+                              + phi_0_phi**p * (-p**3 + 11*p**2 - 20*p + 10) - 2)
         return num / den
 
     @cached_property
     def phi_end(self):  # noqa: D102
-        phi0 = self.phi0
-        phis = np.linspace(0, phi0, 10001)[1:-1]
-        e1V = self.get_epsilon_1V(phi=phis)
-        loge2phi = interp1d(np.log10(e1V), phis)
-        phi_end = loge2phi(0).item()
-        return phi_end
+        def inflation_end(phi):
+            return self.get_epsilon_1V(phi=phi) - 1
+        output = root_scalar(inflation_end, bracket=(EPS * self.phi0, self.phi0))
+        return output.root
 
     def sr_phi2N(self, phi):  # noqa: D102
         p = self.p
@@ -1150,12 +1144,10 @@ class RadionGaugePotential(InflationaryPotential):
 
     @cached_property
     def phi_end(self):  # noqa: D102
-        def V2epsilon1(V):
-            phi = self.inv_V(V)
-            return self.get_epsilon_1V(phi) - 1
-        output = root_scalar(V2epsilon1, bracket=(1e-30, self.Lambda**4 * (1-1e-15)))
-        phi_end = self.inv_V(V=output.root)
-        return phi_end
+        def inflation_end(phi):
+            return self.get_epsilon_1V(phi=phi) - 1
+        out = root_scalar(inflation_end, bracket=(1e-30, self.inv_V(V=self.Lambda**4 * (1-EPS))))
+        return out.root
 
     def sr_phi2N(self, phi):  # noqa: D102
         p = self.p
