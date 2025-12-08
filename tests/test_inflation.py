@@ -749,7 +749,7 @@ def test_calibration_input_errors():
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=0, DeltaN_reh=None)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', w_reh=None, DeltaN_reh=5)
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         b_sol.calibrate_scale_factor(calibration_method='reheating', DeltaN_minus1=5, w_reh=0)
     with pytest.raises(ValueError):
         b_sol.calibrate_scale_factor(background=b, N_star=None)
