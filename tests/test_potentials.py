@@ -8,17 +8,23 @@ from primpy.exceptionhandling import PrimpyError, PrimpyWarning
 import primpy.potentials as pp
 
 
-@pytest.mark.parametrize('Pot, pot_kwargs', [(pp.MonomialPotential, dict(p=2/3)),
-                                             (pp.LinearPotential, {}),
-                                             (pp.QuadraticPotential, {}),
-                                             (pp.CubicPotential, {}),
-                                             (pp.QuarticPotential, {}),
-                                             (pp.StarobinskyPotential, {}),
-                                             (pp.NaturalPotential, dict(phi0=100)),
-                                             (pp.DoubleWellPotential, dict(phi0=100, p=2)),
-                                             (pp.DoubleWell2Potential, dict(phi0=100)),
-                                             (pp.DoubleWell4Potential, dict(phi0=100)),
-                                             (pp.TmodelPotential, dict(p=2, alpha=1))])
+@pytest.mark.parametrize(
+    'Pot, pot_kwargs', [
+        (pp.MonomialPotential, dict(p=2/3)),
+        (pp.LinearPotential, {}),
+        (pp.QuadraticPotential, {}),
+        (pp.CubicPotential, {}),
+        (pp.QuarticPotential, {}),
+        (pp.StarobinskyPotential, {}),
+        (pp.NaturalPotential, dict(phi0=100)),
+        (pp.DoubleWellPotential, dict(phi0=100, p=2)),
+        (pp.DoubleWell2Potential, dict(phi0=100)),
+        (pp.DoubleWell4Potential, dict(phi0=100)),
+        (pp.TmodelPotential, dict(p=2, alpha=1)),
+        (pp.RadionGaugePotential, dict(p=2, alpha=1)),
+        (pp.RadionGauge2Potential, dict(alpha=1)),
+    ]
+)
 @pytest.mark.parametrize('Lambda, phi', [(1, 3.), (2e-3, 10.)])
 def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     with pytest.raises(Exception):
@@ -36,6 +42,9 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
     pot.d4V(phi=phi)
     assert pot.inv_V(V=Lambda**4/2) > 0
     assert 0 < pot.phi_end < phi
+    assert pot.V(phi=pot.inv_V(V=Lambda**4/2)) == approx(Lambda**4 / 2)
+    assert pot.inv_V(V=pot.V(phi=phi)) == approx(phi)
+    assert pot.sr_phi2N(phi=pot.sr_N2phi(N=50)) == approx(50)
     L, p, N = pot.sr_As2Lambda(A_s=2e-9, phi_star=None, N_star=60, **pot_kwargs)
     assert L > 0
     assert p > 0
@@ -48,6 +57,7 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
         pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
     e1V = pot.get_epsilon_1V(phi=phi)
     assert 0 < e1V < 1
+    assert pot.get_epsilon_1V(phi=pot.phi_end) == approx(1)
     pot.get_epsilon_2V(phi=phi)
     pot.get_epsilon_3V(phi=phi)
     pot.get_epsilon_4V(phi=phi)
