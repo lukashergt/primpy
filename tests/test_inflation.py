@@ -524,7 +524,6 @@ def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in,
     N_end_out = b.N_end
     N_reh_out = b.N_reh
     delta_N_calib_out = b.delta_N_calib
-    print(N_star_out, rho_reh_GeV_out)
     if is_instant_reheating(N_star_in, rho_reh_GeV_in, w_reh_in, DeltaN_reh_in, DeltaN_minus1_in):
         # if instant reheating, check correct parameter inference
         assert np.isfinite(N_star_out)
