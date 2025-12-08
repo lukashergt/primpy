@@ -747,6 +747,7 @@ class InflationEquations(Equations, ABC):
                         sol._N_reh = np.nan
                         sol.w_reh = np.nan
                         sol.DeltaN_reh = np.nan
+                        sol.DeltaN_minus1 = np.nan  # TODO: should actually be calculable, right?
                     else:
                         sol.rho_reh_GeV = rho_reh_GeV
                         sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
@@ -756,6 +757,7 @@ class InflationEquations(Equations, ABC):
                                       + np.log(3/2 * T_CMB_Tp**4 / sol.rho_reh_mp4) / 4)
                         sol.DeltaN_reh = sol._N_reh - sol._N_end
                         sol.w_reh = np.log(3/2*sol.V_end/sol.rho_reh_mp4) / (3*sol.DeltaN_reh) - 1
+                        sol.DeltaN_minus1 = sol.DeltaN_reh / 4 * (3 * sol.w_reh - 1)
 
                 elif calibration_method == 'reheating':  # derive a0 and Omega_K0 from reheating
                     if Omega_K0 is not None:
@@ -778,6 +780,7 @@ class InflationEquations(Equations, ABC):
                         # assume instant reheating
                         sol.DeltaN_reh = 0
                         sol.w_reh = 1/3
+                        sol.DeltaN_minus1 = 0
                         sol.rho_reh_mp4 = 3/2 * sol.V_end
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         sol._N_reh = sol._N_end
@@ -785,7 +788,8 @@ class InflationEquations(Equations, ABC):
                         # reheating from w_reh and DeltaN_reh
                         sol.w_reh = w_reh
                         sol.DeltaN_reh = DeltaN_reh
-                        sol.N0 += 3/4 * (1/3 - w_reh) * DeltaN_reh
+                        sol.DeltaN_minus1 = DeltaN_reh / 4 * (3 * w_reh - 1)
+                        sol.N0 -= sol.DeltaN_minus1
                         sol.rho_reh_mp4 = 3/2 * sol.V_end * np.exp(-3 * (1+w_reh) * DeltaN_reh)
                         sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         sol._N_reh = sol._N_end + DeltaN_reh
@@ -795,7 +799,8 @@ class InflationEquations(Equations, ABC):
                         sol.rho_reh_GeV = rho_reh_GeV
                         sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
                         sol.DeltaN_reh = -(1+w_reh) / 3 * np.log(2/3 * sol.rho_reh_mp4 / sol.V_end)
-                        sol.N0 += 3/4 * (1/3 - w_reh) * sol.DeltaN_reh
+                        sol.DeltaN_minus1 = sol.DeltaN_reh / 4 * (3 * w_reh - 1)
+                        sol.N0 -= sol.DeltaN_minus1
                         sol._N_reh = sol._N_end + sol.DeltaN_reh
                     else:
                         raise ValueError(
