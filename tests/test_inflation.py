@@ -621,6 +621,12 @@ def test_derived_reheating(K, rho_reh_GeV):
     assert bist.N_end < bist.N_reh
     assert -1/3 <= bist.w_reh <= 1
     assert bist.DeltaN_reh >= 0
+    if bist.w_reh < 1/3:
+        assert bist.DeltaN_minus1 > 0
+    elif bist.w_reh > 1/3:
+        assert bist.DeltaN_minus1 < 0
+    else:
+        assert bist.DeltaN_minus1 == 0
 
 
 def nan_inflation_end(background_sol):
