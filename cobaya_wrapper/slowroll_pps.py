@@ -1,9 +1,8 @@
 """Slow-roll inflationary primordial power spectrum (PPS) for use with Cobaya."""
 import warnings
 import numpy as np
-from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
+from powerlaw_pps import ExternalPrimordialPowerSpectrum
 from primpy.exceptionhandling import PrimpyError, StepSizeError, PrimpyWarning
-from primpy.units import mp_GeV, lp_iGeV
 import primpy.potentials as pp
 from primpy.time.inflation import InflationEquationsT as InflationEquations
 from primpy.events import InflationEvent
@@ -12,6 +11,9 @@ from primpy.solver import solve
 
 
 class SlowRollPPS(ExternalPrimordialPowerSpectrum):
+    rtol = 2.22045e-14
+    atol = 1e-18
+    solve_ivp_method = 'DOP853'
 
     def initialize(self):
         super().initialize()
@@ -23,7 +25,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
                 'N_end', 'phi_end', 'V_end', 'H_end',
-                'N_reh', 'w_reh', 'DeltaN_reh', 'rho_reh_GeV',
+                'N_reh', 'w_reh', 'DeltaN_reh', 'rho_reh_GeV', 'lnR_rad',
                 'A_s', 'n_s', 'n_run', 'n_runrun', 'A_t', 'n_t', 'r'}
 
     def calculate(self, state, want_derived=True, **params_values_dict):
@@ -43,13 +45,14 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
             alpha = params_values_dict.get('alpha')
             pot_kwargs.update(alpha=alpha)
 
-        atol = 1e-14
-        rtol = 1e-6
+        atol_A = 1e-14
+        rtol_A = 1e-5
         K = 0
         t_eval = np.logspace(5, 12, (12 - 5) * 1000 + 1)
         pot = self.Pot(**pot_kwargs)
         Lambda, _, _ = pot.sr_As2Lambda(A_s=A_s, N_star=N_star, phi_star=None, **pot_kwargs)
-        phi_i = pot.sr_N2phi(N=90)  # choose sufficiently high N to accommodate even highest N_star
+        # choose sufficiently high N to accommodate even highest N_star
+        phi_i = pot.sr_N2phi(N=max(N_star+30, 90))
         if 'phi0' in pot_kwargs and phi_i > phi0:
             phi_i = phi0
         for i in range(11):
@@ -59,27 +62,22 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                   InflationEvent(eq, -1, terminal=True)]   # records inflation end
             ic = SlowRollIC(equations=eq, phi_i=phi_i, N_i=0, t_i=t_eval[0])
             b = solve(ic=ic, events=ev, t_eval=t_eval,
-                      atol=1e-18, rtol=2.22045e-14, method='DOP853')
+                      atol=self.atol, rtol=self.rtol, method=self.solve_ivp_method)
             if not b.success:
                 raise StepSizeError(b.message)
-            rho_end_GeV = (1/3 * (1/2 * b.dphidt[b.inflation_mask][-1]**2
-                                  + b.potential.V(b.phi[b.inflation_mask][-1]))
-                           * mp_GeV / lp_iGeV**3)**(1/4)
-            if rho_reh_GeV > rho_end_GeV:
-                raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
             with warnings.catch_warnings(action='ignore', category=PrimpyWarning):
                 if w_reh is not None and rho_reh_GeV is not None:
                     b.calibrate_scale_factor(calibration_method='reheating',
                                              rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
                 elif N_star is not None and n_s is None:
                     b.calibrate_scale_factor(calibration_method='N_star', N_star=N_star,
-                                             rho_reh_GeV=rho_reh_GeV)
+                                             rho_reh_GeV=rho_reh_GeV, w_reh=w_reh)
                 else:
                     N_star = min(N_star, b.N_tot-0.1)
                     b.calibrate_scale_factor(N_star=N_star, rho_reh_GeV=rho_reh_GeV)
                     b.set_ns(n_s=n_s, rho_reh_GeV=rho_reh_GeV, N_star_min=20, N_star_max=N_star)
             # check whether the target A_s is met
-            if abs(b.A_s - A_s) < atol + rtol * A_s:
+            if abs(b.A_s - A_s) < atol_A + rtol_A * A_s:
                 break  # when the target is met, exit the loop
             elif i < 10:
                 # when the target is not met, use the scaling relations between
@@ -101,6 +99,8 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
                                          'kmax': self.kmax,
                                          'Pk': Pkt,
                                          'log_regular': True}
+        state['primordial_cHH'] = {'N': b.N,
+                                   'cHH': b.cHH_Mpc}
         derived_params = self.get_can_provide_params()
         state['derived'] = {derived_param: getattr(b, derived_param)
                             for derived_param in derived_params}
@@ -110,6 +110,9 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
 
     def get_primordial_tensor_pk(self):
         return self.current_state['primordial_tensor_pk']
+
+    def get_comoving_hubble_horizon(self):
+        return self.current_state['primordial_cHH']
 
 
 class MonomialSlowRollPPS(SlowRollPPS):
