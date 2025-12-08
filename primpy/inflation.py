@@ -669,9 +669,11 @@ class InflationEquations(Equations, ABC):
                                 f"Something in the reheating setup went wrong. Keep in mind that "
                                 f"two of `w_reh`, `DeltaN_reh`, and `rho_reh_GeV` must be "
                                 f"specified. The respective third should be `None` and will be "
-                                f"inferred. Or set all to `None` for instant reheating. "
-                                f"However, we got w_reh={w_reh}, DeltaN_reh={DeltaN_reh}, and "
-                                f"rho_reh_GeV={rho_reh_GeV}."
+                                f"inferred. Alternatively, you can provide `DeltaN_minus1` if the "
+                                f"details of the other reheating parameters are not important. "
+                                f"Or you can set all parameters to `None` for instant reheating. "
+                                f"However, we got w_reh={w_reh}, DeltaN_reh={DeltaN_reh}, "
+                                f"rho_reh_GeV={rho_reh_GeV}, and DeltaN_minus1={DeltaN_minus1}."
                             )
                         sol.delta_N_calib = sol.N_end - sol._N_end
                         sol._logaH_star = sol.N0 + np.log(K_STAR_lp) - sol.delta_N_calib
