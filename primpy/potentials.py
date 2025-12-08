@@ -1,12 +1,17 @@
 """Inflationary potentials."""
+import sys
 from abc import ABC, abstractmethod
 from functools import cached_property
 from warnings import warn
 import numpy as np
 from scipy.special import lambertw
 from scipy.interpolate import interp1d
+from scipy.optimize import root_scalar
 from primpy.units import pi
 from primpy.exceptionhandling import PrimpyError, PrimpyWarning
+
+
+EPS = sys.float_info.epsilon
 
 
 class InflationaryPotential(ABC):
@@ -749,35 +754,31 @@ class DoubleWellPotential(InflationaryPotential):
         super().__init__(**pot_kwargs)
 
     def V(self, phi):  # noqa: D102
-        phi_0_phi = (self.phi0 - phi) / self.phi0
+        phi_0_phi = 1 - phi / self.phi0
         return self.Lambda**4 * (1 - phi_0_phi**self.p)**2
 
     def dV(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-1) / phi0
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-1) / self.phi0
         return pre * (1 - phi_0_phi**p)
 
     def d2V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-2) / phi0**2
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-2) / self.phi0**2
         return pre * (-p + phi_0_phi**p * (2*p-1) + 1)
 
     def d3V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-3) / phi0**3
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-3) / self.phi0**3
         return pre * (p**2 - 3*p + phi_0_phi**p * (-4*p**2 + 6*p - 2) + 2)
 
     def d4V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-4) / phi0**4
+        phi_0_phi = 1 - phi / self.phi0
+        pre = self.Lambda**4 * 2 * p * phi_0_phi**(p-4) / self.phi0**4
         return pre * (-p**3 + 6*p**2 - 11*p + phi_0_phi**p * (8*p**3-24*p**2+22*p-6) + 6)
 
     def inv_V(self, V):  # noqa: D102
@@ -785,49 +786,43 @@ class DoubleWellPotential(InflationaryPotential):
 
     def get_epsilon_1V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
-        return 2 * p**2 * phi_0_phi**(2*p-2) / (phi0**2 * (phi_0_phi**p - 1)**2)
+        phi_0_phi = 1 - phi / self.phi0
+        return 2 * p**2 * phi_0_phi**(2*p-2) / (self.phi0**2 * (phi_0_phi**p - 1)**2)
 
     def get_epsilon_2V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
+        phi_0_phi = 1 - phi / self.phi0
         return (4 * p * phi_0_phi**(p - 2) * (p + phi_0_phi**p - 1)
-                / (phi0**2 * (phi_0_phi**p - 1)**2))
+                / (self.phi0**2 * (phi_0_phi**p - 1)**2))
 
     def get_epsilon_3V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
+        phi_0_phi = 1 - phi / self.phi0
         return (2*p*phi_0_phi**(p-2) * (p**2-3*p+2*phi_0_phi**(2*p)+phi_0_phi**p*(p**2+3*p-4)+2)
-                / (phi0**2 * (phi_0_phi**p - 1)**2 * (p + phi_0_phi**p - 1)))
+                / (self.phi0**2 * (phi_0_phi**p - 1)**2 * (p + phi_0_phi**p - 1)))
 
     def get_epsilon_4V(self, phi):  # noqa: D102
         p = self.p
-        phi0 = self.phi0
-        phi_0_phi = (phi0 - phi) / phi0
+        phi_0_phi = 1 - phi / self.phi0
         num = 2 * p * phi_0_phi**(p-2) * (p**4 - 6*p**3 + 13*p**2 - 12*p
                                           + 4*phi_0_phi**(4*p)
                                           + phi_0_phi**(3*p) * (p**3 + 3*p**2 + 12*p - 16)
                                           + phi_0_phi**(2*p) * (5*p**3 + 7*p**2 - 36*p + 24)
                                           + phi_0_phi**p * (3*p**4 - 23*p**2 + 36*p - 16) + 4)
-        den = phi0**2 * (p**3 - 4 * p**2 + 5 * p
-                         + 2 * phi_0_phi**(5*p)
-                         + phi_0_phi**(4*p) * (p**2 + 5*p - 10)
-                         + phi_0_phi**(3*p) * (p**3 + p**2 - 20*p + 20)
-                         + phi_0_phi**(2*p) * (-p**3 - 9*p**2 + 30*p - 20)
-                         + phi_0_phi**p * (-p**3 + 11*p**2 - 20*p + 10) - 2)
+        den = self.phi0**2 * (p**3 - 4 * p**2 + 5 * p
+                              + 2 * phi_0_phi**(5*p)
+                              + phi_0_phi**(4*p) * (p**2 + 5*p - 10)
+                              + phi_0_phi**(3*p) * (p**3 + p**2 - 20*p + 20)
+                              + phi_0_phi**(2*p) * (-p**3 - 9*p**2 + 30*p - 20)
+                              + phi_0_phi**p * (-p**3 + 11*p**2 - 20*p + 10) - 2)
         return num / den
 
     @cached_property
     def phi_end(self):  # noqa: D102
-        phi0 = self.phi0
-        phis = np.linspace(0, phi0, 10001)[1:-1]
-        e1V = self.get_epsilon_1V(phi=phis)
-        loge2phi = interp1d(np.log10(e1V), phis)
-        phi_end = loge2phi(0).item()
-        return phi_end
+        def inflation_end(phi):
+            return self.get_epsilon_1V(phi=phi) - 1
+        output = root_scalar(inflation_end, bracket=(EPS * self.phi0, self.phi0))
+        return output.root
 
     def sr_phi2N(self, phi):  # noqa: D102
         p = self.p
@@ -1046,6 +1041,175 @@ class TmodelPotential(InflationaryPotential):
         p = self.p
         s_6_a = self.s_6_a
         return s_6_a / 2 * np.arccosh(8*p/s_6_a**2 * N + np.sqrt(8*p**2+s_6_a**2)/s_6_a)
+
+
+class RadionGaugePotential(InflationaryPotential):
+    """Generalised Radion Gauge potential: `V(phi) = Lambda**4 * phi**p / (alpha + phi**p)`.
+
+    Listed in the Encyclopaedia Inflationaris under eq. (5.226).
+    Also related to the KKLT version of D-Brane Inflation, see eq. (6.319).
+
+    Parameters
+    ----------
+    Lambda : float
+        Potential amplitude parameter.
+    p : float
+        Power of the inflaton field in the potential.
+    alpha : float
+        Potential parameter controlling the tensor-to-scalar ratio similar to other `alpha`
+        parameters in alpha-attractors.
+
+    Attributes
+    ----------
+    mu : float
+        Alternative potential parameter, related to `alpha` as `mu**p = alpha`, allowing to express
+        the potential in terms of the fraction `phi/mu`. Provided here for convenience.
+
+    """
+
+    tag = 'rgp'
+    name = 'RadionGaugePotential'
+    tex = r'Radion Gauge'
+    perturbation_ic = (1, 0, 0, 1)
+
+    def __init__(self, **pot_kwargs):
+        self.p = pot_kwargs.pop('p')
+        self.alpha = pot_kwargs.pop('alpha')
+        self.mu = self.alpha**(1/self.p)
+        super().__init__(**pot_kwargs)
+
+    def V(self, phi):  # noqa: D102
+        return self.Lambda**4 * phi**self.p / (self.alpha + phi**self.p)
+
+    def dV(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        L1 = self.Lambda**4 * alpha * p * phi**(p-1)
+        return L1 / (alpha + phi**p)**2
+
+    def d2V(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        L2 = self.Lambda**4 * alpha * p * phi**(p-2)
+        return L2 * (alpha * p - alpha - p * phi**p - phi**p) / (alpha + phi**p)**3
+
+    def d3V(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        L3 = self.Lambda**4 * alpha * p * phi**(p-3)
+        return L3 * (p**2 * (alpha**2 - 4*alpha*phi**p + phi**(2*p))
+                     - 3 * p * (alpha - phi**p) * (alpha + phi**p)
+                     + 2 * (alpha + phi**p)**2) / (alpha + phi**p)**4
+
+    def d4V(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        L4 = self.Lambda**4 * alpha * p * phi**(p-4)
+        return L4 * (p**3 * (alpha - phi**p) * (alpha**2 - 10*alpha*phi**p + phi**(2*p))
+                     - 6 * p**2 * (alpha + phi**p) * (alpha**2 - 4*alpha*phi**p + phi**(2*p))
+                     + 11 * p * (alpha - phi**p) * (alpha + phi**p)**2
+                     - 6 * (alpha + phi**p)**3) / (alpha + phi**p)**5
+
+    def inv_V(self, V):  # noqa: D102
+        return (self.alpha / (self.Lambda**4/V - 1))**(1/self.p)
+
+    def get_epsilon_1V(self, phi):  # noqa: D102
+        return self.alpha**2 * self.p**2 / (2 * phi**2 * (self.alpha + phi**self.p)**2)
+
+    def get_epsilon_2V(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        return 2 * alpha * p * (alpha + phi**p*(p+1)) / (phi**2 * (alpha + phi**p)**2)
+
+    def get_epsilon_3V(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        return (alpha * p * (p**2*(alpha - phi**p) * (3*alpha - phi**p)
+                             - 3 * p * (alpha**2*p - alpha*p*phi**p - alpha*phi**p - phi**(2*p))
+                             + 2 * (alpha + phi**p)**2) /
+                (phi**2 * (alpha + phi**p)**2 * (alpha + p*phi**p + phi**p)))
+
+    def get_epsilon_4V(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        return (alpha * p * (p**4 * phi**(3*p) * (3*alpha - phi**p)
+                             - p**3*phi**p*(alpha+phi**p) * (alpha**2-6*alpha*phi**p+6*phi**(2*p))
+                             + p**2*phi**p*(alpha + phi**p)**2*(3*alpha - 13*phi**p)
+                             - 12*p*phi**p*(alpha + phi**p)**3
+                             - 4*(alpha + phi**p)**4) /
+                (phi**2 * (p**3 * phi**(2*p) * (alpha - phi**p) * (alpha + phi**p)**2
+                           + p**2 * phi**p * (alpha - 4*phi**p) * (alpha + phi**p)**3
+                           - 5 * p * phi**p * (alpha + phi**p)**4
+                           - 2 * (alpha + phi**p)**5)))
+
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        def inflation_end(phi):
+            return self.get_epsilon_1V(phi=phi) - 1
+        out = root_scalar(inflation_end, bracket=(1e-30, self.inv_V(V=self.Lambda**4 * (1-EPS))))
+        return out.root
+
+    def sr_phi2N(self, phi):  # noqa: D102
+        p = self.p
+        alpha = self.alpha
+        phi_end = self.phi_end
+        return ((phi**(p+2) - phi_end**(p+2) + (phi**2 - phi_end**2) * (alpha*p/2 + alpha)) /
+                (alpha * p * (p+2)))
+
+    def sr_N2phi(self, N):  # noqa: D102
+        def root_N(phi_in):
+            return self.sr_phi2N(phi=phi_in) - N
+        out = root_scalar(root_N, bracket=(self.phi_end, self.inv_V(V=self.Lambda**4*(1-1e-15))))
+        phi = out.root
+        return phi
+
+
+class RadionGauge2Potential(RadionGaugePotential):
+    """Quadratic Radion Gauge potential: `V(phi) = Lambda**4 * phi**2 / (alpha + phi**2)`.
+
+    Listed in the Encyclopaedia Inflationaris under eq. (5.226).
+    Also related to the KKLT version of D-Brane Inflation, see eq. (6.319).
+
+    Parameters
+    ----------
+    Lambda : float
+        Potential amplitude parameter.
+    alpha : float
+        Potential parameter controlling the tensor-to-scalar ratio similar to other `alpha`
+        parameters in alpha-attractors.
+
+    Attributes
+    ----------
+    mu : float
+        Alternative potential parameter, related to `alpha` as `mu**2 = alpha`, allowing to express
+        the potential in terms of the fraction `phi/mu`. Provided here for convenience.
+
+    """
+
+    tag = 'rg2'
+    name = 'RadionGauge2Potential'
+    tex = r'Radion Gauge (p=2)'
+    perturbation_ic = (1, 0, 0, 1)
+
+    def __init__(self, **pot_kwargs):
+        super().__init__(p=2, **pot_kwargs)
+
+    @cached_property
+    def phi_end(self):  # noqa: D102
+        a = self.alpha
+        phi_end = 3**(1/12) * np.sqrt(
+            3 * a**(4/3)
+            + 3**(2/3) * a**(2/3) * (np.sqrt(3)*a + 9*np.sqrt(2*a+27) + 27*np.sqrt(3))**(2/3)
+            - 2 * 3**(5/6) * a * (np.sqrt(3)*a + 9*np.sqrt(2*a+27) + 27*np.sqrt(3))**(1/3)
+        ) / (
+            3 * (np.sqrt(3)*a + 9*np.sqrt(2*a+27) + 27*np.sqrt(3))**(1/6)
+        )
+        return phi_end
+
+    def sr_N2phi(self, N):  # noqa: D102
+        alpha = self.alpha
+        phi_end = self.phi_end
+        return np.sqrt(-alpha + np.sqrt(8*N*alpha + alpha**2 + 2*alpha*phi_end**2 + phi_end**4))
 
 
 # TODO:
