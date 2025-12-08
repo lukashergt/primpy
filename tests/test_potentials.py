@@ -57,6 +57,7 @@ def test_inflationary_potentials(Pot, pot_kwargs, Lambda, phi):
         pot.sr_As2Lambda(A_s=2e-9, phi_star=5, N_star=60, **pot_kwargs)
     e1V = pot.get_epsilon_1V(phi=phi)
     assert 0 < e1V < 1
+    assert pot.get_epsilon_1V(phi=pot.phi_end) == approx(1)
     pot.get_epsilon_2V(phi=phi)
     pot.get_epsilon_3V(phi=phi)
     pot.get_epsilon_4V(phi=phi)
