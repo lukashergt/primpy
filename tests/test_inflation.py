@@ -776,6 +776,8 @@ def test_calibration_input_errors():
     ev = [InflationEvent(eq, +1, terminal=False),
           InflationEvent(eq, -1, terminal=True)]
     b_sol = solve(ic=ic, events=ev)
+    with pytest.raises(ValueError):  # should not provide N_star
+        b_sol.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=50)
     with pytest.raises(ValueError):  # missing h
         b_sol.calibrate_scale_factor(Omega_K0=Omega_K0)
     with pytest.raises(ValueError):  # negative h
