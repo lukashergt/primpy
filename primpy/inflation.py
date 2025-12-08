@@ -726,6 +726,10 @@ class InflationEquations(Equations, ABC):
                 sol.logk = logk[sol.inflation_mask]
 
             else:  # curved universe
+                if N_star is not None:
+                    raise ValueError(f"For curved universes, `N_star` should be a derived "
+                                     f"parameter, not an input parameter, but you requested "
+                                     f"Omega_K0={Omega_K0} and N_star={N_star}.")
                 if h is None or h <= 0:
                     raise ValueError(f"To calibrate curved universes little h>0 must be provided, "
                                      f"but got h={h}.")
