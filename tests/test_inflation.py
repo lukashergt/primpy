@@ -495,7 +495,7 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
 )
 def test_reheating_self_consistency_flat(N_star_in, rho_reh_GeV_in, w_reh_in,
                                          DeltaN_reh_in, DeltaN_minus1_in):
-    K = 0  # consider only flat unverses
+    K = 0  # consider only flat universes
     N_i = 14
     phi_i = 6.5
     t_i = 7e4
@@ -690,7 +690,7 @@ def test_Ncross_not_during_inflation(K, Eq):
 @pytest.mark.parametrize('N_star_in, DeltaN_minus1_in', [(50, None),
                                                          (None, +5)])
 def test_reheating_nan(N_star_in, DeltaN_minus1_in):
-    K = 0  # consider only flat unverses
+    K = 0  # consider only flat universes
     N_i = 14
     phi_i = 6.5
     t_i = 7e4
