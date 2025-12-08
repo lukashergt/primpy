@@ -25,7 +25,7 @@ def is_instant_reheating(N_star, rho_reh_GeV, w_reh, DeltaN_reh, DeltaN_minus1):
     DeltaN_minus1 : float
         Contribution to the calibration of `N_star` or `N_end` that comes from reheating
         but is agnostic to the details of reheating. See Martin & Ringeval (2010), where
-        this is called `lnR_rad`.
+        this is called `-lnR_rad`.
         https://arxiv.org/abs/1004.5525
 
     Returns
