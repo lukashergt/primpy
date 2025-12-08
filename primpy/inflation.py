@@ -643,7 +643,7 @@ class InflationEquations(Equations, ABC):
                                 sol.rho_reh_GeV = rho_reh_GeV
                                 sol.rho_reh_mp4 = rho_reh_GeV**4 / mp_GeV * lp_iGeV**3
                                 sol.N_reh = (sol.N0
-                                             - np.log((45 / pi**2)**(1 / 4) * g0**(-1 / 3))
+                                             - np.log((45 / pi**2)**(1/4) * g0**(-1/3))
                                              - np.log(g_th) / 12
                                              + np.log(3 / 2 * T_CMB_Tp**4 / sol.rho_reh_mp4) / 4)
                                 sol.DeltaN_reh = sol.N_reh - sol.N_end
