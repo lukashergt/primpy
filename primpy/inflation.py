@@ -579,7 +579,7 @@ class InflationEquations(Equations, ABC):
                                                  f"be greater than -1/3 (reheating by definition "
                                                  f"happens after the end of inflation, but "
                                                  f"w_reh<-1/3 is inflating), but got "
-                                                 f"DeltaN_reh={DeltaN_reh} and w_reh={w_reh}.")
+                                                 f"DeltaN_reh={sol.DeltaN_reh} and w_reh={w_reh}.")
                             sol.rho_reh_mp4 = 3/2*sol.V_end * np.exp(-3*(1+w_reh) * sol.DeltaN_reh)
                             sol.rho_reh_GeV = (sol.rho_reh_mp4 * mp_GeV / lp_iGeV**3)**(1/4)
                         elif rho_reh_GeV is not None and w_reh is None and DeltaN_reh is None:
@@ -625,11 +625,12 @@ class InflationEquations(Equations, ABC):
                             # use DeltaN_minus1 to calibrate N_end
                             sol.DeltaN_minus1 = DeltaN_minus1
                             sol.N_end += sol.DeltaN_minus1
-                            if not (w_reh is None and DeltaN_reh is None):
-                                raise ValueError(
+                            if w_reh is not None or DeltaN_reh is not None:
+                                raise NotImplementedError(
                                     "`DeltaN_minus1` is meant to be agnostic to the details of "
-                                    "reheating, so it should not be combined with any of "
-                                    "[w_reh, DeltaN_reh, rho_reh_GeV]."
+                                    "reheating, so we have not implemented a combination with "
+                                    "`w_reh` or `DeltaN_reh`. However, you can provide "
+                                    "`rho_reh_GeV` to assume details on reheating."
                                 )
                             elif rho_reh_GeV is not None:
                                 sol.rho_reh_GeV = rho_reh_GeV
