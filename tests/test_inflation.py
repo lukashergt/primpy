@@ -461,6 +461,7 @@ def test_reheating(K, DeltaN_reh, w_reh, rho_reh_GeV):
         assert bist.N_reh == approx(bisn.N_reh, rel=1e-5)
         assert bist.w_reh == approx(bisn.w_reh, rel=1e-5)
         assert bist.DeltaN_reh == approx(bisn.DeltaN_reh, rel=1e-5)
+        assert bist.DeltaN_minus1 == approx(bisn.DeltaN_minus1, rel=1e-5)
         assert bist.rho_reh_GeV == approx(bisn.rho_reh_GeV, rel=1e-5)
         assert bist.rho_reh_mp4 == approx(bisn.rho_reh_mp4, rel=1e-5)
         assert bist.delta_N_calib == approx(bisn.delta_N_calib, rel=1e-5)
