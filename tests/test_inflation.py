@@ -610,7 +610,7 @@ def test_derived_reheating(K, rho_reh_GeV):
     t_i = 7e4
     h = 0.7
     Omega_K0 = -0.1 * K
-    N_star = 55
+    N_star = 55 if K == 0 else None
     eq_t = InflationEquationsT(K=K, potential=pot)
     ic_t = InflationStartIC(eq_t, N_i=N_i, phi_i=phi_i, t_i=t_i)
     ev_t = [InflationEvent(eq_t, +1, terminal=False),
