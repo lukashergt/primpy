@@ -569,6 +569,13 @@ class InflationEquations(Equations, ABC):
                             sol.w_reh = np.nan
                             sol.DeltaN_reh = np.nan
                         elif rho_reh_GeV is None and w_reh is not None and DeltaN_reh is None:
+                            if w_reh == 1/3:
+                                raise ValueError(f"You requested N_star={N_star} and w_reh=1/3, "
+                                                 f"but w_reh=1/3 corresponds to instant reheating "
+                                                 f"and should not be requested together with a "
+                                                 f"specific value for `N_star`. For instant "
+                                                 f"reheating, `N_star` has to be a derived "
+                                                 f"parameter.")
                             sol.w_reh = w_reh
                             sol.DeltaN_reh = 4 * sol.DeltaN_minus1 / (3 * w_reh - 1)
                             sol._N_reh = sol._N_end + sol.DeltaN_reh
