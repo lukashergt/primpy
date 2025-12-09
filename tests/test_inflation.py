@@ -356,6 +356,36 @@ def test_sol_time_efolds(K):
         assert_allclose(bist.P_s_approx(k, 'ARBDS', o), bisn.P_s_approx(k, 'ARBDS', o), rtol=1e-4)
         assert_allclose(bist.P_t_approx(k, 'ARBDS', o), bisn.P_t_approx(k, 'ARBDS', o), rtol=1e-4)
 
+    assert bist.A_s_LLMS == approx(bisn.A_s_LLMS)
+    assert bist.A_t_LLMS == approx(bisn.A_t_LLMS)
+    assert bist.r_LLMS == approx(bisn.r_LLMS)
+    assert bist.n_s_LLMS == approx(bisn.n_s_LLMS)
+    assert bist.n_t_LLMS == approx(bisn.n_t_LLMS)
+    assert bist.n_run_LLMS == approx(bisn.n_run_LLMS, rel=1e-3)
+    assert bist.n_t_run_LLMS == approx(bisn.n_t_run_LLMS, rel=1e-3)
+    assert bist.A_s_ARBDS3 == approx(bisn.A_s_ARBDS3)
+    assert bist.A_t_ARBDS3 == approx(bisn.A_t_ARBDS3)
+    assert bist.r_ARBDS3 == approx(bisn.r_ARBDS3)
+    assert bist.n_s_ARBDS3 == approx(bisn.n_s_ARBDS3)
+    assert bist.n_t_ARBDS3 == approx(bisn.n_t_ARBDS3)
+    assert bist.n_run_ARBDS3 == approx(bisn.n_run_ARBDS3, rel=1e-3)
+    assert bist.n_t_run_ARBDS3 == approx(bisn.n_t_run_ARBDS3, rel=1e-3)
+    assert bist.n_runrun_ARBDS3 == approx(bisn.n_runrun_ARBDS3, rel=1e-3)
+    assert bist.n_t_runrun_ARBDS3 == approx(bisn.n_t_runrun_ARBDS3, rel=1e-3)
+
+    assert bist.A_s_LLMS == approx(bist.A_s_ARBDS3, rel=1e-3)
+    assert bist.A_t_LLMS == approx(bist.A_t_ARBDS3, rel=1e-5)
+    assert bist.r_LLMS == approx(bist.r_ARBDS3, rel=1e-3)
+    assert bist.n_s_LLMS == approx(bist.n_s_ARBDS3, rel=1e-5)
+    assert bist.n_t_LLMS == approx(bist.n_t_ARBDS3, rel=1e-3)
+
+    assert bist.A_s == approx(bist.A_s_ARBDS3, rel=1e-3)
+    assert bist.A_t == approx(bist.A_t_ARBDS3, rel=1e-5)
+    assert bist.r == approx(bist.r_ARBDS3, rel=1e-3)
+    assert bist.n_s == approx(bist.n_s_ARBDS3, rel=1e-4)
+    assert bist.n_t == approx(bist.n_t_ARBDS3, rel=1e-3)
+    assert bist.n_run == approx(bist.n_run_ARBDS3, rel=1e-2)
+
     # set n_s
     if K == 0:
         bist.set_ns(0.96, N_star_min=20, N_star_max=65)
