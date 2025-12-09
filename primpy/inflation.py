@@ -1117,13 +1117,16 @@ class InflationEquations(Equations, ABC):
                    + (-C**2 - 3 * C + 7 * pi**2 / 12 - 7) * e1 * e2
                    + (pi**2 / 8 - 1) * e2**2
                    + (-C**2 / 2 + pi**2 / 24) * e2 * e3)
+            sol.A_s_LLMS = Ps0 * np.exp(bs0)
             sol.n_s_LLMS = 1 - 2 * e1 - e2 - 2 * e1**2 - (2 * C + 3) * e1 * e2 - C * e2 * e3
             sol.n_run_LLMS = -2 * e1 * e2 - e2 * e3
             bt0 = (-2 * (C + 1) * e1
                    + (-2 * C + pi**2 / 2 - 7) * e1**2
                    + (-C**2 - 2 * C + pi**2 / 12 - 2) * e1 * e2)
+            sol.A_t_LLMS = Pt0 * np.exp(bt0)
             sol.n_t_LLMS = -2 * e1 - 2 * e1**2 - 2 * (C + 1) * e1 * e2
             sol.n_t_run_LLMS = -2 * e1 * e2
+            sol.r_LLMS = sol.A_t_LLMS / sol.A_s_LLMS
 
             sol.P_s_approx_LLMS = lambda k: Ps0 * np.exp(
                 bs0
@@ -1384,6 +1387,7 @@ class InflationEquations(Equations, ABC):
                 sol.P_tensor_approx = sol.P_t_approx_ARBDS1(k=np.exp(sol.logk))
 
             # Ballardini, Davoli, and Sirletti (2025), eqs. (C.12) to (C.25)
+            sol.A_s_ARBDS3 = Ps0 * as0
             sol.n_s_ARBDS3 = 1 + (
                 - 2 * e1 - e2
                 - 2 * e1**2 - (3 - 2*alpha) * e1 * e2 + alpha * e2 * e3
@@ -1408,6 +1412,8 @@ class InflationEquations(Equations, ABC):
             # n_s = lambda k: (1 + bs1
             #                  + bs2 * np.log(k/K_STAR)
             #                  + bs3/2 * np.log(k/K_STAR)**2
+            sol.A_t_ARBDS3 = Pt0 * at0
+            sol.r_ARBDS3 = sol.A_t_ARBDS3 / sol.A_s_ARBDS3
             sol.n_t_ARBDS3 = (
                 - 2 * e1
                 - 2 * e1**2 - 2 * (1 - alpha) * e1 * e2
