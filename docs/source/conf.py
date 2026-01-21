@@ -78,6 +78,7 @@ autodoc_default_options = {
     'undoc-members': False,
 }
 autosummary_generate = True
+autodoc_use_legacy_class_based = True  # Sphinx 9.x: fall back to legacy (pre-9.0) class-based autodoc
 
 
 # -- Options for autosectionlabel------------------------------------------
