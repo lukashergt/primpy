@@ -166,3 +166,17 @@ class TmodelSlowRollPPS(SlowRollPPS):
     def initialize(self):
         super().initialize()
         self.Pot = pp.TmodelPotential
+
+
+class RadionGaugeSlowRollPPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.RadionGaugePotential
+
+
+class RadionGauge2SlowRollPPS(SlowRollPPS):
+
+    def initialize(self):
+        super().initialize()
+        self.Pot = pp.RadionGauge2Potential
