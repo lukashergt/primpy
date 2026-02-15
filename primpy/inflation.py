@@ -1069,15 +1069,12 @@ class InflationEquations(Equations, ABC):
                 sol.logk2logP_s = logk2logP_s_3
                 sol.logk2logP_t = logk2logP_t_3
 
-        def derive_approx_power_LLMS(**interp1d_kwargs):
+        def derive_approx_power_LLMS():
             """Slow-roll approximation by Leach, Liddle, Martin, and Schwarz (2002).
 
             http://arxiv.org/abs/astro-ph/0101225v2
 
             """
-            spline_order = interp1d_kwargs.pop('k', 3)
-            extrapolate = interp1d_kwargs.pop('ext', 'const')
-
             K = sol.K
             _N = sol._N[sol.inflation_mask]
             H = sol.H[sol.inflation_mask]
@@ -1120,31 +1117,29 @@ class InflationEquations(Equations, ABC):
                    + (-C**2 - 3 * C + 7 * pi**2 / 12 - 7) * e1 * e2
                    + (pi**2 / 8 - 1) * e2**2
                    + (-C**2 / 2 + pi**2 / 24) * e2 * e3)
-            n_s = 1 - 2 * e1 - e2 - 2 * e1**2 - (2 * C + 3) * e1 * e2 - C * e2 * e3
-            n_s_run = -2 * e1 * e2 - e2 * e3
+            sol.A_s_LLMS = Ps0 * np.exp(bs0)
+            sol.n_s_LLMS = 1 - 2 * e1 - e2 - 2 * e1**2 - (2 * C + 3) * e1 * e2 - C * e2 * e3
+            sol.n_run_LLMS = -2 * e1 * e2 - e2 * e3
             bt0 = (-2 * (C + 1) * e1
                    + (-2 * C + pi**2 / 2 - 7) * e1**2
                    + (-C**2 - 2 * C + pi**2 / 12 - 2) * e1 * e2)
-            n_t = -2 * e1 - 2 * e1**2 - 2 * (C + 1) * e1 * e2
-            n_t_run = -2 * e1 * e2
+            sol.A_t_LLMS = Pt0 * np.exp(bt0)
+            sol.n_t_LLMS = -2 * e1 - 2 * e1**2 - 2 * (C + 1) * e1 * e2
+            sol.n_t_run_LLMS = -2 * e1 * e2
+            sol.r_LLMS = sol.A_t_LLMS / sol.A_s_LLMS
 
-            log_k_kstar = sol.logk - np.log(K_STAR)
-            logP_s = np.log(Ps0) + bs0 + (n_s - 1) * log_k_kstar + n_s_run / 2 * log_k_kstar**2
-            logP_t = np.log(Pt0) + bt0 + n_t * log_k_kstar + n_t_run / 2 * log_k_kstar**2
-            logk2logP_s_LLMS = InterpolatedUnivariateSpline(
-                sol.logk, logP_s,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            sol.P_s_approx_LLMS = lambda k: Ps0 * np.exp(
+                bs0
+                + (sol.n_s_LLMS - 1) * np.log(k/K_STAR)
+                + sol.n_run_LLMS / 2 * np.log(k/K_STAR)**2
             )
-            logk2logP_t_LLMS = InterpolatedUnivariateSpline(
-                sol.logk, logP_t,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
+            sol.P_t_approx_LLMS = lambda k: Pt0 * np.exp(
+                bt0
+                + sol.n_t_LLMS * np.log(k/K_STAR)
+                + sol.n_t_run_LLMS / 2 * np.log(k/K_STAR)**2
             )
-            sol.P_s_approx_LLMS = lambda k: np.exp(logk2logP_s_LLMS(np.log(k)))
-            sol.P_t_approx_LLMS = lambda k: np.exp(logk2logP_t_LLMS(np.log(k)))
-            sol.P_scalar_approx = np.exp(logP_s)
-            sol.P_tensor_approx = np.exp(logP_t)
-            sol.logk2logP_s = logk2logP_s_LLMS
-            sol.logk2logP_t = logk2logP_t_LLMS
+            sol.P_scalar_approx = sol.P_s_approx_LLMS(k=np.exp(sol.logk))
+            sol.P_tensor_approx = sol.P_t_approx_LLMS(k=np.exp(sol.logk))
 
         def derive_approx_power_STE(**interp1d_kwargs):
             """Slow-roll approximation by Schwarz and Terrero-Escalante (2004).
@@ -1216,7 +1211,7 @@ class InflationEquations(Equations, ABC):
             sol.logk2logP_s = logk2logP_s_STE
             sol.logk2logP_t = logk2logP_t_STE
 
-        def derive_approx_power_ARBDS(order=3, **interp1d_kwargs):
+        def derive_approx_power_ARBDS(order=3):
             """Slow-roll approximation up to third order (N3LO).
 
             Slow-roll approximation by
@@ -1229,9 +1224,6 @@ class InflationEquations(Equations, ABC):
             https://arxiv.org/abs/2408.05210
 
             """
-            spline_order = interp1d_kwargs.pop('k', 3)
-            extrapolate = interp1d_kwargs.pop('ext', 'const')
-
             K = sol.K
             _N = sol._N[sol.inflation_mask]
             H = sol.H[sol.inflation_mask]
@@ -1349,45 +1341,22 @@ class InflationEquations(Equations, ABC):
             at3_3 = 1/6 * (-8 * e1**3 + 12 * e1**2 * e2 - 2 * e1 * e2**2 - 2 * e1 * e2 * e3)
 
             # order 1
-            log_k_kstar = sol.logk - np.log(K_STAR)
-            P_s = Ps0 * (as0_1 + as1_1 * log_k_kstar)
-            P_t = Pt0 * (at0_1 + at1_1 * log_k_kstar)
-            mask = (P_s > 0) & (P_t > 0)
-            logP_s = np.log(P_s[mask])
-            logP_t = np.log(P_t[mask])
-            logk2logP_s_ARBDS1 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_s,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
-            logk2logP_t_ARBDS1 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_t,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
-            if order == 1:
-                sol.P_scalar_approx = P_s
-                sol.P_tensor_approx = P_t
-            sol.P_s_approx_ARBDS1 = lambda k: np.exp(logk2logP_s_ARBDS1(np.log(k)))
-            sol.P_t_approx_ARBDS1 = lambda k: np.exp(logk2logP_t_ARBDS1(np.log(k)))
+            sol.P_s_approx_ARBDS1 = lambda k: Ps0 * (as0_1 + as1_1 * np.log(k/K_STAR))
+            sol.P_t_approx_ARBDS1 = lambda k: Pt0 * (at0_1 + at1_1 * np.log(k/K_STAR))
 
             # order 2
-            P_s = Ps0 * (as0_1 + as0_2 + (as1_1 + as1_2) * log_k_kstar + as2_2 * log_k_kstar**2)
-            P_t = Pt0 * (at0_1 + at0_2 + (at1_1 + at1_2) * log_k_kstar + at2_2 * log_k_kstar**2)
-            mask = (P_s > 0) & (P_t > 0)
-            logP_s = np.log(P_s[mask])
-            logP_t = np.log(P_t[mask])
-            logk2logP_s_ARBDS2 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_s,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
-            logk2logP_t_ARBDS2 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_t,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
-            if order == 2:
-                sol.P_scalar_approx = P_s
-                sol.P_tensor_approx = P_t
-            sol.P_s_approx_ARBDS2 = lambda k: np.exp(logk2logP_s_ARBDS2(np.log(k)))
-            sol.P_t_approx_ARBDS2 = lambda k: np.exp(logk2logP_t_ARBDS2(np.log(k)))
+            as0 = as0_1 + as0_2
+            at0 = at0_1 + at0_2
+            as1 = as1_1 + as1_2
+            at1 = at1_1 + at1_2
+            as2 = as2_2
+            at2 = at2_2
+            sol.P_s_approx_ARBDS2 = lambda k: Ps0 * (as0
+                                                     + as1 * np.log(k/K_STAR)
+                                                     + as2 * np.log(k/K_STAR)**2)
+            sol.P_t_approx_ARBDS2 = lambda k: Pt0 * (at0
+                                                     + at1 * np.log(k/K_STAR)
+                                                     + at2 * np.log(k/K_STAR)**2)
 
             # order 3
             as0 = as0_1 + as0_2 + as0_3
@@ -1398,33 +1367,67 @@ class InflationEquations(Equations, ABC):
             at2 = at2_2 + at2_3
             as3 = as3_3
             at3 = at3_3
-            P_s = Ps0 * (as0 + as1 * log_k_kstar + as2 * log_k_kstar**2 + as3 * log_k_kstar**3)
-            P_t = Pt0 * (at0 + at1 * log_k_kstar + at2 * log_k_kstar**2 + at3 * log_k_kstar**3)
-            mask = (P_s > 0) & (P_t > 0)
-            logP_s = np.log(P_s[mask])
-            logP_t = np.log(P_t[mask])
-            logk2logP_s_ARBDS3 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_s,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
-            logk2logP_t_ARBDS3 = InterpolatedUnivariateSpline(
-                sol.logk[mask], logP_t,
-                k=spline_order, ext=extrapolate, **interp1d_kwargs
-            )
+            sol.P_s_approx_ARBDS3 = lambda k: Ps0 * (as0
+                                                     + as1 * np.log(k/K_STAR)
+                                                     + as2 * np.log(k/K_STAR)**2
+                                                     + as3 * np.log(k/K_STAR)**3)
+            sol.P_t_approx_ARBDS3 = lambda k: Pt0 * (at0
+                                                     + at1 * np.log(k/K_STAR)
+                                                     + at2 * np.log(k/K_STAR)**2
+                                                     + at3 * np.log(k/K_STAR)**3)
+
             if order == 3:
-                sol.P_scalar_approx = P_s
-                sol.P_tensor_approx = P_t
-            sol.P_s_approx_ARBDS3 = lambda k: np.exp(logk2logP_s_ARBDS3(np.log(k)))
-            sol.P_t_approx_ARBDS3 = lambda k: np.exp(logk2logP_t_ARBDS3(np.log(k)))
-            if order == 1:
-                sol.logk2logP_s = logk2logP_s_ARBDS1
-                sol.logk2logP_t = logk2logP_t_ARBDS1
+                sol.P_scalar_approx = sol.P_s_approx_ARBDS3(k=np.exp(sol.logk))
+                sol.P_tensor_approx = sol.P_t_approx_ARBDS3(k=np.exp(sol.logk))
             elif order == 2:
-                sol.logk2logP_s = logk2logP_s_ARBDS2
-                sol.logk2logP_t = logk2logP_t_ARBDS2
-            elif order == 3:
-                sol.logk2logP_s = logk2logP_s_ARBDS3
-                sol.logk2logP_t = logk2logP_t_ARBDS3
+                sol.P_scalar_approx = sol.P_s_approx_ARBDS2(k=np.exp(sol.logk))
+                sol.P_tensor_approx = sol.P_t_approx_ARBDS2(k=np.exp(sol.logk))
+            elif order == 1:
+                sol.P_scalar_approx = sol.P_s_approx_ARBDS1(k=np.exp(sol.logk))
+                sol.P_tensor_approx = sol.P_t_approx_ARBDS1(k=np.exp(sol.logk))
+
+            # Ballardini, Davoli, and Sirletti (2025), eqs. (C.12) to (C.25)
+            sol.A_s_ARBDS3 = Ps0 * as0
+            sol.n_s_ARBDS3 = 1 + (
+                - 2 * e1 - e2
+                - 2 * e1**2 - (3 - 2*alpha) * e1 * e2 + alpha * e2 * e3
+                - 2 * e1**3
+                - (15 - 6 * alpha - pi**2) * e1**2 * e2
+                - (7 - 3*alpha + alpha**2 - 7*pi**2/12) * e1 * e2**2
+                - (6 - 4*alpha + alpha**2 - 7*pi**2/12) * e1 * e2 * e3
+                - 1/2 * (alpha**2 - pi**2/12) * (e2 * e3**2 + e2 * e3 * e4)
+                - (2 - pi**2/4) * e2**2 * e3
+            )
+            sol.n_run_ARBDS3 = (
+                - 2 * e1 * e2 - e2 * e3
+                - 6 * e1**2 * e2
+                - (3 - 2*alpha) * e1 * e2**2
+                - 2 * (2 - alpha) * e1 * e2 * e3
+                + alpha * e2 * e3**2
+                + alpha * e2 * e3 * e4
+            )
+            sol.n_runrun_ARBDS3 = (
+                -2 * e1 * e2**2 - 2 * e1 * e2 * e3 - e2 * e3**2 - e2 * e3 * e4
+            )
+            # n_s = lambda k: (1 + bs1
+            #                  + bs2 * np.log(k/K_STAR)
+            #                  + bs3/2 * np.log(k/K_STAR)**2
+            sol.A_t_ARBDS3 = Pt0 * at0
+            sol.r_ARBDS3 = sol.A_t_ARBDS3 / sol.A_s_ARBDS3
+            sol.n_t_ARBDS3 = (
+                - 2 * e1
+                - 2 * e1**2 - 2 * (1 - alpha) * e1 * e2
+                - 2 * e1**3
+                - (14 - 6*alpha - pi**2) * e1**2 * e2
+                - (2 - 2*alpha + alpha**2 - pi**2/12) * (e1*e2**2 + e1*e2*e3)
+            )
+            sol.n_t_run_ARBDS3 = (
+                -2 * e1 * e2
+                - 6 * e1**2 * e2
+                - 2 * (1 - alpha) * e1 * e2**2
+                - 2 * (1 - alpha) * e1 * e2 * e3
+            )
+            sol.n_t_runrun_ARBDS3 = -2 * e1 * e2**2 - 2 * e1 * e2 * e3
 
         sol.derive_approx_power = derive_approx_power
 
