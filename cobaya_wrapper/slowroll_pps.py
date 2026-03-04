@@ -65,7 +65,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
             rho_end_GeV = (1/3 * (1/2 * b.dphidt[b.inflation_mask][-1]**2
                                   + b.potential.V(b.phi[b.inflation_mask][-1]))
                            * mp_GeV / lp_iGeV**3)**(1/4)
-            if rho_reh_GeV > rho_end_GeV:
+            if rho_reh_GeV is not None and rho_reh_GeV > rho_end_GeV:
                 raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
             with warnings.catch_warnings(action='ignore', category=PrimpyWarning):
                 if w_reh is not None and rho_reh_GeV is not None:
