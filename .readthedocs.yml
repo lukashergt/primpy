@@ -11,6 +11,8 @@ build:
   tools:
     python: "3.12"
   jobs:
+    post_checkout:
+      - git fetch --unshallow || true
     pre_install:
       - python -m pip install -U pip setuptools wheel
     install:

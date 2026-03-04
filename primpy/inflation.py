@@ -466,6 +466,7 @@ class InflationEquations(Equations, ABC):
                 N_star=None, background=None,                             # for flat universes
                 DeltaN_reh=None, w_reh=None, rho_reh_GeV=None, g_th=1e2,  # for reheating specific
                 DeltaN_minus1=None,                                       # for reheating agnostic
+                **kwargs,
         ):
             """Calibrate the scale factor `a` for flat or curved universes or from reheating.
 
@@ -528,6 +529,8 @@ class InflationEquations(Equations, ABC):
                 and backward integrations where you can provide the solution
                 from the forward integration as calibrator for the backward
                 integration.
+
+            The remaining keyword arguments are passed to `derive_approx_power`.
 
             """
             if self.K == 0:  # flat universe
@@ -862,7 +865,7 @@ class InflationEquations(Equations, ABC):
 
             # derive approximate primordial power spectra
             if background is None:  # only derive if not copied from background
-                derive_approx_power()
+                derive_approx_power(**kwargs)
 
         sol.calibrate_scale_factor = calibrate_scale_factor
 

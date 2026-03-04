@@ -1,7 +1,10 @@
 """Slow-roll inflationary primordial power spectrum (PPS) for use with Cobaya."""
 import warnings
 import numpy as np
-from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
+try:
+    from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
+except:
+    from powerlaw_pps import ExternalPrimordialPowerSpectrum
 from primpy.exceptionhandling import PrimpyError, StepSizeError, PrimpyWarning
 from primpy.units import mp_GeV, lp_iGeV
 import primpy.potentials as pp
@@ -23,7 +26,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
                 'N_end', 'phi_end', 'V_end', 'H_end',
-                'N_reh', 'w_reh', 'DeltaN_reh', 'rho_reh_GeV',
+                'N_reh', 'w_reh', 'DeltaN_reh', 'rho_reh_GeV', 'DeltaN_minus1',
                 'A_s', 'n_s', 'n_run', 'n_runrun', 'A_t', 'n_t', 'r'}
 
     def calculate(self, state, want_derived=True, **params_values_dict):
@@ -65,7 +68,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
             rho_end_GeV = (1/3 * (1/2 * b.dphidt[b.inflation_mask][-1]**2
                                   + b.potential.V(b.phi[b.inflation_mask][-1]))
                            * mp_GeV / lp_iGeV**3)**(1/4)
-            if rho_reh_GeV > rho_end_GeV:
+            if rho_reh_GeV is not None and rho_reh_GeV > rho_end_GeV:
                 raise PrimpyError(f"Unrealistic reheating scenario with rho_reh={rho_reh_GeV}.")
             with warnings.catch_warnings(action='ignore', category=PrimpyWarning):
                 if w_reh is not None and rho_reh_GeV is not None:

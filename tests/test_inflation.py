@@ -254,8 +254,10 @@ def test_sol_time_efolds(K):
     assert_allclose(bist.H[1:-1], N2H(bist._N[1:-1]), rtol=1e-4)
 
     # using Omega_K0 or N_star
-    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None)
-    bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None)
+    bist.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None,
+                                method='CGS', order=3)
+    bisn.calibrate_scale_factor(Omega_K0=Omega_K0, h=h, N_star=N_star if K == 0 else None,
+                                method='CGS', order=3)
     assert bist.K == K
     assert bisn.K == K
     assert bist.Omega_K0 == Omega_K0
