@@ -853,7 +853,7 @@ class DoubleWell2Potential(DoubleWellPotential):
 
     tag = 'dw2'
     name = 'DoubleWell2Potential'
-    tex = r'Double-Well (quadratic)'
+    tex = r'(quadratic) Double-Well'
     perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
@@ -902,7 +902,7 @@ class DoubleWell4Potential(DoubleWellPotential):
 
     tag = 'dw4'
     name = 'DoubleWell4Potential'
-    tex = r'Double-Well (quartic)'
+    tex = r'(quartic) Double-Well'
     perturbation_ic = (1, 0, 0, 1)
 
     def __init__(self, **pot_kwargs):
@@ -960,7 +960,7 @@ class DoubleWell4Potential(DoubleWellPotential):
 class TmodelPotential(InflationaryPotential):
     """T-model potential: `V(phi) = Lambda**4 * (tanh(phi / (sqrt(6) * alpha)))**(2*p)`."""
 
-    tag = 'tmp'
+    tag = 'tap'
     name = 'TmodelPotential'
     tex = r'T-model'
     perturbation_ic = (1, 0, 0, 1)
