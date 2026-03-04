@@ -530,6 +530,8 @@ class InflationEquations(Equations, ABC):
                 from the forward integration as calibrator for the backward
                 integration.
 
+            The remaining keyword arguments are passed to `derive_approx_power`.
+
             """
             if self.K == 0:  # flat universe
                 if Omega_K0 is not None and Omega_K0 != 0.0:
