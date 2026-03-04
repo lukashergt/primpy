@@ -1,7 +1,10 @@
 """Slow-roll inflationary primordial power spectrum (PPS) for use with Cobaya."""
 import warnings
 import numpy as np
-from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
+try:
+    from cobaya_wrapper.powerlaw_pps import ExternalPrimordialPowerSpectrum
+except:
+    from powerlaw_pps import ExternalPrimordialPowerSpectrum
 from primpy.exceptionhandling import PrimpyError, StepSizeError, PrimpyWarning
 from primpy.units import mp_GeV, lp_iGeV
 import primpy.potentials as pp
@@ -23,7 +26,7 @@ class SlowRollPPS(ExternalPrimordialPowerSpectrum):
     def get_can_provide_params(self):
         return {'N_star',  # 'phi_star', 'V_star', 'H_star',
                 'N_end', 'phi_end', 'V_end', 'H_end',
-                'N_reh', 'w_reh', 'DeltaN_reh', 'rho_reh_GeV',
+                'N_reh', 'w_reh', 'DeltaN_reh', 'rho_reh_GeV', 'DeltaN_minus1',
                 'A_s', 'n_s', 'n_run', 'n_runrun', 'A_t', 'n_t', 'r'}
 
     def calculate(self, state, want_derived=True, **params_values_dict):
